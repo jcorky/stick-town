@@ -19,6 +19,7 @@ import numpy as np
 ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = 34962, 34963
 FLOAT, BYTE, UBYTE, USHORT, UINT = 5126, 5120, 5121, 5123, 5125
 REPEAT, LINEAR, LINEAR_MIPMAP_LINEAR = 10497, 9729, 9987
+UV_TILE = 64.0  # tiling textures (bark, ground): UVs stored ÷64 as uint16, KHR_texture_transform scales back
 
 
 def _to_gltf(v):
@@ -41,6 +42,8 @@ class GLB:
         self.images, self.textures, self.samplers = [], [], []
         self.tex_index = {}
         self.mat_tint = {}  # material → texture mean; COLOR_0 is divided by it
+        self.mat_uvscale = {}  # material → UV_TILE for tiling textures
+        self.ext_used = {"KHR_mesh_quantization"}
 
     def _view(self, data: bytes, target=None, stride=None):
         while len(self.bin) % 4:
@@ -86,13 +89,19 @@ class GLB:
         if alpha < 1:
             m["alphaMode"] = "BLEND"
         if texture is not None:
-            m["pbrMetallicRoughness"]["baseColorTexture"] = {"index": self.texture(texture)}
+            ti = {"index": self.texture(texture)}
+            if texture.key.split("/")[0] in ("bark", "ground"):
+                ti["extensions"] = {"KHR_texture_transform": {"scale": [UV_TILE, UV_TILE]}}
+                self.ext_used.add("KHR_texture_transform")
+            m["pbrMetallicRoughness"]["baseColorTexture"] = ti
             if texture.alpha:
                 m["alphaMode"], m["alphaCutoff"] = "MASK", 0.5
         self.materials.append(m)
         self.mat_index[name] = len(self.materials) - 1
         if texture is not None:
             self.mat_tint[self.mat_index[name]] = np.asarray(texture.mean, np.float32)
+            if "extensions" in ti:
+                self.mat_uvscale[self.mat_index[name]] = UV_TILE
         return self.mat_index[name]
 
     def mesh(self, mesh, name, material):
@@ -110,13 +119,20 @@ class GLB:
                  "NORMAL": self._acc(N8, BYTE, "VEC3", ARRAY_BUFFER, normalized=True, stride=4),
                  "COLOR_0": self._acc(C, UBYTE, "VEC4", ARRAY_BUFFER, normalized=True)}
         if textured:
-            uv = np.asarray(mesh.uvs, np.float32)
+            uv = np.asarray(mesh.uvs, np.float64)
+            k = self.mat_uvscale.get(material)
+            if k:  # repeating texture: shift by whole tiles (invisible), then ÷k so it fits uint16
+                uv = (uv - np.floor(uv.min(0))) / k
+            uv = uv.astype(np.float32)
             if uv.min() >= 0 and uv.max() <= 1:  # quantised (KHR_mesh_quantization): 4 bytes instead of 8
                 attrs["TEXCOORD_0"] = self._acc(np.round(uv * 65535).astype(np.uint16), USHORT, "VEC2",
                                                 ARRAY_BUFFER, normalized=True)
             else:  # tiling UVs (bark, ground) need repeats beyond 0..1
                 attrs["TEXCOORD_0"] = self._acc(uv, FLOAT, "VEC2", ARRAY_BUFFER)
-        idx = self._acc(mesh.indices.astype(np.uint32).ravel(), UINT, "SCALAR", ELEMENT_ARRAY_BUFFER)
+        if len(P) < 65536:  # 16-bit indices halve index data for all but the largest meshes
+            idx = self._acc(mesh.indices.astype(np.uint16).ravel(), USHORT, "SCALAR", ELEMENT_ARRAY_BUFFER)
+        else:
+            idx = self._acc(mesh.indices.astype(np.uint32).ravel(), UINT, "SCALAR", ELEMENT_ARRAY_BUFFER)
         self.meshes.append({"name": name, "primitives": [{"attributes": attrs, "indices": idx, "material": material}]})
         return len(self.meshes) - 1
 
@@ -161,7 +177,8 @@ class GLB:
             doc["animations"] = self.animations
         if self.images:
             doc["images"], doc["textures"], doc["samplers"] = self.images, self.textures, self.samplers
-        doc["extensionsUsed"] = doc["extensionsRequired"] = ["KHR_mesh_quantization"]
+        doc["extensionsUsed"] = sorted(self.ext_used)
+        doc["extensionsRequired"] = ["KHR_mesh_quantization"]
         js = json.dumps(doc, separators=(",", ":")).encode()
         js += b" " * ((4 - len(js) % 4) % 4)
         binb = bytes(self.bin) + b"\0" * ((4 - len(self.bin) % 4) % 4)

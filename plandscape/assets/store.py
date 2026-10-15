@@ -35,7 +35,7 @@ GENERATOR_VERSIONS = {
     "behavior": "behavior-0.1.1",
     "grass_patch": "grass-0.1.0",
     "texture": "texture-0.1.1",
-    "model": "model-0.1.0",
+    "model": "model-0.1.3",
 }
 
 DEFAULT_ROOT = os.environ.get(
@@ -177,12 +177,18 @@ class AssetStore:
 # ── codecs ─────────────────────────────────────────────────────────────
 
 def mesh_arrays(prefix, m: Mesh):
-    return {f"{prefix}_p": m.positions.astype(np.float32), f"{prefix}_c": (np.clip(m.colors, 0, 1) * 255).astype(np.uint8),
-            f"{prefix}_i": m.indices.astype(np.uint32)}
+    a = {f"{prefix}_p": m.positions.astype(np.float32), f"{prefix}_c": (np.clip(m.colors, 0, 1) * 255).astype(np.uint8),
+         f"{prefix}_i": m.indices.astype(np.uint32)}
+    if m.uvs is not None and m.texture:  # textured: keep UVs and the texture key (a plain unicode array)
+        a[f"{prefix}_uv"] = m.uvs.astype(np.float32)
+        a[f"{prefix}_tex"] = np.array(m.texture)
+    return a
 
 
 def arrays_mesh(prefix, a):
-    return Mesh(a[f"{prefix}_p"], a[f"{prefix}_c"].astype(np.float32) / 255.0, a[f"{prefix}_i"])
+    uv, tex = a.get(f"{prefix}_uv"), a.get(f"{prefix}_tex")
+    return Mesh(a[f"{prefix}_p"], a[f"{prefix}_c"].astype(np.float32) / 255.0, a[f"{prefix}_i"],
+                uv, str(tex) if tex is not None else None)
 
 
 def tree_codec():
