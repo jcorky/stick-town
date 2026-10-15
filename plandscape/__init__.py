@@ -7,4 +7,4 @@ any seed key yields a new, distinct variant ("infinite combinations").
 Core runs on numpy + scipy only, so it works in locked-down sandboxes.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
