@@ -43,18 +43,26 @@ class Base(unittest.TestCase):
         self.net.start()
         self.dl = mock.patch("plandscape.sources.sites.DOWNLOADS", os.path.join(self.tmp, "dl"))
         self.dl.start()
+        # generators that call AssetStore() without a store must not touch the real library
+        self.root = mock.patch("plandscape.assets.store.DEFAULT_ROOT", os.path.join(self.tmp, "lib"))
+        self.root.start()
         self.reg = dict(textures._REGISTRY)
         textures._REGISTRY.clear()
 
     def tearDown(self):
         self.net.stop()
         self.dl.stop()
+        self.root.stop()
         textures._REGISTRY.clear()
         textures._REGISTRY.update(self.reg)
         shutil.rmtree(self.tmp)
 
 
 class Textures(Base):
+    def test_fallbacks_are_never_cached(self):
+        textures.get("bark/Bark012", self.store)
+        self.assertEqual(self.store.find("texture"), [])
+
     def test_offline_fallback_and_solid_patch(self):
         for key in ("leaf/LeafSet016", "needle/PineNeedles001", "bark/Bark012", "ground/Ground078"):
             t = textures.get(key, self.store)

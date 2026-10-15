@@ -8,17 +8,16 @@
  "meta": {
   "alpha": true,
   "bbox": [
-   0.3223,
+   0.248,
    0.125,
-   0.7441,
+   0.7266,
    0.9824
   ],
-  "created": "2026-10-15T20:24:53",
-  "fallback": "OSError: network disabled in tests",
+  "created": "2026-10-15T20:35:06",
   "mean": [
-   0.7982,
-   0.7982,
-   0.7982
+   0.7981,
+   0.7981,
+   0.7981
   ],
   "mime": "image/png",
   "size": [
@@ -26,7 +25,11 @@
    512
   ],
   "source": {
-   "site": "procedural"
+   "id": "LeafSet016",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/LeafSet016"
   }
  },
  "path": "texture/68/687ed43b441f3e1408a8d4a806eeed66.npz"

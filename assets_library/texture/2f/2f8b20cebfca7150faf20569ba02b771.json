@@ -8,17 +8,16 @@
  "meta": {
   "alpha": true,
   "bbox": [
-   0.2051,
-   0.2383,
-   0.7676,
+   0.1348,
+   0.2188,
+   0.8398,
    0.9746
   ],
-  "created": "2026-10-15T20:24:52",
-  "fallback": "OSError: network disabled in tests",
+  "created": "2026-10-15T20:35:07",
   "mean": [
-   0.7988,
-   0.7988,
-   0.7988
+   0.7937,
+   0.7937,
+   0.7937
   ],
   "mime": "image/png",
   "size": [
@@ -26,7 +25,11 @@
    512
   ],
   "source": {
-   "site": "procedural"
+   "id": "PineNeedles001",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/PineNeedles001"
   }
  },
  "path": "texture/2f/2f8b20cebfca7150faf20569ba02b771.npz"

@@ -144,7 +144,17 @@ def get(key: str, store=None) -> Texture | None:
         return None  # model/* textures are registered when their model is decoded
     from .assets.store import AssetStore
     store = store or AssetStore()
-    tex = store.get_or_build("texture", dict(key=key), lambda: build(key), *texture_codec())
+    enc, dec = texture_codec()
+    arrays, e = store.get("texture", dict(key=key))
+    if arrays is not None:
+        store.hits += 1
+        tex = dec(arrays, e.meta)
+    else:
+        store.misses += 1
+        tex = build(key)
+        if "fallback" not in tex.meta:  # never cache a stand-in: a networked run must fetch the real one
+            a, meta, _ = enc(tex)
+            store.put("texture", dict(key=key), a, meta)
     tex.key = key
     return register(tex)
 
