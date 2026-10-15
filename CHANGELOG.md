@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0 — 2026-10-15 (second session)
+
+**Added**
+- Texture pipeline: `Mesh` carries UVs and a texture key; the GLB writer embeds PNG/JPEG images, alpha-masked materials, quantised `TEXCOORD_0` and `KHR_texture_transform` for tiling maps; the preview renderer samples textures with an alpha test.
+- `plandscape.textures`: leaf-sprig cards composited from ambientCG leaf atlases (shape-matched per species), pine needle tuft cards, tiling bark and ground detail maps, procedural fallbacks when offline. Textures are grey detail maps, so one leaf texture serves every season.
+- `plandscape.models`: glTF importer, crack-free vertex-clustering decimator, whole-card thinning for alpha foliage; 10 Poly Haven models (29 variants) in the library.
+- `scene.groundcover`: habitat-driven scatter of stumps, logs, deadfall, mossy rocks, a boulder, ferns and shrubs in the central 80 m, instanced in the GLB.
+- `closeup.png` review render; `scene.json` lists ground props and asset credits.
+- `plandscape.sources.sites`: licence-gated downloads; both sites probed as CC0 (`catalog/asset_sites.json`).
+- Asset CLI: `bake` builds textures, new `bake-models` and `prune`.
+- 10 new tests (20 total).
+
+**Changed**
+- Broadleaf crowns: kite leaves → cropped sprig cards at half the triangles; pines: per-needle triangles → crossed needle cards. Pines no longer look bare at `detail=low`.
+- Bark rings duplicate the seam vertex and get cylindrical UVs along branch arc length.
+- GLB: 16-bit indices when possible; tiling UVs quantised to uint16. Three demo scenes: 11.6, 12.3, 13.2 MB.
+- Generator versions: tree-0.2.0, texture-0.1.1, model-0.1.3. The library was rebuilt and pruned (36.5 MB).
+- Session 1 history imported from the owner's bundle. The 53 non-tree binaries that never reached LFS were regenerated, and the asset commit was rewritten so it doesn't reference the lost objects.
+
+**Fixed**
+- Library hits dropped UVs (trees came back untextured).
+- Fallback textures could be cached and then reused instead of the real maps.
+
 ## 0.1.0 — 2026-10-15 (first session)
 
 **Added**

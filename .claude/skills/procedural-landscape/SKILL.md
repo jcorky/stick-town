@@ -34,7 +34,7 @@ plan the change → implement → render it → LOOK at the image → fix → te
 - **Asset library first**: wrap any expensive generator in `AssetStore.get_or_build(kind, params, build, encode, decode)`. Quantise continuous params into a few buckets or the cache never hits. Bump `GENERATOR_VERSIONS[kind]` whenever that generator's output changes.
 - **Licences are probed, not remembered**: add repos to `catalog/sources.json`, then `python3 -m plandscape.sources.harvest probe`. Only permissive licences may be adapted; record adaptations in `catalog/PROVENANCE.md`. Copyleft, non-commercial and no-licence repos are study-only.
 - **No invented facts**: species dimensions, animal behaviour numbers and dataset specs need a source you opened; otherwise keep `verified=False` and say so.
-- **Output budget**: scene GLB under 15 MB (artifact limit 16 MB). Use variant instancing, `TWIG_CULL`, leaf/grass budgets; normals are already int8.
+- **Output budget**: scene GLB under 15 MB (artifact limit 16 MB). Use variant instancing, `TWIG_CULL`, leaf/grass budgets; normals are int8, UVs uint16, indices 16-bit where they fit. Bark is the largest item (~half a scene).
 
 ## 3. Extending
 
@@ -47,7 +47,9 @@ plan the change → implement → render it → LOOK at the image → fix → te
 | Building/prop | `scene/buildings.py` | footprint + door for desire paths; render from two angles |
 | Province | `terrain/heightfield.PROVINCES` + `planner.REGIONS` | soil colours; render the tile; check creeks/water appear |
 | Real data | `load_dem()` etc. | optional import; cache tiles in the library |
-| Asset kind | `assets/store.GENERATOR_VERSIONS` + a codec | a `bake` step in `assets/__main__.py`; a round-trip test |
+| Asset kind | `assets/store.GENERATOR_VERSIONS` + a codec | a `bake` step in `assets/__main__.py`; a round-trip test that checks UVs and texture keys survive |
+| Texture | `textures.py` (key `kind/source`, a recipe in `build`) | grey detail map with mean 0.8 unless it is a model's own colour map; keep the `SOLID_UV` patch opaque and card content out of the top 1/8 strip; a procedural fallback; contact-sheet render; credit in `catalog/PROVENANCE.md` |
+| Imported model | `models.MODELS` (+ a role in `scene/groundcover.MIX`) | only from a site whose licence probe is permissive; render every variant after decimation; check the scene GLB size; credit it |
 
 ## 4. Reviewing a scene (what "alive" means)
 
@@ -72,6 +74,8 @@ Open `map.png` and `scene.json` and check:
 - The session's GitHub identity can differ from the repo owner's account (v0.1: the session signed in as `thecheckdigit`, the repo is `jcorky/stick-town`). Push needs the Claude GitHub app installed on the owner's account with access to the repo, and GitHub reconnected in claude.ai Settings → Connectors.
 - `pkill -f <pattern>` where the pattern appears in your own command line kills your shell (exit 144).
 - Artifacts don't serve `.glb`. Publish `scene.glb.txt` (base64); the viewer decodes it.
+- GitHub rejects a push whose history references LFS objects it doesn't have. Push LFS objects in the same session that commits them; if they are lost, the commit that introduced the pointers has to be rewritten (ask the owner first).
+- PyPI was reachable in session 2 (scipy had to be installed); don't count on it.
 
 ### Numerics / geometry
 - `_norm(v)` on a 1-D vector returns 1-D; indexing `[0]` turns it into a scalar and silently breaks direction maths (v0.1 trunk loop hung forever).
@@ -97,6 +101,21 @@ Open `map.png` and `scene.json` and check:
 ### Tests
 - Spanish moss is evergreen, so a "deciduous trees are bare in winter" test must use a dry site (`moisture=0.1`) or it counts moss as leaves.
 
+### Textures and imported assets (v0.2)
+- ambientCG answers 403 to Python's default User-Agent; send one (`sources.sites.UA`).
+- `PineNeedles001` is an atlas of needle fascicles on transparent black, not a ground texture. Look at every downloaded map before deciding what it is.
+- Atlas sprites lying sideways (needles) need a rotation so the base is at the bottom; leaf sets used are upright.
+- A card's crop box swallowed the reserved solid patch when content reached the top-left corner → opaque squares floating in pine crowns. Card content is now composited below the top 1/8 strip.
+- Poly Haven glTFs pack several variants as separate nodes (six rocks, four ferns); import each node, never merge them. Alpha (fern, shrub) is a separate `Alpha` map that the glTF doesn't reference; fetch it.
+- Clustering with the normal direction in the *position* key opens cracks at sharp rock edges. Weld positions per cell; split only the vertices (by UV chart and facing).
+- Thinning a card-based shrub to ~10% leaves floating leaves; keep large components (stems) and don't thin card shrubs below about a third.
+- Poly Haven stumps are squat, root-spread scans that read as mounds on open grass; keep them in litter-covered biomes.
+- Variants of one set share one atlas: key textures by asset and material, not variant, or the GLB embeds it six times.
+- The preview renderer has no near clip: close-ups must crop the terrain first or it covers the view.
+
 ### Asset library
+- A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
+- Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
 - Continuous params (moisture 0.4137…, body scale 1.0734…) mean zero cache hits. Bucket them.
-- Bump `GENERATOR_VERSIONS` when output changes, or the library serves stale models.
+- Bump `GENERATOR_VERSIONS` when output changes, or the library serves stale models; then `assets prune`.
+- Re-running a scene rewrites its behaviour clips with a new `created` timestamp; don't commit that churn (`git restore assets_library/behavior assets_library/index.jsonl`).
