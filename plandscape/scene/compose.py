@@ -16,6 +16,7 @@ from dataclasses import asdict
 import numpy as np
 from scipy import ndimage
 
+from .. import textures
 from ..assets.store import AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
 from ..export.gltf import GLB
 from ..fauna.agents import FAUNA, World, run, spawn
@@ -246,6 +247,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     mix = BIOME_GRASS.get(plan.biome, BIOME_GRASS["pasture"])
     ter = terrain_mesh(hf, dens, field.G, canopy, world.signs, plan.season,
                        litter=0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2)
+    ter.uvs = (ter.positions[:, :2] / textures.TILE_M["ground"]).astype(np.float32)
+    ter.texture = textures.ground_key(plan.biome)
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
     grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season)
@@ -269,11 +272,16 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     # ── export ─────────────────────────────────────────────────────────
     light = sun_and_sky(plan.hour)
     g = GLB()
-    m_ter, m_bark = g.material("terrain", rough=1.0), g.material("bark", rough=0.95)
-    m_fol, m_grass = g.material("foliage", double=True, rough=0.7), g.material("grass", double=True, rough=0.8)
+
+    def mat(mesh, name, **kw):
+        """One material per (role, texture); untextured meshes share the plain role material."""
+        tex = textures.get(mesh.texture, store) if (mesh.texture and mesh.uvs is not None) else None
+        return g.material(f"{name}:{tex.key}" if tex else name, texture=tex, **kw)
+
+    m_grass = g.material("grass", double=True, rough=0.8)
     m_bld, m_water = g.material("building", rough=0.6), g.material("water", rough=0.08, alpha=0.85)
     m_fauna = g.material("fauna", rough=0.8)
-    g.node("terrain", g.mesh(ter, "terrain", m_ter))
+    g.node("terrain", g.mesh(ter, "terrain", mat(ter, "terrain", rough=1.0)))
     if grass.n_tris:
         g.node("grass", g.mesh(grass, "grass", m_grass))
     if water_mesh.n_tris:
@@ -284,7 +292,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     vmesh = {}
     for key, tm in variants.items():
         nm = f"{key[0]}_{key[1]}_{int(key[2] * 10)}"
-        vmesh[key] = (g.mesh(tm.bark, nm + "_bark", m_bark), g.mesh(tm.foliage, nm + "_foliage", m_fol))
+        vmesh[key] = (g.mesh(tm.bark, nm + "_bark", mat(tm.bark, "bark", rough=0.95)),
+                      g.mesh(tm.foliage, nm + "_foliage", mat(tm.foliage, "foliage", double=True, rough=0.7)))
     kids = []
     for n, pl in enumerate(placements):
         b, f = vmesh[pl["model"]]

@@ -20,6 +20,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial import cKDTree
 
+from .. import textures
 from ..mesh import Mesh, MeshBuilder
 from ..rng import rng as make_rng
 from .species import SPECIES, Species
@@ -202,8 +203,15 @@ def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
     trunkseg = np.r_[True, trunkseg]
     phase = r.uniform(0, 2 * np.pi)
     nlobes = 5 + int(r.integers(0, 3))
-    mb = MeshBuilder()
+    mb = MeshBuilder(textures.bark_key(sp.key))
     base = np.array(sp.bark_rgb)
+    # arc length from the root, so bark texture runs continuously up the trunk and out the limbs
+    arc = np.zeros(len(pos))
+    for i in range(1, len(pos)):
+        arc[i] = arc[par[i]] + np.linalg.norm(pos[i] - pos[par[i]])
+    va = np.r_[-0.5, np.array([arc[par[i]] for i in segs])]
+    vb = np.r_[0.0, np.array([arc[i] for i in segs])]
+    tile = textures.TILE_M["bark"]
     for sides in (10, 7, 5, 3):
         sel = {10: r1 > 0.12, 7: (r1 <= 0.12) & (r1 > 0.035),
                5: (r1 <= 0.035) & (r1 > 0.012), 3: r1 <= 0.012}[sides]
@@ -212,9 +220,10 @@ def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
         A, B, R0, R1, T = a[sel], b[sel], r0[sel], r1[sel], trunkseg[sel]
         t = _norm(B - A)
         u, w = _perp_frame(t)
-        ang = np.linspace(0, 2 * np.pi, sides, endpoint=False)
+        nv = sides + 1  # the seam vertex is duplicated so u can run 0 → reps without wrapping back
+        ang = np.linspace(0, 2 * np.pi, nv)
         ca, sa = np.cos(ang), np.sin(ang)
-        dirs = u[:, None, :] * ca[None, :, None] + w[:, None, :] * sa[None, :, None]  # (S,sides,3)
+        dirs = u[:, None, :] * ca[None, :, None] + w[:, None, :] * sa[None, :, None]  # (S,nv,3)
         rings = []
         for C, RR in ((A, R0), (B, R1)):
             z = C[:, 2:3]
@@ -224,11 +233,16 @@ def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
         P = np.concatenate([rings[0], rings[1]], axis=1).reshape(-1, 3)
         S = len(A)
         k = np.arange(sides)
-        k1 = (k + 1) % sides
-        quad = np.stack([k, k1, k + sides, k1, k1 + sides, k + sides], -1).reshape(-1, 3)
-        idx = (quad[None] + (np.arange(S) * 2 * sides)[:, None, None]).reshape(-1, 3)
+        k1 = k + 1
+        quad = np.stack([k, k1, k + nv, k1, k1 + nv, k + nv], -1).reshape(-1, 3)
+        idx = (quad[None] + (np.arange(S) * 2 * nv)[:, None, None]).reshape(-1, 3)
+        reps = np.maximum(1, np.round(2 * np.pi * np.maximum(R0, R1) / tile))  # texel size stays ~constant
+        U = (ang[None, :] / (2 * np.pi)) * reps[:, None]
+        V0 = np.repeat(va[sel][:, None] / tile, nv, 1)
+        V1 = np.repeat(vb[sel][:, None] / tile, nv, 1)
+        UV = np.stack([np.concatenate([U, U], 1), np.concatenate([V0, V1], 1)], -1).reshape(-1, 2)
         # bark: vertical furrows + north-side moss low on trunk
-        zz = np.concatenate([np.repeat(A[:, 2:3], sides, 1), np.repeat(B[:, 2:3], sides, 1)], 1)
+        zz = np.concatenate([np.repeat(A[:, 2:3], nv, 1), np.repeat(B[:, 2:3], nv, 1)], 1)
         dd = np.concatenate([dirs, dirs], 1)
         furrow = 0.82 + 0.18 * np.sin(np.concatenate([ang, ang])[None, :] * 9 + zz * 1.7) ** 2
         jitter = r.uniform(0.9, 1.1, (S, 1))
@@ -236,7 +250,7 @@ def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
         north = np.clip(dd[..., 1], 0, 1) * np.exp(-np.maximum(zz, 0) / 2.5)
         moss = np.array([0.30, 0.40, 0.18])
         col = col * (1 - 0.55 * north[..., None]) + moss * 0.55 * north[..., None]
-        mb.add(P, col.reshape(-1, 3), idx)
+        mb.add(P, col.reshape(-1, 3), idx, UV)
     return mb.build()
 
 
@@ -259,7 +273,8 @@ def _leaf_colour(sp, season, r, n):
 
 
 def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
-    mb = MeshBuilder()
+    tex = {"broadleaf": textures.leaf_key(sp.key), "needle": textures.needle_key()}.get(sp.leaf)
+    mb = MeshBuilder(tex)
     pos, par, rad = sk.pos, sk.parent, sk.radius
     has_child = np.zeros(len(pos), bool)
     has_child[par[par >= 0]] = True
@@ -274,45 +289,61 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
     shell = 4 * np.pi * R * max(H * (1 - sp.crown_base) / 2, 0.5) * 1.2
     if len(cand) and not leafless:
         if sp.leaf == "broadleaf":
-            per = max(1, budget // len(cand))
+            # leaf-cluster cards: each quad shows a photographed sprig of ~15 leaves (alpha-masked)
+            u0, v0, u1, v1, cov = textures.card_box(mb.texture)
+            aspect = (u1 - u0) / max(v1 - v0, 1e-3)
+            per = max(1, budget // 2 // len(cand))
             nl = per * len(cand)
-            L = float(np.clip(np.sqrt(shell * 3.2 / (nl * 0.32)), sp.leaf_size, sp.leaf_size * 20))
-            anchor = np.repeat(pos[cand], per, 0) + r.normal(0, L * 0.6, (nl, 3))
+            L = float(np.clip(np.sqrt(shell * 3.2 / (nl * aspect * max(cov, 0.2))),
+                              sp.leaf_size / 0.3, sp.leaf_size * 60))
+            anchor = np.repeat(pos[cand], per, 0) + r.normal(0, L * 0.35, (nl, 3))
             outward = _norm(anchor - crown_c + r.normal(0, 0.5, (nl, 3)))
-            axis = _norm(outward + [0, 0, -0.35] + r.normal(0, 0.4, (nl, 3)))
+            axis = _norm(outward + [0, 0, 0.15] + r.normal(0, 0.45, (nl, 3)))
             side = _norm(np.cross(axis, _norm([0, 0, 1] + r.normal(0, 0.6, (nl, 3)))))
-            Ls = L * r.uniform(0.7, 1.25, (nl, 1))
-            Wd = Ls * 0.42
-            v0 = anchor
-            v1 = anchor + axis * Ls * 0.35 + side * Wd / 2
-            v2 = anchor + axis * Ls
-            v3 = anchor + axis * Ls * 0.35 - side * Wd / 2
-            P = np.stack([v0, v1, v2, v3], 1).reshape(-1, 3)
+            Ls = L * r.uniform(0.75, 1.2, (nl, 1))
+            left = (u0 - 0.5) / (v1 - v0) * Ls   # the twig enters at the texture's bottom centre
+            right = (u1 - 0.5) / (v1 - v0) * Ls
+            v0_ = anchor + side * left
+            v1_ = anchor + side * right
+            v2_ = anchor + side * right + axis * Ls
+            v3_ = anchor + side * left + axis * Ls
+            P = np.stack([v0_, v1_, v2_, v3_], 1).reshape(-1, 3)
+            flip = r.uniform(0, 1, nl) < 0.5  # mirror half the cards so sprigs don't all lean one way
+            ul, ur = np.where(flip, u1, u0), np.where(flip, u0, u1)
+            UV = np.stack([np.c_[ul, np.full(nl, v1)], np.c_[ur, np.full(nl, v1)],
+                           np.c_[ur, np.full(nl, v0)], np.c_[ul, np.full(nl, v0)]], 1).reshape(-1, 2)
             ao = np.clip(np.linalg.norm(anchor - crown_c, axis=1) / R, 0.55, 1.1)[:, None]
             col = _leaf_colour(sp, season, r, nl) * ao
             C = np.repeat(col, 4, 0)
             base = (np.arange(nl) * 4)[:, None]
             idx = np.concatenate([base + [0, 1, 2], base + [0, 2, 3]])
-            mb.add(P, C, idx)
+            mb.add(P, C, idx, UV)
         elif sp.leaf == "needle":
-            # pines carry needles in brush-like tufts along the outer shoots
+            # pines carry needles in brush-like tufts along the outer shoots: two crossed needle cards per tuft
             shoots = np.nonzero(~sk.trunk & (rad <= np.percentile(rad[~sk.trunk], 70)))[0]
             shoots = shoots if len(shoots) else cand
-            per_tuft = 22
-            ntuft = max(1, budget // per_tuft)
+            u0, v0, u1, v1, cov = textures.card_box(mb.texture)
+            aspect = (u1 - u0) / max(v1 - v0, 1e-3)
+            ntuft = max(1, budget // 4)
             pick = r.choice(shoots, ntuft, replace=True)
             tip = pos[pick] + r.normal(0, 0.18, (ntuft, 3))
             fwd = _norm(pos[pick] - pos[par[pick]] + _norm(pos[pick] - crown_c) * 0.8)
-            Ln = sp.leaf_size * float(np.clip(np.sqrt(shell * 0.6 / (ntuft * sp.leaf_size ** 2 * 6)), 1.0, 3.5))
-            n = ntuft * per_tuft
-            f = np.repeat(fwd, per_tuft, 0)
-            spread = _norm(f * 0.8 + r.normal(0, 0.6, (n, 3)) + [0, 0, 0.2])
-            base = np.repeat(tip, per_tuft, 0)
-            u, _ = _perp_frame(spread)
-            wdt = 0.004 * Ln / sp.leaf_size + 0.003
-            P = np.stack([base - u * wdt, base + u * wdt, base + spread * Ln * r.uniform(0.7, 1.1, (n, 1))], 1)
-            col = np.repeat(_leaf_colour(sp, season, r, ntuft), per_tuft, 0)
-            mb.add(P.reshape(-1, 3), np.repeat(col, 3, 0), np.arange(n * 3).reshape(-1, 3))
+            axis = _norm(fwd * 0.8 + r.normal(0, 0.35, (ntuft, 3)) + [0, 0, 0.35])
+            Lc = float(np.clip(np.sqrt(shell * 0.9 / (ntuft * 2 * aspect * max(cov, 0.1))),
+                               sp.leaf_size * 1.4, sp.leaf_size * 8)) * r.uniform(0.8, 1.15, (ntuft, 1))
+            s1, s2 = _perp_frame(axis)
+            left = (u0 - 0.5) / (v1 - v0) * Lc
+            right = (u1 - 0.5) / (v1 - v0) * Lc
+            quads = []
+            for sd in (s1, s2):
+                quads.append(np.stack([tip + sd * left, tip + sd * right, tip + sd * right + axis * Lc,
+                                       tip + sd * left + axis * Lc], 1))
+            P = np.concatenate(quads, 0).reshape(-1, 3)
+            n = 2 * ntuft
+            uvq = np.array([[u0, v1], [u1, v1], [u1, v0], [u0, v0]], np.float32)
+            col = np.tile(_leaf_colour(sp, season, r, ntuft), (2, 1))
+            base = (np.arange(n) * 4)[:, None]
+            mb.add(P, np.repeat(col, 4, 0), np.concatenate([base + [0, 1, 2], base + [0, 2, 3]]), np.tile(uvq, (n, 1)))
         elif sp.leaf == "scale_spray":
             per = max(1, budget // max(len(cand), 1))
             nl = per * len(cand)
@@ -366,8 +397,8 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
     return mb.build()
 
 
-def _knees(r, n_max=18) -> Mesh:
-    mb = MeshBuilder()
+def _knees(r, n_max=18, texture=None) -> Mesh:
+    mb = MeshBuilder(texture)
     for _ in range(int(r.integers(5, n_max))):
         a, d = r.uniform(0, 2 * np.pi), r.uniform(1.0, 4.0)
         c = np.array([np.cos(a) * d, np.sin(a) * d, -0.2])
@@ -376,7 +407,8 @@ def _knees(r, n_max=18) -> Mesh:
         ring = c + np.c_[np.cos(ang) * rr, np.sin(ang) * rr, np.zeros(7)]
         P = np.vstack([ring, c + [0, 0, h]])
         k = np.arange(7)
-        mb.add(P, np.array([0.45, 0.36, 0.30]) * r.uniform(0.85, 1.1), np.c_[k, (k + 1) % 7, np.full(7, 7)])
+        uv = np.r_[np.c_[np.arange(7) / 7 * rr * 6, np.zeros(7)], [[0.5 * rr * 6, h]]]
+        mb.add(P, np.array([0.45, 0.36, 0.30]) * r.uniform(0.85, 1.1), np.c_[k, (k + 1) % 7, np.full(7, 7)], uv)
     return mb.build()
 
 
@@ -444,6 +476,6 @@ def generate_tree(species: str, seed=0, season="summer", detail="med",
     sk = grow_skeleton(sp, H, r)
     bark = _bark_mesh(sp, sk, r, TWIG_CULL[detail])
     if sp.knees and moisture > 0.65:
-        bark = Mesh.merge([bark, _knees(r)])
+        bark = Mesh.merge([bark, _knees(r, texture=bark.texture)])
     fol = _foliage_mesh(sp, sk, H, season, detail, r, moisture)
     return TreeModel(sp, (species, seed), H, sk, bark, fol)

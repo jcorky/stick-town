@@ -6,12 +6,18 @@ from dataclasses import dataclass
 
 import numpy as np
 
+# Every texture keeps an opaque patch of its mean colour here (see plandscape.textures), so
+# untextured parts of a textured mesh render as their plain vertex colour.
+SOLID_UV = (1 / 16, 1 / 16)
+
 
 @dataclass
 class Mesh:
     positions: np.ndarray  # (N,3) float32, world z-up
     colors: np.ndarray     # (N,3) float32 linear-ish RGB 0..1
     indices: np.ndarray    # (M,3) uint32
+    uvs: np.ndarray | None = None  # (N,2) float32 texture coordinates, v down (glTF convention)
+    texture: str | None = None     # key into plandscape.textures; colours stay the final look
 
     @staticmethod
     def empty() -> "Mesh":
@@ -36,10 +42,12 @@ class Mesh:
 
     def transformed(self, M: np.ndarray) -> "Mesh":
         p = np.c_[self.positions, np.ones(len(self.positions))] @ M.T
-        return Mesh(p[:, :3].astype(np.float32), self.colors, self.indices)
+        return Mesh(p[:, :3].astype(np.float32), self.colors, self.indices, self.uvs, self.texture)
 
     @staticmethod
     def merge(meshes) -> "Mesh":
+        """Concatenate meshes. UVs survive only when every part has them and all share one
+        texture; otherwise the result is untextured (vertex colours still carry the look)."""
         meshes = [m for m in meshes if m is not None and len(m.positions)]
         if not meshes:
             return Mesh.empty()
@@ -47,30 +55,42 @@ class Mesh:
         for m in meshes:
             idx.append(m.indices + off)
             off += len(m.positions)
+        tex = {m.texture for m in meshes}
+        keep_uv = len(tex) == 1 and all(m.uvs is not None for m in meshes)
         return Mesh(np.concatenate([m.positions for m in meshes]).astype(np.float32),
                     np.concatenate([m.colors for m in meshes]).astype(np.float32),
-                    np.concatenate(idx).astype(np.uint32))
+                    np.concatenate(idx).astype(np.uint32),
+                    np.concatenate([m.uvs for m in meshes]).astype(np.float32) if keep_uv else None,
+                    meshes[0].texture if keep_uv else None)
 
 
 class MeshBuilder:
     """Append-only builder; cheaper than merging thousands of tiny Mesh objects."""
 
-    def __init__(self):
-        self.p, self.c, self.i = [], [], []
+    def __init__(self, texture: str | None = None):
+        self.p, self.c, self.i, self.u = [], [], [], []
         self.n = 0
+        self.texture = texture
 
-    def add(self, positions, colors, indices):
+    def add(self, positions, colors, indices, uvs=None):
         positions = np.asarray(positions, np.float32)
         colors = np.broadcast_to(np.asarray(colors, np.float32), positions.shape)
         self.p.append(positions)
         self.c.append(np.array(colors))
         self.i.append(np.asarray(indices, np.uint32) + self.n)
+        self.u.append(None if uvs is None else np.broadcast_to(np.asarray(uvs, np.float32), (len(positions), 2)))
         self.n += len(positions)
 
     def build(self) -> Mesh:
         if not self.p:
             return Mesh.empty()
-        return Mesh(np.concatenate(self.p), np.concatenate(self.c), np.concatenate(self.i))
+        uv = None
+        if self.texture and any(u is not None for u in self.u):
+            # parts added without UVs sample the texture's solid patch, i.e. show their vertex colour
+            uv = np.concatenate([u if u is not None else np.tile(np.float32(SOLID_UV), (len(p), 1))
+                                 for u, p in zip(self.u, self.p)])
+        return Mesh(np.concatenate(self.p), np.concatenate(self.c), np.concatenate(self.i),
+                    uv, self.texture if uv is not None else None)
 
 
 def box(center, size, color, rot_z=0.0) -> Mesh:

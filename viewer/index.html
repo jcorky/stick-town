@@ -106,14 +106,20 @@ function addWind(mat) {
   mat.needsUpdate = true;
 }
 
+const m0 = (o) => (Array.isArray(o.material) ? o.material[0] : o.material);
+function alphaDepth(m) {
+  return new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: m.map, alphaTest: m.alphaTest });
+}
+
 function onGLTF(g) {
     const root = g.scene;
     root.traverse((o) => {
       if (!o.isMesh) return;
       o.castShadow = !/terrain|water|grass/.test(o.name);
+      if (m0(o) && m0(o).alphaTest > 0) o.customDepthMaterial = alphaDepth(m0(o));  // leaf cards cast leaf-shaped shadows
       o.receiveShadow = true;
       const m = o.material;
-      if (m && (m.name === 'foliage' || m.name === 'grass')) addWind(m);
+      if (m && /^(foliage|grass)/.test(m.name)) addWind(m);
       if (m && m.name === 'water') { m.transparent = true; m.opacity = 0.85; m.roughness = 0.08; }
     });
     scene.add(root);

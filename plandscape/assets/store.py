@@ -28,12 +28,14 @@ from ..mesh import Mesh
 # Bump a version when its generator's output changes; old entries stay readable
 # but are no longer matched.
 GENERATOR_VERSIONS = {
-    "tree": "tree-0.1.4",
+    "tree": "tree-0.2.0",
     "building": "building-0.1.1",
     "terrain": "terrain-0.1.1",
     "body": "body-0.1.0",
     "behavior": "behavior-0.1.1",
     "grass_patch": "grass-0.1.0",
+    "texture": "texture-0.1.1",
+    "model": "model-0.1.0",
 }
 
 DEFAULT_ROOT = os.environ.get(
