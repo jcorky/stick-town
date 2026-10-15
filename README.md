@@ -19,6 +19,10 @@ You get `scene.glb` (terrain, trees, grass, buildings, water, animated animals),
 - **Asset library**: everything generated is stored by content hash and reused (`python3 -m plandscape.assets bake`). See [docs/ASSETS.md](docs/ASSETS.md).
 - **Source harvester**: a license-checked catalog of public procedural repos, datasets and papers (`python3 -m plandscape.sources.harvest probe`).
 
+## Getting the asset library
+
+Binaries in `assets_library/` are stored with Git LFS. After cloning run `git lfs install && git lfs pull`, or regenerate them with `python3 -m plandscape.assets bake` (generation is deterministic).
+
 ## Requirements
 
 Python 3.10+ with numpy, scipy, Pillow and matplotlib. Nothing else — it runs in locked-down sandboxes. Blender, rasterio and friends are optional future extras.
@@ -40,7 +44,9 @@ Open `DIR/index.html` through any static server (`python3 -m http.server -d DIR`
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, seeding, LOD, how 1 cm detail works
 - [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) — real-world data for real-place mode
 - [docs/ASSETS.md](docs/ASSETS.md) — the asset library and how to share it
-- [skills/procedural-landscape/SKILL.md](skills/procedural-landscape/SKILL.md) — working method for Claude sessions on this repo
-- [HANDOFF.md](HANDOFF.md) — the prompt that starts the next session
+- [CLAUDE.md](CLAUDE.md) — orientation Claude Code loads automatically
+- [.claude/skills/procedural-landscape/SKILL.md](.claude/skills/procedural-landscape/SKILL.md) — working method, rules and pitfalls for Claude sessions (auto-discovered)
+- [HANDOFF.md](HANDOFF.md) — current status, next priorities, and the prompt that starts the next session
+- [CHANGELOG.md](CHANGELOG.md)
 
 Licensed Apache-2.0. Third-party sources and their licences are tracked in `catalog/`.

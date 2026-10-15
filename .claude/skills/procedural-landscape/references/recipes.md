@@ -1,5 +1,7 @@
 # Recipes
 
+Companion to `../SKILL.md`. Run from the repo root.
+
 ## Species contact sheet
 ```python
 from plandscape.flora.tree import generate_tree
