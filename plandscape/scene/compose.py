@@ -29,6 +29,7 @@ from ..paths.desire import TrailField, obstacle_cost, simulate
 from ..rng import rng as make_rng
 from ..terrain.heightfield import generate_tile
 from .buildings import clothesline, fence, generate_building, mailbox
+from .groundcover import scatter
 from .planner import ScenePlan
 
 GRASS_BUDGET = {"low": 20000, "med": 70000, "high": 250000, "cm": 2_000_000}
@@ -252,6 +253,14 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
     grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season)
+
+    def _grid(A):
+        return lambda x, y: float(A[min(max(int(round((y - hf.origin[1]) / hf.res)), 0), A.shape[0] - 1),
+                                    min(max(int(round((x - hf.origin[0]) / hf.res)), 0), A.shape[1] - 1)])
+    gprops, gparts = scatter(hf, plan, store, _grid(canopy), _grid(field.G), footprints, trees_arr,
+                             (c - 40, c - 40, c + 40, c + 40), log)
+    log(f"ground props: {len(gprops)} placed from {len({g_['model'] for g_ in gprops})} variants "
+        f"({time.time() - t0:.1f}s)")
     wmb = MeshBuilder()
     wy, wx = np.nonzero(water > 0.5)
     for i, j in zip(wy, wx):
@@ -301,6 +310,17 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         kids.append(g.node(f"{pl['species']}_{n}", translation=(pl["x"], pl["y"], pl["z"]),
                            rotation_z=pl["yaw"], scale=pl["scale"], children=sub))
     g.node("trees", children=kids)
+    pmesh, pkids = {}, []
+    for n, gp in enumerate(gprops):
+        if gp["model"] not in pmesh:
+            part = gparts[gp["model"]]
+            nm = f"{gp['model'][0]}_{gp['model'][1]}"
+            role = "foliage" if part.texture.alpha else "prop"  # ferns and shrubs sway in the wind
+            pmesh[gp["model"]] = g.mesh(part.mesh, nm, mat(part.mesh, role, double=part.texture.alpha, rough=0.9))
+        pkids.append(g.node(f"{gp['model'][0]}_{n}", pmesh[gp["model"]], translation=(gp["x"], gp["y"], gp["z"]),
+                            rotation_z=gp["yaw"], scale=gp["scale"]))
+    if pkids:
+        g.node("ground_props", children=pkids)
     tracks = []
     akids = []
     for a in agents:
@@ -322,13 +342,17 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     g.save(glb, extras=dict(prompt=plan.prompt, seed=plan.seed))
     size_mb = os.path.getsize(glb) / 1e6
 
-    stats = dict(trees=len(placements), unique_tree_models=len(variants),
+    stats = dict(trees=len(placements), unique_tree_models=len(variants), ground_props=len(gprops),
+                 ground_prop_tris=int(sum(gparts[k].mesh.n_tris for k in pmesh)),
                  tree_tris=int(sum(tm.n_tris for tm in variants.values())), grass_blades=grass.n_tris,
                  terrain_tris=ter.n_tris, agents=len(agents), signs=len(world.signs),
                  trodden_cells=int((field.G > 0.35).sum()), glb_mb=round(size_mb, 2),
                  seconds=round(time.time() - t0, 1), library=store.stats())
     scene = dict(plan=asdict(plan), stats=stats, lighting=light, buildings=info,
                  trees=[{k: v for k, v in pl.items() if k != "model"} for pl in placements], signs=world.signs,
+                 ground_props=[dict(gp, model=f"{gp['model'][0]}/{gp['model'][1]}") for gp in gprops],
+                 credits=sorted({(p_.meta["source"]["url"], p_.meta["source"]["licence"],
+                                  ", ".join(p_.meta["source"].get("authors", []))) for p_ in gparts.values()}),
                  agents=[dict(id=a.id, species=a.spec.key, traits={k: round(v, 2) for k, v in a.trait.items()},
                               events=a.events[:80]) for a in agents])
     with open(os.path.join(out_dir, "scene.json"), "w") as f:
@@ -338,4 +362,5 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     log(f"exported {glb} ({size_mb:.1f} MB) in {time.time() - t0:.1f}s")
     return dict(dir=out_dir, glb=glb, stats=stats, hf=hf, field=field, canopy=canopy, agents=agents,
                 world=world, placements=placements, variants=variants, ter=ter, grass=grass,
+                ground_props=gprops, prop_parts=gparts,
                 built=built, water=water_mesh, light=light)

@@ -16,12 +16,27 @@ def _rotz(theta, t, s):
     return M
 
 
-def perspective(res, path, size=(1100, 720)):
+def _scene_meshes(res, near=None, foliage=True):
+    """Scene meshes in world space; `near=(x, y, r)` keeps only trees and props within r metres."""
     meshes = [res["ter"], res["grass"], res["built"], res["water"]]
+    def ok(o):
+        return near is None or np.hypot(o["x"] - near[0], o["y"] - near[1]) < near[2]
     for pl in res["placements"]:
+        if not ok(pl):
+            continue
         tm = res["variants"][pl["model"]]
         M = _rotz(pl["yaw"], (pl["x"], pl["y"], pl["z"]), pl["scale"])
-        meshes += [tm.bark.transformed(M), tm.foliage.transformed(M)]
+        meshes += [tm.bark.transformed(M)] + ([tm.foliage.transformed(M)] if foliage else [])
+    for gp in res.get("ground_props", []):
+        if not ok(gp):
+            continue
+        M = _rotz(gp["yaw"], (gp["x"], gp["y"], gp["z"]), gp["scale"])
+        meshes.append(res["prop_parts"][gp["model"]].mesh.transformed(M))
+    return meshes
+
+
+def perspective(res, path, size=(1100, 720)):
+    meshes = _scene_meshes(res)
     light = res["light"]
     S = res["hf"].size[0]
     zc = float(res["hf"].z.mean())
@@ -30,6 +45,33 @@ def perspective(res, path, size=(1100, 720)):
     # the viewer applies the scene's real time-of-day lighting
     return render(meshes, path, size=size, azimuth=200, elevation=16, fit=fit,
                   sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_200_000, keep_first=4)
+
+
+def _crop(m, box):
+    """Keep triangles whose centroid lies in an xy box (the preview renderer has no near clip)."""
+    if m is None or not m.n_tris:
+        return m
+    cen = m.positions[m.indices].mean(1)
+    keep = (cen[:, 0] > box[0]) & (cen[:, 0] < box[2]) & (cen[:, 1] > box[1]) & (cen[:, 1] < box[3])
+    return Mesh(m.positions, m.colors, m.indices[keep], m.uvs, m.texture)
+
+
+def closeup(res, path, size=(1100, 720)):
+    """Ground-level review of the focus area, where textures and imported props matter most.
+    Tree crowns are left out (trunks stay) so they don't hide the ground."""
+    S = res["hf"].size[0]
+    cx = cy = S / 2
+    gp = res.get("ground_props", [])
+    if gp:  # centre on the busiest patch of ground props
+        xy = np.array([(g["x"], g["y"]) for g in gp])
+        n = (np.hypot(*(xy[:, None, :] - xy[None, :, :]).transpose(2, 0, 1)) < 5).sum(1)
+        cx, cy = xy[int(np.argmax(n))]
+    zc = float(res["hf"].sample(cx, cy)[0])
+    meshes = [_crop(m, (cx - 9, cy - 9, cx + 9, cy + 9))
+              for m in _scene_meshes(res, near=(cx, cy, 9), foliage=False)]
+    fit = ((cx - 6, cy - 6, zc - 1), (cx + 6, cy + 6, zc + 2))
+    return render(meshes, path, size=size, azimuth=200, elevation=14, fit=fit,
+                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=4)
 
 
 def map_view(res, path):

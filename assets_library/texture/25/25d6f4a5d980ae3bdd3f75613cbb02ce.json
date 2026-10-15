@@ -1,0 +1,30 @@
+{
+ "key": "25d6f4a5d980ae3bdd3f75613cbb02ce",
+ "kind": "texture",
+ "version": "texture-0.1.1",
+ "params": {
+  "key": "ground/Ground078"
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:25:43",
+  "mean": [
+   0.7938,
+   0.7938,
+   0.7938
+  ],
+  "mime": "image/jpeg",
+  "size": [
+   1024,
+   1024
+  ],
+  "source": {
+   "id": "Ground078",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/Ground078"
+  }
+ },
+ "path": "texture/25/25d6f4a5d980ae3bdd3f75613cbb02ce.npz"
+}

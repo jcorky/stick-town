@@ -1,0 +1,44 @@
+{
+ "key": "48916c6dc00c3ca171e0ab718722231d",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "dry_branches_medium_01",
+  "target": 800,
+  "variant": 0
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:31:53",
+  "id": "dry_branches_medium_01",
+  "mean": [
+   0.3072,
+   0.277,
+   0.2456
+  ],
+  "mime": "image/jpeg",
+  "name": "dry_branches_medium_01_c",
+  "role": "deadfall",
+  "size": [
+   0.116,
+   0.756,
+   0.134
+  ],
+  "source": {
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "id": "dry_branches_medium_01",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 16803,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/dry_branches_medium_01"
+  },
+  "src_tris": 5616,
+  "tex_key": "model/dry_branches_medium_01/0",
+  "tris": 695,
+  "variant": 0
+ },
+ "path": "model/48/48916c6dc00c3ca171e0ab718722231d.npz"
+}

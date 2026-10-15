@@ -1,0 +1,33 @@
+{
+ "key": "2f8b20cebfca7150faf20569ba02b771",
+ "kind": "texture",
+ "version": "texture-0.1.1",
+ "params": {
+  "key": "needle/PineNeedles001"
+ },
+ "meta": {
+  "alpha": true,
+  "bbox": [
+   0.2051,
+   0.2383,
+   0.7676,
+   0.9746
+  ],
+  "created": "2026-10-15T20:24:52",
+  "fallback": "OSError: network disabled in tests",
+  "mean": [
+   0.7988,
+   0.7988,
+   0.7988
+  ],
+  "mime": "image/png",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "site": "procedural"
+  }
+ },
+ "path": "texture/2f/2f8b20cebfca7150faf20569ba02b771.npz"
+}

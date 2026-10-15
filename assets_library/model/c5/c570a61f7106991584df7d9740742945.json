@@ -1,0 +1,45 @@
+{
+ "key": "c570a61f7106991584df7d9740742945",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "fern_02",
+  "target": 1600,
+  "variant": 3
+ },
+ "meta": {
+  "alpha": true,
+  "created": "2026-10-15T20:32:00",
+  "id": "fern_02",
+  "mean": [
+   0.2865,
+   0.3501,
+   0.1289
+  ],
+  "mime": "image/png",
+  "name": "fern_02_d",
+  "role": "fern",
+  "size": [
+   0.573,
+   0.593,
+   0.213
+  ],
+  "source": {
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "id": "fern_02",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 6232,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/fern_02"
+  },
+  "src_tris": 816,
+  "tex_key": "model/fern_02/0",
+  "tris": 816,
+  "variant": 3
+ },
+ "path": "model/c5/c570a61f7106991584df7d9740742945.npz"
+}

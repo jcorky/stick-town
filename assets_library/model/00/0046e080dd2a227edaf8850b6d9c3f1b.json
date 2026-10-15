@@ -1,0 +1,44 @@
+{
+ "key": "0046e080dd2a227edaf8850b6d9c3f1b",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "shrub_02",
+  "target": 8000,
+  "variant": 2
+ },
+ "meta": {
+  "alpha": true,
+  "created": "2026-10-15T20:32:02",
+  "id": "shrub_02",
+  "mean": [
+   0.4172,
+   0.3293,
+   0.2328
+  ],
+  "mime": "image/png",
+  "name": "shrub_02_c",
+  "role": "shrub",
+  "size": [
+   1.777,
+   2.292,
+   1.322
+  ],
+  "source": {
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "id": "shrub_02",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 52317,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/shrub_02"
+  },
+  "src_tris": 9234,
+  "tex_key": "model/shrub_02/0",
+  "tris": 7998,
+  "variant": 2
+ },
+ "path": "model/00/0046e080dd2a227edaf8850b6d9c3f1b.npz"
+}

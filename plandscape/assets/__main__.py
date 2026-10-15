@@ -3,26 +3,52 @@
   python -m plandscape.assets stats
   python -m plandscape.assets bake --variants 3 --detail low --seasons summer fall
   python -m plandscape.assets find tree species=live_oak season=fall
-  python -m plandscape.assets export-glb        # write a .glb next to every mesh asset
+  python -m plandscape.assets bake-models                 # import Poly Haven props (needs network once)
+  python -m plandscape.assets prune                       # drop entries from superseded generator versions
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 
 from ..fauna.agents import FAUNA
 from ..fauna.bodies import body
 from ..flora.species import SPECIES
 from ..flora.tree import generate_tree
+from .. import models, textures
 from ..scene.buildings import generate_building
-from .store import AssetStore, mesh_codec, tree_codec
+from .store import GENERATOR_VERSIONS, AssetStore, mesh_codec, tree_codec
+
+
+def prune(store):
+    """Delete entries whose generator version is no longer current (they can never be hit again)."""
+    keep, gone = {}, 0
+    for k, e in store.entries.items():
+        if e.version == GENERATOR_VERSIONS.get(e.kind):
+            keep[k] = e
+            continue
+        gone += 1
+        for ext in (".npz", ".json", ".glb"):
+            f = os.path.join(store.root, os.path.splitext(e.path)[0] + ext)
+            if os.path.exists(f):
+                os.remove(f)
+    with open(store.index_path, "w") as f:
+        for e in keep.values():
+            f.write(json.dumps(e.__dict__) + "\n")
+    store.entries = keep
+    print(f"pruned {gone} superseded entries")
 
 
 def bake(store, variants, detail, seasons, moistures=(0.5, 0.8)):
     enc, dec = tree_codec()
     n0 = time.time()
+    keys = {textures.leaf_key(k) for k in SPECIES} | {textures.bark_key(k) for k in SPECIES} | \
+        {textures.ground_key(b) for b in textures.GROUND_SET} | {textures.needle_key()}
+    for key in sorted(keys):
+        textures.get(key, store)
     for sp in SPECIES:
         for season in seasons:
             for v in range(variants):
@@ -47,6 +73,8 @@ def main(argv=None):
     ap.add_argument("--root", default=None)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("stats")
+    sub.add_parser("prune")
+    sub.add_parser("bake-models")
     b = sub.add_parser("bake")
     b.add_argument("--variants", type=int, default=2)
     b.add_argument("--detail", default="low")
@@ -59,6 +87,10 @@ def main(argv=None):
     store = AssetStore(a.root, export_glb=getattr(a, "glb", False))
     if a.cmd == "bake":
         bake(store, a.variants, a.detail, a.seasons)
+    elif a.cmd == "bake-models":
+        print(models.bake(store))
+    elif a.cmd == "prune":
+        prune(store)
     elif a.cmd == "find":
         flt = dict(x.split("=", 1) for x in a.filters)
         for e in store.find(a.kind, **flt):

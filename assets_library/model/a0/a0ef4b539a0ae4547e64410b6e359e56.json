@@ -1,0 +1,45 @@
+{
+ "key": "a0ef4b539a0ae4547e64410b6e359e56",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "dead_tree_trunk_02",
+  "target": 3000,
+  "variant": 0
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:31:53",
+  "id": "dead_tree_trunk_02",
+  "mean": [
+   0.3975,
+   0.3192,
+   0.2249
+  ],
+  "mime": "image/jpeg",
+  "name": "dead_tree_trunk_02",
+  "role": "log",
+  "size": [
+   4.013,
+   1.024,
+   1.047
+  ],
+  "source": {
+   "authors": [
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "id": "dead_tree_trunk_02",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 155864,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/dead_tree_trunk_02"
+  },
+  "src_tris": 83128,
+  "tex_key": "model/dead_tree_trunk_02/0",
+  "tris": 2801,
+  "variant": 0
+ },
+ "path": "model/a0/a0ef4b539a0ae4547e64410b6e359e56.npz"
+}

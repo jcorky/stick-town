@@ -122,7 +122,11 @@ def fetch_polyhaven_model(asset_id: str, res: str = "1k") -> dict:
         if ".." in rel or rel.startswith("/"):
             continue
         _cached(os.path.join(d, rel), inc["url"])
-    return dict(gltf=path, _source=dict(site="polyhaven", id=asset_id, url=f"https://polyhaven.com/a/{asset_id}",
+    alpha = None  # alpha-masked models (ferns, shrubs) keep their mask in a separate map
+    am = files.get("Alpha", {}).get(res, {}).get("jpg")
+    if am:
+        alpha = _cached(os.path.join(d, "textures", f"{asset_id}_alpha_{res}.jpg"), am["url"])
+    return dict(gltf=path, alpha=alpha, _source=dict(site="polyhaven", id=asset_id, url=f"https://polyhaven.com/a/{asset_id}",
                                         licence=rec["licence"], licence_page=rec["licence_page"],
                                         authors=sorted(info.get("authors", {})), polycount=info.get("polycount")))
 

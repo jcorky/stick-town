@@ -1,0 +1,33 @@
+{
+ "key": "687ed43b441f3e1408a8d4a806eeed66",
+ "kind": "texture",
+ "version": "texture-0.1.1",
+ "params": {
+  "key": "leaf/LeafSet016"
+ },
+ "meta": {
+  "alpha": true,
+  "bbox": [
+   0.3223,
+   0.125,
+   0.7441,
+   0.9824
+  ],
+  "created": "2026-10-15T20:24:53",
+  "fallback": "OSError: network disabled in tests",
+  "mean": [
+   0.7982,
+   0.7982,
+   0.7982
+  ],
+  "mime": "image/png",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "site": "procedural"
+  }
+ },
+ "path": "texture/68/687ed43b441f3e1408a8d4a806eeed66.npz"
+}

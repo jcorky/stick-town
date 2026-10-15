@@ -1,0 +1,44 @@
+{
+ "key": "2cb3de78d870d37e053d1f3eb3e5311d",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "rock_moss_set_01",
+  "target": 1200,
+  "variant": 1
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:31:55",
+  "id": "rock_moss_set_01",
+  "mean": [
+   0.2446,
+   0.1969,
+   0.1279
+  ],
+  "mime": "image/jpeg",
+  "name": "rock_moss_set_01_rock02",
+  "role": "rock",
+  "size": [
+   2.589,
+   3.167,
+   1.239
+  ],
+  "source": {
+   "authors": [
+    "Kless Gyzen"
+   ],
+   "id": "rock_moss_set_01",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 63127,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/rock_moss_set_01"
+  },
+  "src_tris": 10996,
+  "tex_key": "model/rock_moss_set_01/0",
+  "tris": 1031,
+  "variant": 1
+ },
+ "path": "model/2c/2cb3de78d870d37e053d1f3eb3e5311d.npz"
+}
