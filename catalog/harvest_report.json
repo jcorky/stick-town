@@ -1,0 +1,416 @@
+{
+ "infinigen": {
+  "id": "infinigen",
+  "url": "https://github.com/princeton-vl/infinigen",
+  "ok": true,
+  "commit": "224598d4a2ff95b4fc928e72c222598b7122c698",
+  "license_file": "LICENSE",
+  "license_found": "BSD-3-Clause",
+  "license_expected": "BSD-3-Clause",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "ez-tree": {
+  "id": "ez-tree",
+  "url": "https://github.com/dgreenheck/ez-tree",
+  "ok": true,
+  "commit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/ez-tree",
+  "index": {
+   "files": 118,
+   "top_ext": [
+    [
+     ".jpg",
+     36
+    ],
+    [
+     ".js",
+     21
+    ],
+    [
+     ".json",
+     19
+    ],
+    [
+     ".png",
+     14
+    ],
+    [
+     "",
+     7
+    ],
+    [
+     ".glb",
+     7
+    ]
+   ],
+   "techniques": {
+    "wind": [
+     "README.md",
+     "CHANGELOG.md",
+     "src/app/grass.js",
+     "src/app/main.js",
+     "src/lib/tree.js"
+    ],
+    "lod_impostor": [
+     "README.md",
+     "CHANGELOG.md",
+     "src/app/ui.js",
+     "src/lib/enums.js",
+     "src/lib/options.js",
+     "src/lib/tree.js",
+     "src/lib/index.js"
+    ],
+    "grass": [
+     "CHANGELOG.md",
+     "src/app/ui.js",
+     "src/app/environment.js",
+     "src/app/ground.js",
+     "src/app/grass.js"
+    ],
+    "scatter": [
+     "README.md",
+     "CHANGELOG.md",
+     "src/app/scene.js",
+     "src/app/ui.js",
+     "src/app/rocks.js",
+     "src/app/grass.js",
+     "src/lib/options.js",
+     "src/lib/tree.js"
+    ]
+   }
+  }
+ },
+ "tree-js": {
+  "id": "tree-js",
+  "url": "https://github.com/dgreenheck/tree-js",
+  "ok": true,
+  "commit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "proctree": {
+  "id": "proctree",
+  "url": "https://github.com/supereggbert/proctree.js",
+  "ok": true,
+  "commit": "c1ea9dc2c1b0d3cc37cb7645b50b27c984505382",
+  "license_file": null,
+  "license_found": "NONE",
+  "license_expected": "NONE",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "wfc": {
+  "id": "wfc",
+  "url": "https://github.com/mxgmn/WaveFunctionCollapse",
+  "ok": true,
+  "commit": "de7d22e705e816b62b4d613199d0463820fcaef3",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/wfc",
+  "index": {
+   "files": 199,
+   "top_ext": [
+    [
+     ".png",
+     177
+    ],
+    [
+     ".xml",
+     8
+    ],
+    [
+     ".cs",
+     5
+    ],
+    [
+     ".gif",
+     4
+    ],
+    [
+     "",
+     2
+    ],
+    [
+     ".cff",
+     1
+    ]
+   ],
+   "techniques": {
+    "wfc": [
+     "README.md"
+    ]
+   }
+  }
+ },
+ "recast": {
+  "id": "recast",
+  "url": "https://github.com/recastnavigation/recastnavigation",
+  "ok": true,
+  "commit": "9f4ce64458dfae86e1239c525ddc219c4e9e06f1",
+  "license_file": "License.txt",
+  "license_found": "Zlib",
+  "license_expected": "Zlib",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "terrain3d": {
+  "id": "terrain3d",
+  "url": "https://github.com/TokisanGames/Terrain3D",
+  "ok": true,
+  "commit": "854a4575ef0f6db8f3e2c051d352181da75236a2",
+  "license_file": "LICENSE.txt",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "simple-hydrology": {
+  "id": "simple-hydrology",
+  "url": "https://github.com/weigert/SimpleHydrology",
+  "ok": true,
+  "commit": "2709726934f0a02ceacdb7ee07d17785c344d244",
+  "license_file": null,
+  "license_found": "NONE",
+  "license_expected": "NONE",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "simple-erosion": {
+  "id": "simple-erosion",
+  "url": "https://github.com/weigert/SimpleErosion",
+  "ok": true,
+  "commit": "e89ddb4f622daf8d057e196f433b1b87d4b53e1e",
+  "license_file": null,
+  "license_found": "NONE",
+  "license_expected": "NONE",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "seblague-erosion": {
+  "id": "seblague-erosion",
+  "url": "https://github.com/SebLague/Hydraulic-Erosion",
+  "ok": true,
+  "commit": "f245576d204978e3186f41c8abbd75c326c6857e",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "fastnoiselite": {
+  "id": "fastnoiselite",
+  "url": "https://github.com/Auburn/FastNoiseLite",
+  "ok": true,
+  "commit": "785f37a9ad76e283586a379675085f2063ae03f7",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "opensimplex2": {
+  "id": "opensimplex2",
+  "url": "https://github.com/KdotJPG/OpenSimplex2",
+  "ok": true,
+  "commit": "4cd120d35bfc27096698de90d1bcbf4f9d359a3b",
+  "license_file": "LICENSE",
+  "license_found": "CC0-1.0",
+  "license_expected": "CC0-1.0",
+  "matches": true,
+  "permissive": true,
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/opensimplex2",
+  "index": {
+   "files": 35,
+   "top_ext": [
+    [
+     "",
+     8
+    ],
+    [
+     ".java",
+     6
+    ],
+    [
+     ".cs",
+     5
+    ],
+    [
+     ".rs",
+     4
+    ],
+    [
+     ".h",
+     2
+    ],
+    [
+     ".hlsl",
+     2
+    ]
+   ],
+   "techniques": {
+    "scatter": [
+     "README.md"
+    ]
+   }
+  }
+ },
+ "terra-grass": {
+  "id": "terra-grass",
+  "url": "https://github.com/spacejack/terra",
+  "ok": true,
+  "commit": "ed8d04dfc52874fbd1489ac7a39638092619a618",
+  "license_file": "license.txt",
+  "license_found": "CC-BY-NC-4.0",
+  "license_expected": "CC-BY-NC-4.0",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "mesa": {
+  "id": "mesa",
+  "url": "https://github.com/projectmesa/mesa",
+  "ok": true,
+  "commit": "5451086fe47ab78e9ba894aa1b4c3063f4c247f1",
+  "license_file": "LICENSE",
+  "license_found": "Apache-2.0",
+  "license_expected": "Apache-2.0",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "ml-agents": {
+  "id": "ml-agents",
+  "url": "https://github.com/Unity-Technologies/ml-agents",
+  "ok": true,
+  "commit": "ced666f054af966a0c9c29769783bf72338cc5a0",
+  "license_file": "LICENSE.md",
+  "license_found": "Apache-2.0",
+  "license_expected": "Apache-2.0",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "worldengine": {
+  "id": "worldengine",
+  "url": "https://github.com/Mindwerks/worldengine",
+  "ok": true,
+  "commit": "b2adbb674afb381232097f126e548a8c133e4633",
+  "license_file": "LICENSE.txt",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "fantasy-map-generator": {
+  "id": "fantasy-map-generator",
+  "url": "https://github.com/Azgaar/Fantasy-Map-Generator",
+  "ok": true,
+  "commit": "403a670055b1a3f30373a64841eb2efe7b5e4688",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "three": {
+  "id": "three",
+  "url": "https://github.com/mrdoob/three.js",
+  "ok": true,
+  "commit": "ec2b7458eae7bf3718b10a4d7b867fb746a2b70a",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "ocean": {
+  "id": "ocean",
+  "url": "https://github.com/jbouny/ocean",
+  "ok": true,
+  "commit": "d5e5f4bd2fe7122fda787458800bba4836aad2a1",
+  "license_file": "LICENSE",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ },
+ "ms-building-footprints": {
+  "id": "ms-building-footprints",
+  "url": "https://github.com/microsoft/USBuildingFootprints",
+  "ok": true,
+  "commit": "5e80784e2c1cd0f644d65b94a0c063e79807c004",
+  "license_file": "LICENSE-DATA",
+  "license_found": "ODbL-1.0",
+  "license_expected": "ODbL-1.0 (data)",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "blender-addons": {
+  "id": "blender-addons",
+  "url": "https://github.com/blender/blender-addons",
+  "ok": true,
+  "commit": "b42d68627734cb18af0e6f41537063984313a284",
+  "license_file": null,
+  "license_found": "NONE",
+  "license_expected": "NONE",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "blosm": {
+  "id": "blosm",
+  "url": "https://github.com/vvoovv/blosm",
+  "ok": true,
+  "commit": "4fe4e40e3d6494222cd17f771aff08f64c8b9fe0",
+  "license_file": null,
+  "license_found": "NONE",
+  "license_expected": "NONE",
+  "matches": true,
+  "permissive": false,
+  "study_only": true
+ },
+ "nadrin-pbr": {
+  "id": "nadrin-pbr",
+  "url": "https://github.com/Nadrin/PBR",
+  "ok": true,
+  "commit": "cd61a5d59baa15413c7b0aff4a7da5ed9cc57f61",
+  "license_file": "COPYING.txt",
+  "license_found": "MIT",
+  "license_expected": "MIT",
+  "matches": true,
+  "permissive": true,
+  "study_only": false
+ }
+}
