@@ -1,0 +1,19 @@
+{
+ "key": "c08303bd4f86da712c27538712aeb764",
+ "kind": "body",
+ "version": "body-0.1.0",
+ "params": {
+  "rgb": [
+   0.58,
+   0.56,
+   0.54
+  ],
+  "scale": 1.1,
+  "species": "gray_squirrel"
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:31",
+  "tris": 360
+ },
+ "path": "body/c0/c08303bd4f86da712c27538712aeb764.npz"
+}

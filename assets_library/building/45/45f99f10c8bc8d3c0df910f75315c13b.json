@@ -1,0 +1,28 @@
+{
+ "key": "45f99f10c8bc8d3c0df910f75315c13b",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "shotgun",
+  "seed": [
+   0,
+   0
+  ]
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:13",
+  "door": [
+   3.0,
+   0.0
+  ],
+  "footprint": [
+   -14.542,
+   -2.0046,
+   2.0,
+   2.0046
+  ],
+  "kind": "shotgun",
+  "tris": 498
+ },
+ "path": "building/45/45f99f10c8bc8d3c0df910f75315c13b.npz"
+}

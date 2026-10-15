@@ -1,0 +1,28 @@
+{
+ "key": "4af16b9cd2cdfdeb499a218d3994097e",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "dogtrot",
+  "seed": [
+   0,
+   0
+  ]
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:13",
+  "door": [
+   3.0,
+   0.0
+  ],
+  "footprint": [
+   -5.3233,
+   -7.3626,
+   2.2,
+   7.3626
+  ],
+  "kind": "dogtrot",
+  "tris": 270
+ },
+ "path": "building/4a/4af16b9cd2cdfdeb499a218d3994097e.npz"
+}

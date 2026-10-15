@@ -1,0 +1,23 @@
+{
+ "key": "e8918f73bbe26215877b9c58891d0bc1",
+ "kind": "tree",
+ "version": "tree-0.1.4",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "fall",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "bald_cypress"
+ },
+ "meta": {
+  "created": "2026-10-15T13:41:25",
+  "height": 27.972,
+  "species": "bald_cypress",
+  "tris": 15568,
+  "trunk_radius": 0.4318
+ },
+ "path": "tree/e8/e8918f73bbe26215877b9c58891d0bc1.npz"
+}

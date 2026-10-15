@@ -1,0 +1,101 @@
+{
+ "key": "a3b4721d98055455e82b2e05fdbed906",
+ "kind": "behavior",
+ "version": "behavior-0.1.1",
+ "params": {
+  "agent": 3,
+  "scene": "899da1681562",
+  "species": "gray_squirrel"
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:31",
+  "distance": 41.2797,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:climb"
+   ],
+   [
+    4.2,
+    "arrive:climb"
+   ],
+   [
+    23.2,
+    "plan:rest"
+   ],
+   [
+    32.2,
+    "plan:climb"
+   ],
+   [
+    32.5,
+    "arrive:climb"
+   ],
+   [
+    40.2,
+    "plan:climb"
+   ],
+   [
+    40.5,
+    "arrive:climb"
+   ],
+   [
+    60.2,
+    "plan:climb"
+   ],
+   [
+    60.5,
+    "arrive:climb"
+   ],
+   [
+    66.2,
+    "plan:explore"
+   ],
+   [
+    79.8,
+    "plan:rest"
+   ],
+   [
+    87.2,
+    "plan:climb"
+   ],
+   [
+    92.0,
+    "arrive:climb"
+   ],
+   [
+    115.5,
+    "plan:drink"
+   ],
+   [
+    141.5,
+    "arrive:drink"
+   ],
+   [
+    161.5,
+    "plan:climb"
+   ],
+   [
+    168.2,
+    "arrive:climb"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "drink": 79,
+   "freeze": 345,
+   "idle": 9,
+   "pause": 35,
+   "travel": 252
+  },
+  "traits": {
+   "boldness": 0.169,
+   "curiosity": 0.484,
+   "laziness": 0.353,
+   "patience": 0.596,
+   "wanderlust": 0.215
+  }
+ },
+ "path": "behavior/a3/a3b4721d98055455e82b2e05fdbed906.npz"
+}
