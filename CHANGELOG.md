@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+**Added**
+- Curved grass blades (two segments, quadratic bend, tapering) that are shorter and bent along the path where trampled (TECHNIQUES §17). Scenes 9.7 / 11.1 / 11.4 MB.
+
 **Fixed**
 - Agent ids came from a process-wide counter, so a scene's animals (and their behaviour-clip keys and body looks) changed with how many agents earlier scenes in the same process had made — e.g. in `scripts/gallery.py`. Ids are now the index within the scene.
 - Squirrels froze on every routine climb (28 % of their time); they now feed, groom or rest in the canopy and freeze only when they bolted up (TECHNIQUES §16).

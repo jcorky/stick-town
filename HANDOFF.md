@@ -39,6 +39,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 **Known weaknesses** (look at them, then fix):
 - Bark limbs look faceted in the flat-shaded preview (smooth in the viewer). Rounded card normals and twig-attached leaf cards are still queued (`catalog/notes/ez-tree.md` #3).
 - Leaf sets are other species chosen by outline; no Southern-specific leaf scans yet (e.g. sweetgum stars are maple-like).
+- Grass blades are curved and trampled now (§17) but only in the central 56 m at ~6 per m² at `low`; a real lawn needs `detail="cm"` near the camera.
 - Stump scans are squat hardwood stumps; there's no tall pine stump or longleaf "lighter stump".
 - Desire paths are straight-ish and only in high-traffic corridors. The county road is real now (§15) but always crosses west→east; driveways and multiple roads are next.
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.

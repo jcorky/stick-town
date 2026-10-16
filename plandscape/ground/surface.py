@@ -117,7 +117,7 @@ def ground_weights(hf, density, trail_G, canopy, litter=0.2, seed=0):
     return (a / a.sum(-1, keepdims=True)).reshape(-1, 4).astype(np.float32)
 
 
-def grass_mesh(hf, density, region, budget=40000, mix=None, seed=0, season="summer") -> Mesh:
+def grass_mesh(hf, density, region, budget=40000, mix=None, seed=0, season="summer", trail=None) -> Mesh:
     """Individual grass blades inside `region` (x0, y0, x1, y1), placed by density."""
     mix = mix or BIOME_GRASS["lawn"]
     r = make_rng("grass", seed, region)
@@ -149,14 +149,32 @@ def grass_mesh(hf, density, region, budget=40000, mix=None, seed=0, season="summ
     # at detail="cm" (budget in the millions) set widen=1.
     widen = float(np.clip(np.sqrt(4e5 / max(budget, 1)), 1.0, 5.0))
     ang = r.uniform(0, 2 * np.pi, n)
-    lean = r.uniform(0.1, 0.6, n) * h
+    bend = r.uniform(0.15, 0.6, n)  # tip displacement as a fraction of height
+    if trail is not None:  # trampled: shorter, bent over, lying along the direction of travel (⟂ ∇G)
+        g = np.clip(_sample(hf, trail, x, y) * 1.4, 0, 1)
+        gy_, gx_ = np.gradient(ndimage.gaussian_filter(trail, 1.0))
+        tx, ty = -_sample(hf, gy_, x, y), _sample(hf, gx_, x, y)
+        along = np.arctan2(ty, tx) + np.where(r.uniform(0, 1, n) < 0.5, 0, np.pi)
+        has = np.hypot(tx, ty) > 1e-4
+        ang = np.where(has & (g > 0.15), ang * (1 - g) + along * g, ang)
+        h = h * (1 - 0.65 * g)
+        bend = bend + (0.95 - bend) * g
+    # curved blade: 2 segments (5 vertices; 3 cost +2.7 MB per scene), quadratic bend p(t) = base + up·h·t·(1 − 0.5 b² t) + dir·h·b·t², width w(1 − t)
+    ts = np.array([0.0, 0.5, 1.0])
+    dirv = np.c_[np.cos(ang), np.sin(ang), np.zeros(n)]
     side = np.c_[np.cos(ang + np.pi / 2), np.sin(ang + np.pi / 2), np.zeros(n)] * (wdt * widen / 2)[:, None]
     base = np.c_[x, y, z - 0.01]
-    tip = base + np.c_[np.cos(ang) * lean, np.sin(ang) * lean, h]
-    P = np.stack([base - side, base + side, tip], 1).reshape(-1, 3)
-    C = np.stack([col * 0.55, col * 0.55, col * 1.1], 1).reshape(-1, 3)
-    return Mesh(P.astype(np.float32), np.clip(C, 0, 1).astype(np.float32),
-                np.arange(n * 3, dtype=np.uint32).reshape(-1, 3))
+    pts = []
+    for t in ts:
+        c = base + np.c_[np.zeros(n), np.zeros(n), h * t * (1 - 0.5 * bend ** 2 * t)] + dirv * (h * bend * t * t)[:, None]
+        wv = (1 - t) * side
+        pts += [c - wv, c + wv] if t < 1 else [c]
+    P = np.stack(pts, 1).reshape(-1, 3)  # 5 vertices per blade: 2 pairs + tip
+    shade = np.array([0.7, 0.7, 0.9, 0.9, 1.08])  # darker at the base, lit at the tip
+    C = (col[:, None, :] * shade[None, :, None]).reshape(-1, 3)
+    k = (np.arange(n) * 5)[:, None]
+    idx = np.concatenate([k + [0, 1, 3], k + [0, 3, 2], k + [2, 3, 4]])
+    return Mesh(P.astype(np.float32), np.clip(C, 0, 1).astype(np.float32), idx.astype(np.uint32))
 
 
 def _sample(hf, arr, x, y):
