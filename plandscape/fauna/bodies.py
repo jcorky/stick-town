@@ -38,6 +38,7 @@ def rig(key, rgb, scale=1.0):
     parts, legs, hip, kind = [], [], 0.0, "none"
     neck = None  # dict(mesh relative to the pivot, pivot xyz, graze=head-down pitch in radians)
     tail = None  # dict(mesh relative to the pivot, pivot xyz, flag=raise angle in radians)
+    wings = []   # [dict(mesh relative to the root, pivot xyz, side ±1)] for fliers (§33)
 
     def leg(x, y, h, w, col, knee):
         L = h * REACH
@@ -128,6 +129,11 @@ def rig(key, rgb, scale=1.0):
         for y in (0.05, -0.05):
             leg(0.02, y, h, 0.018, (0.35, 0.3, 0.25), -1.0)
         hip, kind = h, "biped"
+        # wings: a broad flat blade per side, root at the shoulder; span 0.9 m (wingspan 1.7–2.0 m, Audubon)
+        for side in (1.0, -1.0):
+            root = np.array([0.02, 0.08 * side, h + 0.24])
+            wings.append(dict(mesh=ellipsoid((0, 0.45 * side, 0), (0.2, 0.45, 0.015), rgb * 0.9), pivot=tuple(root),
+                              side=side))
     else:  # human
         parts += [box((0, 0, 1.2), (0.25, 0.42, 0.6), rgb),
                   ellipsoid((0, 0, 1.62), (0.11, 0.1, 0.13), (0.72, 0.55, 0.42))]
@@ -136,7 +142,7 @@ def rig(key, rgb, scale=1.0):
         hip, kind = 0.9, "biped"
     torso = Mesh.merge(parts)
     torso.positions *= scale
-    for part in (neck, tail):
+    for part in (neck, tail, *wings):
         if part is not None:
             part["mesh"].positions *= scale
             part["pivot"] = tuple(c * scale for c in part["pivot"])
@@ -147,7 +153,7 @@ def rig(key, rgb, scale=1.0):
         lg["l1"] *= scale
         lg["l2"] *= scale
     drop = {"quad": 0.62, "biped": 0.4}.get(kind, 0.0) if key not in ("human", "great_blue_heron", "box_turtle") else 0.0
-    return dict(torso=torso, legs=legs, neck=neck, tail=tail, hip=hip * scale, kind=kind, lie=drop)
+    return dict(torso=torso, legs=legs, neck=neck, tail=tail, wings=wings, hip=hip * scale, kind=kind, lie=drop)
 
 
 def _pitch(P, th):
@@ -177,4 +183,8 @@ def body(key, rgb, scale=1.0):
         if n is not None:
             parts.append(Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors,
                               n["mesh"].indices))
+    from .gait import WING_FOLD
+    for w in r["wings"]:  # folded: span squeezed toward the body
+        P = w["mesh"].positions * np.array([1, WING_FOLD, 1], np.float32)
+        parts.append(Mesh(P + np.asarray(w["pivot"], np.float32), w["mesh"].colors, w["mesh"].indices))
     return Mesh.merge(parts)

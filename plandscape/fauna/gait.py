@@ -51,7 +51,7 @@ def gait_name(fr):
     return "walk" if fr < 0.5 else ("trot" if fr < 2.5 else "gallop")
 
 
-def phase_track(times, xy, h, v_min=0.05):
+def phase_track(times, xy, h, v_min=0.05, air=None):
     """Speed over each log interval (v[i] for (t[i−1], t[i]]) and cumulative stride phase at the samples.
     Speed is constant within an interval, so phase advances by 2π f_i Δt_i (no trapezoid: that would keep
     the legs moving for half a step after the animal stopped)."""
@@ -60,6 +60,8 @@ def phase_track(times, xy, h, v_min=0.05):
     dt = np.maximum(np.diff(t), 1e-6)
     v = np.r_[0.0, np.hypot(*np.diff(xy, axis=0).T) / dt]
     v = np.where(v < v_min, 0.0, v)
+    if air is not None:  # no strides in the air (§33)
+        v = np.where(np.asarray(air, bool), 0.0, v)
     f = np.where(v > 0, v / stride(np.maximum(v, v_min), h), 0.0)
     phi = np.r_[0.0, np.cumsum(f[1:] * dt)] * 2 * np.pi
     return v, phi
@@ -85,7 +87,7 @@ def key_times(times, v, phi):
 LIFT = {"walk": 0.12, "trot": 0.2, "gallop": 0.3}  # swing-foot lift, fraction of hip height
 BOB = {"walk": 0.015, "trot": 0.03, "gallop": 0.05}  # trunk bob amplitude, fraction of hip height (§28)
 # head pitch per behaviour state, as a fraction of the species' grazing angle (+ = down), and up for alert
-HEAD = {"eat": 1.0, "drink": 1.0, "dig": 0.9, "scratch": 0.8, "groom": 0.4, "rest": 0.3, "idle": 0.1,
+HEAD = {"fly": -0.3, "eat": 1.0, "drink": 1.0, "dig": 0.9, "scratch": 0.8, "groom": 0.4, "rest": 0.3, "idle": 0.1,
         "pause": 0.0, "travel": 0.15, "flee": 0.1, "alert": -0.25, "freeze": -0.2}
 HEAD_EASE = 0.4  # s to move the head to a new pose
 TAIL = {"flee": 1.0, "alert": 0.4}  # deer tail raise, fraction of the flag angle (§29)
@@ -119,13 +121,20 @@ def rest_pose(h, l1, l2, knee):
     return two_bone(0.0, -h, l1, l2, knee)
 
 
-def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None, drop=None):
+TRAIL = (np.radians(-80), 0.0)  # legs in flight: swung back along the body, knee straight (§33)
+
+
+def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None, drop=None, air=None):
     """(key times (K,), angles (K, n_legs, 2) hip/knee radians, gait names) with feet planted in stance.
     With `bob` a list, it is filled with the trunk lift b(t) = A cos 2φ at each key; feet aim at z = −(h + b)
     so they stay on the ground while the body rises and falls. `drop` = (key times, metres) lowers the trunk
     (lying down, §29): its keys join the timeline, and resting feet aim at z = −(h − drop), folding the legs."""
-    v, phi = phase_track(times, xy, h)
+    v, phi = phase_track(times, xy, h, air=air)
     tk = key_times(times, v, phi)
+    if air is not None:  # take-off and landing get keys of their own
+        a_ = np.asarray(air, bool)
+        e_ = np.nonzero(a_[1:] != a_[:-1])[0]
+        tk = np.unique(np.r_[tk, np.asarray(times)[e_], np.asarray(times)[np.minimum(e_ + 1, len(times) - 1)]])
     if drop is not None:
         tk = np.unique(np.r_[tk, np.clip(drop[0], times[0], times[-1])])
     vk = _interval_speed(times, v, tk)
@@ -149,9 +158,36 @@ def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None, drop=None):
         for j, o in enumerate(offs):
             x, z = foot_path(p / (2 * np.pi) - o, beta, S, h, LIFT[nm])
             out[i, j] = two_bone(x, z - b[i], l1, l2, knees[j])
+    if air is not None:
+        ak = np.asarray(air, bool)[np.clip(np.searchsorted(times, tk, side="right") - 1, 0, len(times) - 1)]
+        out[ak] = TRAIL
+        b[ak] = 0.0
     if bob is not None:
         bob.extend(b.tolist())
     return tk, out, names
+
+
+FLAP_HZ, FLAP_AMP, WING_FOLD = 2.5, np.radians(40), 0.12  # design values (§33)
+
+
+def wing_track(times, air):
+    """Wing (roll, span scale) keys: folded to WING_FOLD span on the ground, flapping ±40° at 2.5 Hz in the air,
+    8 keys per beat while airborne."""
+    t = np.asarray(times, float)
+    a = np.asarray(air, bool)
+    keys = [t[0], t[-1]]
+    e = np.nonzero(a[1:] != a[:-1])[0]
+    keys += list(t[e]) + list(t[np.minimum(e + 1, len(t) - 1)])
+    for i0 in np.nonzero(a & ~np.r_[False, a[:-1]])[0]:  # each flight
+        i1 = i0
+        while i1 + 1 < len(a) and a[i1 + 1]:
+            i1 += 1
+        keys += list(np.arange(t[i0], t[i1], 1 / (FLAP_HZ * 8)))
+    tk = np.unique(keys)
+    ak = a[np.clip(np.searchsorted(t, tk, side="right") - 1, 0, len(t) - 1)]
+    roll = np.where(ak, FLAP_AMP * np.sin(2 * np.pi * FLAP_HZ * tk), 0.0)
+    span = np.where(ak, 1.0, WING_FOLD)
+    return tk, roll, span
 
 
 def head_track(times, states, graze):

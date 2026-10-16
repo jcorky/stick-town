@@ -188,7 +188,7 @@ class GLB:
         samplers, channels = [], []
         for node, path, t, val in extra:
             ti = self._acc(np.asarray(t, np.float32), FLOAT, "SCALAR", minmax=True)
-            vi = self._acc(np.asarray(val, np.float32), FLOAT, "VEC4" if path == "rotation" else "VEC3")
+            vi = self._acc(np.asarray(val, np.float32), FLOAT, "VEC4" if path == "rotation" else "VEC3")  # translation, scale
             samplers.append({"input": ti, "output": vi, "interpolation": "LINEAR"})
             channels.append({"sampler": len(samplers) - 1, "target": {"node": node, "path": path}})
         for node, t, p, h in tracks:

@@ -46,6 +46,7 @@ class FaunaSpec:
     size: float = 1.0
     rgb: tuple = (0.5, 0.4, 0.3)
     withdraws: bool = False     # meets a threat by shutting in (box turtle) instead of fleeing
+    flies: float = 0.0          # flight speed (m/s) when flushed; 0 = escapes on foot (§33)
 
 
 FAUNA: dict[str, FaunaSpec] = {f.key: f for f in [
@@ -70,8 +71,12 @@ FAUNA: dict[str, FaunaSpec] = {f.key: f for f in [
     FaunaSpec("box_turtle", "Eastern box turtle", 0.05, 0.49, 5, ("human", "dog", "coyote", "raccoon"), "forage",
               (6, 11), group=(1, 1), shy=0.5, trail_use=0.1, size=0.15, rgb=(0.35, 0.25, 0.12), withdraws=True),
     FaunaSpec("great_blue_heron", "Great blue heron", 0.15, 3.0, 50, ("human", "dog", "coyote"), "shore", (5, 9),
-              crepuscular=True, group=(1, 1), shy=0.7, trail_use=0.0, size=0.6, rgb=(0.45, 0.52, 0.60)),
+              crepuscular=True, group=(1, 1), shy=0.7, trail_use=0.0, size=0.6, rgb=(0.45, 0.52, 0.60),
+              flies=10.7),
 ]}
+
+
+FLY_CRUISE, FLY_CLIMB = 8.0, 2.0  # m above ground, m/s up or down (design values, §33)
 
 
 def activity(spec: FaunaSpec, hour: float) -> float:
@@ -179,6 +184,7 @@ class Agent:
         self.omega = 0.0
         self.z = world.z(*self.p)
         self.climb = 0.0
+        self.alt = 0.0               # height above ground in flight (§33)
         self.group_id = group_id
         # personality: every individual is different
         self.trait = dict(boldness=self.r.beta(2, 2), curiosity=self.r.beta(2, 3),
@@ -348,6 +354,11 @@ class Agent:
                 if s.withdraws:  # a box turtle shuts its shell and waits it out
                     self.state, self.timer = "freeze", r.uniform(30, 120)
                     self.events.append((round(t, 1), f"withdraw:{a.spec.key}"))
+                elif s.flies:  # a heron flushes: takes off away from the threat
+                    self.state, self.timer = "fly", r.uniform(6, 14)
+                    away = self.p - a.p
+                    self.heading = np.arctan2(away[1], away[0]) + r.normal(0, 0.3)
+                    self.events.append((round(t, 1), f"flush:{a.spec.key}"))
                 elif s.climbs and len(world.trees) and self.climb <= 0:
                     i = int(np.argmin(np.hypot(world.trees[:, 0] - self.p[0], world.trees[:, 1] - self.p[1])))
                     self.set_goal(world, ("climb", 1, tuple(world.trees[i, :2]), i), t)
@@ -383,6 +394,23 @@ class Agent:
             if self.timer <= 0:
                 if self.state == "rest" and s.key == "white_tailed_deer":
                     world.signs.append(dict(type="deer_bed", x=self.p[0], y=self.p[1], size=1.2))
+                self.state = "idle"
+            self._log(t, world)
+            return
+        if self.state == "fly":  # climb to cruise, fly straight-ish, glide down for the last 3 s
+            self.timer -= dt
+            target = FLY_CRUISE if self.timer > 3.0 else 0.0
+            self.alt = float(np.clip(self.alt + np.clip(target - self.alt, -FLY_CLIMB * dt, FLY_CLIMB * dt), 0, None))
+            self.heading += r.normal(0, 0.15) * dt
+            d = np.array([np.cos(self.heading), np.sin(self.heading)])
+            nxt = self.p + d * s.flies * (0.4 + 0.6 * min(self.alt / FLY_CRUISE, 1.0)) * dt
+            b = world.bounds
+            if b[0] + 2 < nxt[0] < b[2] - 2 and b[1] + 2 < nxt[1] < b[3] - 2:  # over the trees; turn at the tile edge
+                self.p = nxt
+            else:
+                self.heading += np.pi * 0.6 * dt * 4
+            if self.timer <= 0 and self.alt <= 0.01:
+                self.alt = 0.0
                 self.state = "idle"
             self._log(t, world)
             return
@@ -509,7 +537,7 @@ class Agent:
             world.trail.deposit(self.p[0:1], self.p[1:2], 0.002 * self.spec.size)
 
     def _log(self, t, world):
-        z = world.z(*self.p) + self.climb
+        z = world.z(*self.p) + self.climb + self.alt
         self.log.append((t, float(self.p[0]), float(self.p[1]), z, float(self.heading), self.state))
 
 

@@ -1,0 +1,77 @@
+{
+ "key": "60c0c1a0baf42aa0356670843cbf345f",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 3,
+  "scene": "f5fbf4ed693e",
+  "species": "great_blue_heron",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T11:17:23",
+  "distance": 21.458,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:eat"
+   ],
+   [
+    1.2,
+    "snack"
+   ],
+   [
+    5.2,
+    "plan:explore"
+   ],
+   [
+    71.8,
+    "plan:eat"
+   ],
+   [
+    81.8,
+    "plan:eat"
+   ],
+   [
+    89.8,
+    "plan:rest"
+   ],
+   [
+    114.8,
+    "plan:drink"
+   ],
+   [
+    148.0,
+    "plan:explore"
+   ],
+   [
+    149.5,
+    "snack"
+   ],
+   [
+    160.2,
+    "plan:eat"
+   ],
+   [
+    160.5,
+    "arrive:eat"
+   ]
+  ],
+  "species": "great_blue_heron",
+  "state_mix": {
+   "eat": 135,
+   "idle": 7,
+   "pause": 86,
+   "travel": 492
+  },
+  "traits": {
+   "boldness": 0.429,
+   "curiosity": 0.526,
+   "laziness": 0.274,
+   "patience": 0.77,
+   "wanderlust": 0.114
+  }
+ },
+ "path": "behavior/60/60c0c1a0baf42aa0356670843cbf345f.npz"
+}

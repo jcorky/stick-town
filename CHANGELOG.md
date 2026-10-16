@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- Herons fly when flushed (TECHNIQUES §33). They take off at the sourced 10.7 m/s cruise, climb to 8 m and land again. Wings fold on the ground and flap in the air (±40° at 2.5 Hz, design values), and legs trail back. Gallery adds `flight.jpg`. behavior-0.2.1.
 - Raccoon, eastern box turtle and great blue heron (TECHNIQUES §32), with sourced sizes, speeds and activity in `catalog/fauna_sources.json` (unsourced walking speeds are marked as design values). A shore food layer is added along the creek edge for raccoons and herons, and box turtles withdraw into the shell instead of fleeing. The bayou reference scene now has a heron, a raccoon and a box turtle. Gallery adds `fauna.jpg`, all species to scale.
 
 **Fixed**

@@ -266,6 +266,68 @@ def fauna_sheet(path):
     return path
 
 
+def flight_sheet(path):
+    """A flushed heron (§33): four wingbeat phases rendered from the rig, and altitude and wing roll over a flight."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from plandscape.fauna import agents as A
+    from plandscape.fauna import gait
+    from plandscape.fauna.bodies import _pitch, posed_legs, rig
+    from plandscape.mesh import Mesh
+    from plandscape.paths.desire import obstacle_cost, simulate
+    from plandscape.render import render
+    from plandscape.terrain.heightfield import generate_tile
+    rg = rig("great_blue_heron", A.FAUNA["great_blue_heron"].rgb)
+    frames = []
+    for k in range(4):
+        roll = gait.FLAP_AMP * np.sin(2 * np.pi * k / 4)
+        parts = [rg["torso"]]
+        n = rg["neck"]
+        parts.append(Mesh(_pitch(n["mesh"].positions, -gait.HEAD["fly"] * n["graze"]) + np.asarray(n["pivot"], np.float32),
+                          n["mesh"].colors, n["mesh"].indices))
+        parts += posed_legs(rg, [gait.TRAIL] * len(rg["legs"]))
+        for w in rg["wings"]:
+            a = w["side"] * roll
+            c, s_ = np.cos(a), np.sin(a)
+            R = np.array([[1, 0, 0], [0, c, -s_], [0, s_, c]], np.float32)
+            parts.append(Mesh(w["mesh"].positions @ R.T + np.asarray(w["pivot"], np.float32), w["mesh"].colors,
+                              w["mesh"].indices))
+        frames.append(render(parts, None, size=(300, 240), azimuth=35, elevation=18, keep_first=99,
+                             fit=((-0.6, -1.0, 0.3), (0.6, 1.0, 1.3))))
+    hf = generate_tile(96, 1.0, "floodplain", 3)
+    z = np.zeros_like(hf.z)
+    f, _ = simulate(hf, [(5, 5, 1), (90, 90, 1)], n_trips=4, seed=1)
+    w = A.World(hf, f, obstacle_cost(hf), z, z, z, np.zeros((0, 4)))
+    h = A.spawn(w, {"great_blue_heron": 1}, seed=1)[0]
+    h.state, h.timer = "fly", 8.0
+    t = 0.0
+    while t < 14:
+        h.step(w, [h], t, 0.25)
+        t += 0.25
+    tt = np.array([l[0] for l in h.log])
+    alt = np.array([l[3] - w.z(l[1], l[2]) for l in h.log])
+    air = np.array([l[5] == "fly" for l in h.log])
+    wk, roll, span = gait.wing_track(tt, air)
+    fig, ax = plt.subplots(1, 2, figsize=(12, 3.2))
+    ax[0].plot(tt, alt, color="#1f6f8b")
+    ax[0].set_ylabel("height above ground (m)")
+    ax[0].set_xlabel("time (s)")
+    ax[1].plot(wk, np.degrees(roll), lw=0.8, color="#7d5ba6", label="wing roll (deg)")
+    ax[1].plot(wk, span * 40, color="0.5", label="span × 40")
+    ax[1].set_xlabel("time (s)")
+    ax[1].legend(fontsize=8)
+    fig.tight_layout()
+    tmp = path + ".plot.png"
+    fig.savefig(tmp, dpi=80)
+    plt.close(fig)
+    top = np.concatenate(frames, 1)
+    plot = np.asarray(Image.open(tmp).convert("RGB").resize((top.shape[1], int(top.shape[1] * 3.2 / 12))))
+    Image.fromarray(np.concatenate([top, plot], 0)).save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -288,6 +350,7 @@ def main(argv=None):
     _jpeg(pose_sheet(os.path.join(ROOT, "out", "poses.png")), os.path.join(OUT, "poses.jpg"), 1100)
     _jpeg(motion_sheet(os.path.join(ROOT, "out", "motion.png")), os.path.join(OUT, "motion.jpg"), 1200)
     _jpeg(fauna_sheet(os.path.join(ROOT, "out", "fauna.png")), os.path.join(OUT, "fauna.jpg"), 1500)
+    _jpeg(flight_sheet(os.path.join(ROOT, "out", "flight.png")), os.path.join(OUT, "flight.jpg"), 1200)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

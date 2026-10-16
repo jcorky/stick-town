@@ -1,0 +1,91 @@
+{
+ "key": "6b769e7390a6d77f72c91712ccf743d7",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 1,
+  "scene": "f5fbf4ed693e",
+  "species": "raccoon",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T11:17:23",
+  "distance": 11.2389,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:eat"
+   ],
+   [
+    1.2,
+    "snack"
+   ],
+   [
+    6.5,
+    "plan:explore"
+   ],
+   [
+    11.0,
+    "snack"
+   ],
+   [
+    17.8,
+    "plan:climb"
+   ],
+   [
+    30.5,
+    "arrive:climb"
+   ],
+   [
+    30.5,
+    "canopy:groom"
+   ],
+   [
+    39.8,
+    "plan:climb"
+   ],
+   [
+    40.0,
+    "arrive:climb"
+   ],
+   [
+    40.0,
+    "canopy:rest"
+   ],
+   [
+    70.2,
+    "plan:drink"
+   ],
+   [
+    80.2,
+    "plan:drink"
+   ],
+   [
+    96.5,
+    "plan:explore"
+   ],
+   [
+    118.8,
+    "plan:drink"
+   ]
+  ],
+  "species": "raccoon",
+  "state_mix": {
+   "eat": 46,
+   "groom": 36,
+   "idle": 7,
+   "pause": 61,
+   "rest": 120,
+   "travel": 450
+  },
+  "traits": {
+   "boldness": 0.622,
+   "curiosity": 0.424,
+   "laziness": 0.552,
+   "patience": 0.539,
+   "wanderlust": 0.071
+  }
+ },
+ "path": "behavior/6b/6b769e7390a6d77f72c91712ccf743d7.npz"
+}

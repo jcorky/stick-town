@@ -28,6 +28,13 @@ that space colonisation bridged with vertical stems, giving boxy right angles. S
 Every species' rig in its rest pose, ticks every metre: deer, squirrel, turkey, armadillo, coyote, a person, and the
 sourced newcomers raccoon, eastern box turtle and great blue heron.
 
+## Heron flight (§33)
+
+![flight](flight.jpg)
+
+A flushed heron in four wingbeat phases (legs trailed, head drawn back), its height through a flight, and the wing
+roll and span keys that fold the wings again on landing.
+
 ## Gaits (§25)
 
 ![gaits](gaits.jpg)
