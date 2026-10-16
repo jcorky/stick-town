@@ -110,6 +110,47 @@ def creek_sheet(path, seed=135121):
     return path
 
 
+def gait_sheet(path, key="white_tailed_deer"):
+    """One stride in 8 frames at walk, trot and gallop speeds (TECHNIQUES §25), from the same rig the GLB uses."""
+    import numpy as np
+    from plandscape.fauna import gait
+    from plandscape.fauna.bodies import rig
+    from plandscape.mesh import Mesh
+    from plandscape.render import render
+    rg = rig(key, (0.55, 0.42, 0.30))
+    h = rg["hip"]
+    rows = []
+    for v in (1.0, 3.0, 8.0):
+        fr = float(gait.froude(v, h))
+        name = gait.gait_name(fr)
+        offs, beta = gait.QUAD[name]
+        lam = float(gait.stride(v, h))
+        amp = np.arcsin(min(lam * beta / (2 * h), 0.7))
+        frames = []
+        for k in range(8):
+            phi = 2 * np.pi * k / 8
+            parts = [rg["torso"]]
+            for (m, hip), o in zip(rg["legs"], offs):
+                th = amp * np.sin(phi - 2 * np.pi * o)
+                c, s_ = np.cos(th), np.sin(th)  # forward swing: foot toward +x
+                P = m.positions @ np.array([[c, 0, -s_], [0, 1, 0], [s_, 0, c]]).T
+                parts.append(Mesh(P + np.asarray(hip, np.float32), m.colors, m.indices))
+            img = render(parts, None, size=(200, 150), azimuth=0, elevation=4,
+                         fit=((-1.2, -0.5, -0.05), (1.4, 0.5, 1.75)))
+            frames.append(img)
+        strip = Image.fromarray(np.concatenate(frames, 1))
+        ImageDraw.Draw(strip).text((6, 4), f"v = {v} m/s   Fr = {fr:.2f}   {name}   stride = {lam:.2f} m   "
+                                           f"swing = {np.degrees(amp):.0f} deg", fill=(0, 0, 0))
+        rows.append(strip)
+    sheet = Image.new("RGB", (rows[0].width, sum(r.height for r in rows)), "white")
+    y = 0
+    for r in rows:
+        sheet.paste(r, (0, y))
+        y += r.height
+    sheet.save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -128,6 +169,7 @@ def main(argv=None):
         stats[name] = {k: s.get(k) for k in ("glb_mb", "trees", "tree_tris", "ground_props", "agents", "signs")}
     _jpeg(terrain_sheet(os.path.join(ROOT, "out", "terrain.png")), os.path.join(OUT, "terrain-erosion.jpg"), 1500)
     _jpeg(creek_sheet(os.path.join(ROOT, "out", "creeks.png")), os.path.join(OUT, "creeks.jpg"), 1500)
+    _jpeg(gait_sheet(os.path.join(ROOT, "out", "gaits.png")), os.path.join(OUT, "gaits.jpg"), 1600)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

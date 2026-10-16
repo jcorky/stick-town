@@ -27,6 +27,14 @@ def _to_gltf(v):
     return np.stack([v[..., 0], v[..., 2], -v[..., 1]], -1)
 
 
+def pitch_quat(theta):
+    """Quaternion (x,y,z,w) in glTF space swinging a hanging limb forward (+x) by θ about the world lateral
+    axis y, which is −z in glTF space."""
+    theta = np.asarray(theta, np.float64)
+    z = np.zeros_like(theta)
+    return np.stack([z, z, np.sin(theta / 2), np.cos(theta / 2)], -1)
+
+
 def yaw_quat(theta):
     """Quaternion (x,y,z,w) for a world-z heading θ, expressed in glTF space."""
     theta = np.asarray(theta, np.float64)
@@ -162,9 +170,16 @@ class GLB:
         self.nodes.append(n)
         return len(self.nodes) - 1
 
-    def animate(self, name, tracks):
-        """tracks: list of (node_index, times(T,), positions_world(T,3), headings(T,))."""
+    def animate(self, name, tracks, extra=()):
+        """tracks: list of (node_index, times(T,), positions_world(T,3), headings(T,)).
+        extra: list of (node_index, "rotation"|"translation", times(K,), values already in glTF frame (K,4|3)),
+        e.g. leg swings (local to their parent node), all in the same clip."""
         samplers, channels = [], []
+        for node, path, t, val in extra:
+            ti = self._acc(np.asarray(t, np.float32), FLOAT, "SCALAR", minmax=True)
+            vi = self._acc(np.asarray(val, np.float32), FLOAT, "VEC4" if path == "rotation" else "VEC3")
+            samplers.append({"input": ti, "output": vi, "interpolation": "LINEAR"})
+            channels.append({"sampler": len(samplers) - 1, "target": {"node": node, "path": path}})
         for node, t, p, h in tracks:
             ti = self._acc(np.asarray(t, np.float32), FLOAT, "SCALAR", minmax=True)
             pi = self._acc(_to_gltf(p).astype(np.float32), FLOAT, "VEC3")

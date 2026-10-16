@@ -1,6 +1,6 @@
 """Low-poly procedural bodies for animals and people (facing +x, z-up, feet at z=0).
 
-Placeholders for the viewer; skeletal, gait-animated bodies are on the roadmap.
+Bodies are rigs (torso + legs pivoting at the hips) so the viewer can swing the legs by gait (gait.py, §25).
 Each individual gets slight size/colour variation from its seed.
 """
 
@@ -26,41 +26,69 @@ def ellipsoid(c, r, rgb, nu=10, nv=6):
     return mb.build()
 
 
-def body(key, rgb, scale=1.0):
+def rig(key, rgb, scale=1.0):
+    """Body split for gait animation: dict(torso=Mesh, legs=[(Mesh with the hip at its origin, hip xyz)],
+    hip=hip height h (m), kind='quad'|'biped'|'hop'|'none'). Legs are ordered LF, RF, LH, RH (bipeds L, R)."""
     rgb = np.asarray(rgb)
-    parts = []
+    parts, legs, hip, kind = [], [], 0.0, "none"
+
+    def leg(x, y, h, w, col):
+        legs.append((box((0, 0, -h / 2), (w, w, h), col), (x, y, h)))
     if key in ("white_tailed_deer", "coyote"):
         L = 0.75 if key == "white_tailed_deer" else 0.5
         h = 0.95 if key == "white_tailed_deer" else 0.5
         parts += [ellipsoid((0, 0, h), (L, 0.22 * L / 0.75 + 0.05, 0.25 * L / 0.75 + 0.03), rgb),
                   ellipsoid((L * 0.8, 0, h + 0.3 * L), (0.12, 0.07, 0.25 * L), rgb),
                   ellipsoid((L * 1.05, 0, h + 0.55 * L), (0.2 * L / 0.75 + 0.05, 0.07, 0.08), rgb * 0.9)]
-        for x in (-L * 0.6, L * 0.6):
-            for y in (-0.1, 0.1):
-                parts.append(box((x, y, h / 2), (0.06, 0.06, h), rgb * 0.8))
+        for x in (L * 0.6, -L * 0.6):          # fore, then hind
+            for y in (0.1, -0.1):              # left (+y), then right
+                leg(x, y, h, 0.06, rgb * 0.8)
         tail = (0.95, 0.95, 0.92) if key == "white_tailed_deer" else rgb * 0.8
         parts.append(ellipsoid((-L * 1.0, 0, h + 0.05), (0.12, 0.05, 0.08), tail))
         if key == "coyote":
             parts.append(ellipsoid((-L * 1.2, 0, h - 0.1), (0.25, 0.06, 0.07), rgb * 0.75))
+        hip, kind = h, "quad"
     elif key == "gray_squirrel":
         parts += [ellipsoid((0, 0, 0.1), (0.12, 0.05, 0.06), rgb),
                   ellipsoid((0.12, 0, 0.14), (0.05, 0.04, 0.04), rgb),
                   ellipsoid((-0.15, 0, 0.2), (0.06, 0.05, 0.14), rgb * 1.1)]
+        hip, kind = 0.1, "hop"
     elif key == "wild_turkey":
         parts += [ellipsoid((0, 0, 0.55), (0.32, 0.2, 0.22), rgb),
                   ellipsoid((0.3, 0, 0.82), (0.04, 0.04, 0.16), (0.55, 0.65, 0.75)),
                   ellipsoid((0.33, 0, 0.98), (0.06, 0.04, 0.05), (0.7, 0.15, 0.15)),
                   ellipsoid((-0.3, 0, 0.6), (0.12, 0.25, 0.08), rgb * 0.8)]
-        for y in (-0.08, 0.08):
-            parts.append(box((0.02, y, 0.18), (0.03, 0.03, 0.36), (0.6, 0.35, 0.3)))
+        for y in (0.08, -0.08):
+            leg(0.02, y, 0.36, 0.03, (0.6, 0.35, 0.3))
+        hip, kind = 0.36, "biped"
     elif key == "armadillo":
         parts += [ellipsoid((0, 0, 0.14), (0.25, 0.12, 0.12), rgb),
                   ellipsoid((0.27, 0, 0.1), (0.08, 0.04, 0.04), rgb * 0.9),
                   ellipsoid((-0.33, 0, 0.08), (0.15, 0.025, 0.025), rgb * 0.9)]
+        for x in (0.14, -0.14):
+            for y in (0.08, -0.08):
+                leg(x, y, 0.08, 0.04, rgb * 0.7)
+        hip, kind = 0.08, "quad"
     else:  # human
-        parts += [box((0, 0, 0.45), (0.25, 0.32, 0.9), (0.25, 0.25, 0.3)),
-                  box((0, 0, 1.2), (0.25, 0.42, 0.6), rgb),
+        parts += [box((0, 0, 1.2), (0.25, 0.42, 0.6), rgb),
                   ellipsoid((0, 0, 1.62), (0.11, 0.1, 0.13), (0.72, 0.55, 0.42))]
-    m = Mesh.merge(parts)
-    m.positions *= scale
-    return m
+        for y in (0.09, -0.09):
+            leg(0, y, 0.9, 0.13, (0.25, 0.25, 0.3))
+        hip, kind = 0.9, "biped"
+    torso = Mesh.merge(parts)
+    torso.positions *= scale
+    out = []
+    for m, (x, y, z) in legs:
+        m.positions *= scale
+        out.append((m, (x * scale, y * scale, z * scale)))
+    return dict(torso=torso, legs=out, hip=hip * scale, kind=kind)
+
+
+def body(key, rgb, scale=1.0):
+    """The rig merged into one static mesh, legs hanging straight (previews, the asset library)."""
+    r = rig(key, rgb, scale)
+    parts = [r["torso"]]
+    for m, hip in r["legs"]:
+        q = Mesh(m.positions + np.asarray(hip, np.float32), m.colors, m.indices)
+        parts.append(q)
+    return Mesh.merge(parts)

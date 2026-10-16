@@ -18,9 +18,10 @@ from scipy import ndimage
 
 from .. import textures
 from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
-from ..export.gltf import GLB
+from ..export.gltf import GLB, _to_gltf, pitch_quat
 from ..fauna.agents import FAUNA, World, run, spawn
-from ..fauna.bodies import body
+from ..fauna import gait
+from ..fauna.bodies import rig
 from ..flora import impostor
 from ..flora.species import SPECIES
 from ..flora.tree import generate_tree
@@ -398,23 +399,39 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                             rotation_z=gp["yaw"], scale=gp["scale"]))
     if pkids:
         g.node("ground_props", children=pkids)
-    tracks = []
-    akids = []
+    tracks, extra, akids, rigs = [], [], [], {}
     for a in agents:
         rr = make_rng("look", a.id)
-        # a few quantised looks per species so bodies come from the library instead of being rebuilt
+        # a few quantised looks per species, so individuals share meshes
         rgb = np.clip(np.array(a.spec.rgb) * [0.88, 1.0, 1.12][int(rr.integers(0, 3))], 0, 1)
         sc = [0.9, 1.0, 1.1][int(rr.integers(0, 3))]
-        bm, _ = store.get_or_build("body", dict(species=a.spec.key, scale=sc, rgb=[round(float(c), 2) for c in rgb]),
-                                   lambda: (body(a.spec.key, rgb, scale=sc), {}), *mesh_codec("body"))
-        node = g.node(f"{a.spec.key}_{a.id}", g.mesh(bm, f"{a.spec.key}_{a.id}", m_fauna))
+        look = (a.spec.key, sc, tuple(np.round(rgb, 2)))
+        if look not in rigs:  # torso + legs pivoting at the hips (TECHNIQUES §25)
+            rg = rig(a.spec.key, rgb, scale=sc)
+            nm = f"{a.spec.key}_{len(rigs)}"
+            rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
+                          [g.mesh(m, f"{nm}_leg{i}", m_fauna) for i, (m, _) in enumerate(rg["legs"])])
+        rg, torso_mesh, leg_meshes = rigs[look]
+        torso = g.node("torso", torso_mesh)
+        legs = [g.node(f"leg{i}", lm, translation=hip) for i, (lm, (_, hip)) in enumerate(zip(leg_meshes, rg["legs"]))]
+        node = g.node(f"{a.spec.key}_{a.id}", children=[torso] + legs)
         akids.append(node)
         L = a.log[::4]
         if len(L) > 1:
             tracks.append((node, [l[0] for l in L], [(l[1], l[2], l[3]) for l in L], [l[4] for l in L]))
+        if len(a.log) > 1:  # legs swing by gait, by stride phase (keys only while moving)
+            t_ = np.array([l[0] for l in a.log])
+            xy = np.array([(l[1], l[2]) for l in a.log])
+            if legs:
+                tk, ang, _ = gait.leg_angles(t_, xy, rg["hip"], "quad" if rg["kind"] == "quad" else "biped")
+                for i, ln in enumerate(legs):
+                    extra.append((ln, "rotation", tk, pitch_quat(ang[:, i])))
+            elif rg["kind"] == "hop":
+                tk, zz = gait.hop_heights(t_, xy, rg["hip"], 0.6 * rg["hip"])
+                extra.append((torso, "translation", tk, _to_gltf(np.c_[0 * zz, 0 * zz, zz])))
     if akids:
         g.node("fauna", children=akids)
-    g.animate("life", tracks)
+    g.animate("life", tracks, extra)
     glb = os.path.join(out_dir, "scene.glb")
     g.save(glb, extras=dict(prompt=plan.prompt, seed=plan.seed))
     size_mb = os.path.getsize(glb) / 1e6

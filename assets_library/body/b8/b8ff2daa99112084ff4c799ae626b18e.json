@@ -1,0 +1,14 @@
+{
+ "key": "b8ff2daa99112084ff4c799ae626b18e",
+ "kind": "body",
+ "version": "body-0.1.1",
+ "params": {
+  "scale": 1.0,
+  "species": "human"
+ },
+ "meta": {
+  "created": "2026-10-16T09:09:45",
+  "tris": 156
+ },
+ "path": "body/b8/b8ff2daa99112084ff4c799ae626b18e.npz"
+}
