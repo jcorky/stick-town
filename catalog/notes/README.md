@@ -14,4 +14,4 @@ numbers refer to the commit in the harvest report.
 | [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing + angle relax adopted (TECHNIQUES §15); siting, names queued |
 | [wfc](wfc.md) | MIT | low priority |
 | [ez-tree](ez-tree.md) | MIT | chain tubes + shared rings adopted (TECHNIQUES §4); card normals queued |
-| [mesa](mesa.md) | Apache-2.0 | shuffled order, vectorised neighbours queued |
+| [mesa](mesa.md) | Apache-2.0 | shuffled activation adopted (TECHNIQUES §16); vectorised neighbours not needed at ~10 agents |

@@ -41,7 +41,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Leaf sets are other species chosen by outline; no Southern-specific leaf scans yet (e.g. sweetgum stars are maple-like).
 - Stump scans are squat hardwood stumps; there's no tall pine stump or longleaf "lighter stump".
 - Desire paths are straight-ish and only in high-traffic corridors. The county road is real now (§15) but always crosses west→east; driveways and multiple roads are next.
-- Squirrels spend a lot of time in `freeze`; deer often rest at golden hour.
+- Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
 
