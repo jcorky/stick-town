@@ -11,7 +11,7 @@ This file is the canonical copy of the skill. Claude Code loads it automatically
 
 ## 0. Orient (2 minutes, every session)
 
-1. Read `CLAUDE.md`, `HANDOFF.md` (current status and priorities), `README.md` and `docs/ARCHITECTURE.md`. Skim section 6 below.
+1. Read `catalog/notes/README.md` (what each studied repo taught us and what is queued from it), then `CLAUDE.md`, `HANDOFF.md` (current status and priorities), `README.md` and `docs/ARCHITECTURE.md`. Skim section 6 below.
 2. `python3 -m unittest discover -s tests` — must pass before you change anything.
 3. `python3 -m plandscape.assets stats` — see what's already built. **Reuse before you generate.** If `assets_library/` contains LFS pointer files instead of data, run `git lfs pull`, or rebuild with `python3 -m plandscape.assets bake`.
 4. Check the environment: `python3 -c "import numpy, scipy, PIL, matplotlib"`. PyPI is often blocked in sandboxes; don't plan work that needs new packages in the core.
