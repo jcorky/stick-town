@@ -45,12 +45,12 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
-- Creeks are carved into the terrain but the 1 m grid can only hold so much: a 1.5 m wetted branch is one or two cells of bed. Near-camera detail (`detail="cm"`) should re-carve at 25 cm from `hf.channels`. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
+- Creeks are re-cut at 25 cm inside the near windows (§22) but stay 1 m-faceted elsewhere. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
 
 ## 3. Next priorities, in order
 
 0. **Read `catalog/notes/`** — eight permissive repos were studied in session 2; each note lists what is queued from it.
-1. **Fidelity near the camera, continued.** Lattice detiling and leaf flutter are done (§20); next: LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
+1. **Fidelity near the camera, continued.** Detiling, leaf flutter (§20) and fine terrain windows (§22) are done; next: tree LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals that walk.** Skeletal gaits matched to speed, head/tail motion for alert and feeding states, multi-hour runs, more species (heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds).

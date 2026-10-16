@@ -44,7 +44,8 @@ class Heightfield:
     origin: tuple = (0.0, 0.0)
     province: str = "piedmont"
     layers: dict = field(default_factory=dict)  # slope, moisture, flow, water, stage, ...
-    channels: np.ndarray = None  # (N, 6) creek centrelines: x, y, stage, wetted width, reach id, s (channels.py)
+    channels: np.ndarray = None  # (N, 7) creek centrelines: x, y, stage, wetted width, reach id, s, depth
+    near: list = None            # fine near-camera patches (refine.Patch); sample() prefers them
 
     @property
     def shape(self):
@@ -62,8 +63,15 @@ class Heightfield:
     def sample(self, x, y, layer: str | None = None):
         arr = self.z if layer is None else self.layers[layer]
         gx, gy = self.to_grid(x, y)
-        return ndimage.map_coordinates(arr, [np.atleast_1d(gy), np.atleast_1d(gx)],
-                                       order=1, mode="nearest")
+        out = ndimage.map_coordinates(arr, [np.atleast_1d(gy), np.atleast_1d(gx)], order=1, mode="nearest")
+        if layer is None and self.near:  # heights inside a refined window come from its fine patch
+            xa, ya = np.atleast_1d(np.asarray(x, float)), np.atleast_1d(np.asarray(y, float))
+            xa, ya = np.broadcast_arrays(xa, ya)
+            for p in self.near:
+                m = p.inside(xa, ya)
+                if m.any():
+                    out[m] = p.sample(xa[m], ya[m])
+        return out
 
     def normal(self, x, y):
         e = self.res

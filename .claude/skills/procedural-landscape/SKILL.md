@@ -127,6 +127,9 @@ Open `map.png` and `scene.json` and check:
 - Without pit filling, creeks stop at every erosion hollow; route over `channels.routing_surface`, carve the real z.
 - Erosion fans make parallel flow threads that all pass a flow threshold; prune near-parallel lines, one valley, one creek.
 - A bank cut that reaches far from the channel flattens steep valley walls into discs; fade it out within w + 2 m.
+- Fine terrain patches must equal the coarse *bilinear* surface on their border (fade detail by τ), and windows
+  must sit on whole metres, or the stitched mesh cracks. Crop review renders with box edges off the grid lines
+  (x.25), or the centroid crop leaves sawteeth.
 - Review creeks with `creek.png` and the gallery creek sheet; the map's water raster is 1 m and always looks blocky.
 
 ### Asset library

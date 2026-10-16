@@ -30,7 +30,7 @@ from ..mesh import Mesh
 GENERATOR_VERSIONS = {
     "tree": "tree-0.3.1",
     "building": "building-0.1.1",
-    "terrain": "terrain-0.3.0",
+    "terrain": "terrain-0.3.1",
     "body": "body-0.1.0",
     "behavior": "behavior-0.2.0",
     "grass_patch": "grass-0.1.0",

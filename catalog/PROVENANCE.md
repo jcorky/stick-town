@@ -11,9 +11,11 @@ Code adapted from third-party sources is recorded here: source repo, commit, fil
 | `plandscape/textures.py: detile_sample`, `viewer/index.html: detile` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/shaders/main.glsl` | 854a457 | MIT | Per-node rotation and offset detiling (re-done on a regular lattice with our height-blend weights; no code copied) |
 | `viewer/index.html: addWind` (leaf flutter) | [dgreenheck/ez-tree](https://github.com/dgreenheck/ez-tree) `src/lib/tree.js` | dcf309b | MIT | uv.y-weighted three-sine leaf motion (re-written for three.js r128 `onBeforeCompile`; no code copied) |
 | `plandscape/terrain/channels.py` | [Mindwerks/worldengine](https://github.com/Mindwerks/worldengine) `worldengine/simulations/erosion.py` | b2adbb6 | MIT | Idea of a non-increasing river bed (re-done as a cumulative minimum along traced reaches; no code copied) |
+| `plandscape/terrain/refine.py` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/terrain_3d_mesher.cpp` | 854a457 | MIT | Idea of nested finer grids where the eye is (re-done as static two-level windows with a faded border; no code copied) |
 
 ## Methods from the literature (no code)
 
+- Geometry clipmaps: Losasso & Hoppe (2004), *ACM SIGGRAPH* (ToG 23(3)).
 - Priority-Flood + ε: Barnes, Lehman & Mulla (2014), *Computers & Geosciences* 62, 117–127.
 - Flat-area drainage away from higher terrain: Garbrecht & Martz (1997), *J. Hydrology* 193, 204–213.
 - Rho8 (randomised D8, the inspiration for our jitter): Fairfield & Leymarie (1991), *Water Resources Research* 27(5).

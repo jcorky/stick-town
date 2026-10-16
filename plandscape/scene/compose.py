@@ -28,6 +28,7 @@ from ..mesh import Mesh, MeshBuilder
 from ..paths.desire import TrailField, obstacle_cost, simulate
 from ..rng import rng as make_rng
 from ..terrain.channels import water_mesh as creek_surface
+from ..terrain import refine
 from ..terrain.heightfield import generate_tile
 from .buildings import clothesline, fence, generate_building, mailbox
 from .groundcover import scatter
@@ -297,6 +298,14 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     litter_amt = 0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2
     ter.weights = ground_weights(hf, dens, field.G, canopy, litter=litter_amt, seed=plan.seed)
     ter.splat = textures.splat_keys(plan.biome)
+    # near-camera refinement: fine windows on the focus and the creek (TECHNIQUES §22)
+    _, h_near = refine.WINDOW[plan.detail]
+    protect = None if road_dist is None else (road_dist <= ROAD_WIDTH / 2 + 2.5).astype(float)
+    hf.near = refine.build(hf, refine.windows(hf, (S / 2, S / 2), plan.detail), h_near, plan.seed, protect)
+    ter = refine.stitch(ter, hf, hf.near, tile=textures.TILE_M["ground"])
+    for pl in placements:  # trunks sit on the refined ground
+        pl["z"] = float(hf.sample(pl["x"], pl["y"])[0])
+    log(f"near terrain: {len(hf.near)} windows at {h_near} m, terrain {ter.n_tris} tris ({time.time() - t0:.1f}s)")
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
     grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season, trail=field.G)

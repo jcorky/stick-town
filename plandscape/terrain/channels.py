@@ -283,12 +283,29 @@ def carve(hf, reaches):
 
 
 def to_array(reaches):
-    """Pack reaches as (N, 6) float32 rows x, y, stage, wetted width, line id, s — for the asset library."""
+    """Pack reaches as (N, 7) float32 rows x, y, stage, wetted width, line id, s, depth — for the asset library."""
     if not reaches:
-        return np.zeros((0, 6), np.float32)
+        return np.zeros((0, 7), np.float32)
     rows = [np.c_[q["xy"], q["zb"] - (1 - STAGE) * q["d"], q["w"] * np.sqrt(STAGE), np.full(len(q["s"]), q["line"]),
-                  q["s"]] for q in reaches]
+                  q["s"], q["d"]] for q in reaches]
     return np.concatenate(rows).astype(np.float32)
+
+
+def unpack(packed, step=None):
+    """Reaches back from to_array (for re-cutting at finer spacing), optionally resampled every `step` m."""
+    if packed is None or len(packed) == 0 or packed.shape[1] < 7:
+        return []
+    out = []
+    for rid in np.unique(packed[:, 4]):
+        q = packed[packed[:, 4] == rid]
+        q = q[np.argsort(q[:, 5])].astype(float)
+        cols = q[:, [0, 1, 2, 3, 6]]
+        if step:
+            cols, _ = _resample(cols, step)
+        w, d = cols[:, 3] / np.sqrt(STAGE), cols[:, 4]
+        out.append(dict(xy=cols[:, :2], w=w, d=d, zb=cols[:, 2] + (1 - STAGE) * d, line=int(rid),
+                        s=np.r_[0, np.cumsum(np.linalg.norm(np.diff(cols[:, :2], axis=0), axis=1))]))
+    return out
 
 
 def water_mesh(packed, rgb=(0.18, 0.26, 0.24), over=1.15, step=1.0):

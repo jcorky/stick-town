@@ -66,6 +66,7 @@ def closeup(res, path, size=(1100, 720)):
         xy = np.array([(g["x"], g["y"]) for g in gp])
         n = (np.hypot(*(xy[:, None, :] - xy[None, :, :]).transpose(2, 0, 1)) < 5).sum(1)
         cx, cy = xy[int(np.argmax(n))]
+    cx, cy = float(round(cx)) + 0.25, float(round(cy)) + 0.25  # crop box off the grid lines: clean edges
     zc = float(res["hf"].sample(cx, cy)[0])
     meshes = [_crop(m, (cx - 9, cy - 9, cx + 9, cy + 9))
               for m in _scene_meshes(res, near=(cx, cy, 9), foliage=False)]
@@ -79,7 +80,7 @@ def homestead(res, path, size=(1100, 720)):
     if not res.get("buildings"):
         return None
     mx, my = res["buildings"][0]["mailbox"]
-    cx, cy = mx, my + 2
+    cx, cy = float(round(mx)) + 0.25, float(round(my + 2)) + 0.25  # crop box off the grid lines
     z = float(res["hf"].sample(cx, cy)[0])
     meshes = [_crop(m, (cx - 16, cy - 12, cx + 16, cy + 16))
               for m in _scene_meshes(res, near=(cx, cy, 16), foliage=False)]
@@ -89,13 +90,11 @@ def homestead(res, path, size=(1100, 720)):
 
 def creek(res, path, size=(1100, 720)):
     """The creek where it is widest in the middle of the tile: banks, bed cut, water surface (crowns left out)."""
-    c = res["hf"].channels
-    if c is None or not len(c):
+    from ..terrain.refine import creek_focus
+    f = creek_focus(res["hf"])  # the same point the near-terrain window is centred on
+    if f is None:
         return None
-    S = res["hf"].size[0]
-    mid = (c[:, 0] > 0.2 * S) & (c[:, 0] < 0.8 * S) & (c[:, 1] > 0.2 * S) & (c[:, 1] < 0.8 * S)
-    k = int(np.argmax(np.where(mid, c[:, 3], -1) if mid.any() else c[:, 3]))
-    cx, cy = float(round(c[k, 0])) + 0.25, float(round(c[k, 1])) + 0.25  # box edges off the grid lines: clean crop
+    cx, cy = float(round(f[0])) + 0.25, float(round(f[1])) + 0.25  # box edges off the grid lines: clean crop
     r = 10.0
     meshes = [_crop(m, (cx - r, cy - r, cx + r, cy + r))
               for m in _scene_meshes(res, near=(cx, cy, r), foliage=False)]

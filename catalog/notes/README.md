@@ -7,7 +7,7 @@ numbers refer to the commit in the harvest report.
 
 | Repo | Licence | Status |
 |---|---|---|
-| [terrain3d](terrain3d.md) | MIT | height blend (TECHNIQUES §13) and lattice detiling (§20) adopted |
+| [terrain3d](terrain3d.md) | MIT | height blend (TECHNIQUES §13), lattice detiling (§20), clipmap idea (§22) adopted |
 | [ocean](ocean.md) | MIT | water ideas queued |
 | [seblague-erosion](seblague-erosion.md) | MIT | droplet erosion adopted (TECHNIQUES §14) |
 | [worldengine](worldengine.md) | MIT | monotone creek beds adopted (§21); Holdridge lookup queued for real-place mode |
