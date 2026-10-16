@@ -92,6 +92,31 @@ def terrain_mesh(hf, density, trail_G, canopy, signs=(), season="summer", grass_
     return Mesh(pos.astype(np.float32), col.reshape(-1, 3).astype(np.float32), idx.astype(np.uint32))
 
 
+def ground_weights(hf, density, trail_G, canopy, litter=0.2, seed=0):
+    """Per-vertex splat weights a = (litter, soil, grass, mud), summing to 1 (see textures.SPLAT_LAYERS).
+
+    litter = clip(c (0.6 + l)) (1 - g)          under canopy, off trails
+    soil   = max(g, clip((s - 25)/20)) + 0.25 (1 - d)(1 - c)   trodden paths, steep and bare ground
+    grass  = d (1 - 0.8 c)(1 - g)                open, grassy ground
+    mud    = clip(2 (W * N_2)) (1 - clip(s/45))  creek banks (water blurred by a 2 m Gaussian)
+    with g = clip(1.3 G), then jittered by low-frequency noise (amplitude 0.12) so edges wander.
+    """
+    slope = hf.layers["slope"]
+    water = hf.layers["water"]
+    g = np.clip(trail_G * 1.3, 0, 1)
+    c = np.clip(canopy, 0, 1)
+    a = np.stack([
+        np.clip(c * (0.6 + litter), 0, 1) * (1 - g),
+        np.maximum(g, np.clip((slope - 25) / 20, 0, 1)) + 0.25 * (1 - density) * (1 - c),
+        density * (1 - 0.8 * c) * (1 - g),
+        np.clip(2 * ndimage.gaussian_filter(water, 2.0), 0, 1) * (1 - np.clip(slope / 45, 0, 1)),
+    ], -1)
+    r = make_rng("ground_weights", seed)
+    jit = np.stack([ndimage.gaussian_filter(r.uniform(-1, 1, hf.z.shape), 4) for _ in range(4)], -1)
+    a = np.clip(a + 0.12 * jit / max(np.abs(jit).max(), 1e-9), 0, None) + 1e-4
+    return (a / a.sum(-1, keepdims=True)).reshape(-1, 4).astype(np.float32)
+
+
 def grass_mesh(hf, density, region, budget=40000, mix=None, seed=0, season="summer") -> Mesh:
     """Individual grass blades inside `region` (x0, y0, x1, y1), placed by density."""
     mix = mix or BIOME_GRASS["lawn"]

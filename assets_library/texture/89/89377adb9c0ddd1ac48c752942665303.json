@@ -1,0 +1,30 @@
+{
+ "key": "89377adb9c0ddd1ac48c752942665303",
+ "kind": "texture",
+ "version": "texture-0.1.3",
+ "params": {
+  "key": "bark/Bark004"
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-16T04:16:43",
+  "mean": [
+   0.7929,
+   0.7929,
+   0.7929
+  ],
+  "mime": "image/jpeg",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "Bark004",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/Bark004"
+  }
+ },
+ "path": "texture/89/89377adb9c0ddd1ac48c752942665303.npz"
+}

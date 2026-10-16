@@ -52,6 +52,23 @@ GROUND_SET = {"pine_savanna": "Ground078", "pine_plantation": "Ground078", "hard
               "swamp": "Ground048", "pasture": "Grass004", "lawn": "Grass004", "old_field": "Grass004"}
 
 
+# Height-blended ground (splat): four materials per vertex, in this order.
+SPLAT_LAYERS = ("litter", "soil", "grass", "mud")
+SPLAT_SET = {"litter": {"pine_savanna": "Ground078", "pine_plantation": "Ground078", "_": "ScatteredLeaves009"},
+             "soil": {"_": "Ground026"}, "grass": {"_": "Grass004"}, "mud": {"_": "Ground048"}}
+SPLAT_SHARPNESS = 8.0  # k in W_i = (a_i + h_i)^k a_i
+
+
+def splat_keys(biome):
+    return tuple(f"ground/{SPLAT_SET[l].get(biome, SPLAT_SET[l]['_'])}" for l in SPLAT_LAYERS)
+
+
+def height_blend(a, h, k=SPLAT_SHARPNESS):
+    """Terrain3D-style height blend: W_i = (a_i + h_i)^k a_i, normalised. a, h: (..., 4)."""
+    w = np.power(np.clip(a + h, 1e-6, None), k) * a
+    return w / np.maximum(w.sum(-1, keepdims=True), 1e-9)
+
+
 def leaf_key(species):
     return f"leaf/{LEAF_SET.get(species, DEFAULT_LEAF)}"
 
@@ -171,9 +188,9 @@ def build(key: str) -> Texture:
                 rgba = leaf_cluster(_leaf_sprites(maps["Color"], maps["Opacity"]), make_rng("leaf_cluster", src))
             elif kind == "needle":
                 rgba = needle_tuft(_leaf_sprites(maps["Color"], maps["Opacity"]), make_rng("needle_tuft", src))
-            else:
+            else:  # ground maps double as splat layers, whose height blend needs full contrast
                 rgba = detail(np.asarray(Image.open(maps["Color"]).convert("RGB")),
-                              512 if kind == "bark" else 1024, contrast=1.0 if kind == "bark" else 0.7)
+                              512, contrast=1.0)  # 512 px over a 2 m tile is 256 px/m: plenty
         except Exception as e:  # noqa: BLE001 - offline or blocked: fall back, and say so
             meta = dict(fallback=f"{type(e).__name__}: {str(e)[:160]}")
             rgba = None

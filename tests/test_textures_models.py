@@ -157,6 +157,48 @@ class Library(Base):
         self.assertTrue((cosang < 0.97).all())  # every card has a real fold
 
 
+class Splat(Base):
+    def test_weights_follow_layers(self):
+        from plandscape.ground.surface import ground_weights
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(32, 1.0, "piedmont", 3, creek=False)
+        hf.layers["slope"][:] = 0
+        hf.layers["water"][:] = 0
+        G, canopy, dens = np.zeros_like(hf.z), np.zeros_like(hf.z), np.zeros_like(hf.z)
+        G[:, :8] = 1.0          # trail strip
+        canopy[:, 12:20] = 1.0  # wood
+        dens[:, 24:] = 1.0      # lawn
+        w = ground_weights(hf, dens, G, canopy).reshape(*hf.z.shape, 4)
+        np.testing.assert_allclose(w.sum(-1), 1, atol=1e-5)
+        self.assertEqual(int(np.argmax(w[16, 3])), 1)   # soil on the trail
+        self.assertEqual(int(np.argmax(w[16, 16])), 0)  # litter under canopy
+        self.assertEqual(int(np.argmax(w[16, 28])), 2)  # grass on the lawn
+
+    def test_height_blend(self):
+        a = np.array([[1, 0, 0, 0], [0.5, 0.5, 0, 0]], float)
+        h = np.array([[0.2, 0.9, 0.5, 0.5], [0.2, 0.9, 0.5, 0.5]])
+        w = textures.height_blend(a, h)
+        np.testing.assert_allclose(w.sum(-1), 1)
+        np.testing.assert_allclose(w[0], [1, 0, 0, 0], atol=1e-9)  # zero weight stays zero
+        self.assertGreater(w[1, 1], 0.99)  # equal weights: the higher texel wins (k = 8)
+
+    def test_glb_carries_splat(self):
+        import json, struct
+        P = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]], np.float32)
+        tex = [textures.get(k, self.store) for k in textures.splat_keys("hardwood")]
+        m = Mesh(P, np.full((3, 3), 0.5, np.float32), np.array([[0, 1, 2]], np.uint32), P[:, :2] / 2, tex[0].key,
+                 np.eye(4, dtype=np.float32)[[0, 1, 2]], tuple(t.key for t in tex))
+        g = GLB()
+        g.node("t", g.mesh(m, "t", g.material("terrain", texture=tex[0], splat=tex)))
+        path = os.path.join(self.tmp, "s.glb")
+        g.save(path)
+        self.assertEqual(validate_glb(path), [])
+        d = open(path, "rb").read()
+        doc = json.loads(d[20:20 + struct.unpack_from("<I", d, 12)[0]])
+        self.assertIn("_SPLAT", doc["meshes"][0]["primitives"][0]["attributes"])
+        self.assertEqual(len(doc["materials"][0]["extras"]["splat"]["textures"]), 4)
+
+
 class Models(Base):
     def test_decimate_welds_and_hits_target(self):
         P, UV, I = _sphere()

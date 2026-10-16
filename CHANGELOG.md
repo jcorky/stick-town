@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+**Added**
+- Height-blended ground splatting (TECHNIQUES §13, after Terrain3D): per-vertex litter/soil/grass/mud weights from the trail, canopy, grass, water and slope layers; `W_i = (a_i + h_i)^k a_i`; glTF `_SPLAT` attribute + material `extras.splat`, blended in the viewer's fragment shader and in the preview renderer (Gouraud ground).
+- `catalog/notes/`: what each of eight studied repos does, its equations, and what is queued from it.
+- `docs/gallery/` + `scripts/gallery.py`; `docs/TECHNIQUES.md`.
+
 **Changed**
 - Broadleaf leaf cards fold along the twig into a shallow V (4 triangles, two-thirds as many cards, cover held), so crowns no longer show flat streaks edge-on. tree-0.2.1; library trees rebuilt.
 

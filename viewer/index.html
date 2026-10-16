@@ -111,6 +111,35 @@ function alphaDepth(m) {
   return new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: m.map, alphaTest: m.alphaTest });
 }
 
+// Height-blended ground (docs/TECHNIQUES.md §13): four tiling detail maps mixed per pixel by
+// W_i = (a_i + h_i)^k a_i, with a = the mesh's _SPLAT weights and h = each map's own luminance.
+function addSplat(m, parser) {
+  const sp = m.userData && m.userData.splat;
+  if (!sp) return;
+  Promise.all(sp.textures.map((i) => parser.getDependency('texture', i))).then((tx) => {
+    tx.forEach((t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.needsUpdate = true; });
+    m.onBeforeCompile = (sh) => {
+      tx.forEach((t, i) => { sh.uniforms['uSplat' + i] = { value: t }; });
+      sh.uniforms.uSplatTile = { value: sp.tile_m };
+      sh.uniforms.uSplatK = { value: sp.sharpness };
+      sh.vertexShader = 'attribute vec4 _splat;\nvarying vec4 vSplat;\nvarying vec2 vGroundUV;\nuniform float uSplatTile;\n' +
+        sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+          vSplat = _splat; vGroundUV = (modelMatrix * vec4(position, 1.0)).xz / uSplatTile;`);
+      sh.fragmentShader = 'uniform sampler2D uSplat0, uSplat1, uSplat2, uSplat3;\nuniform float uSplatK;\nvarying vec4 vSplat;\nvarying vec2 vGroundUV;\n' +
+        sh.fragmentShader.replace('#include <map_fragment>', `
+          vec4 t0 = mapTexelToLinear(texture2D(uSplat0, vGroundUV));
+          vec4 t1 = mapTexelToLinear(texture2D(uSplat1, vGroundUV));
+          vec4 t2 = mapTexelToLinear(texture2D(uSplat2, vGroundUV));
+          vec4 t3 = mapTexelToLinear(texture2D(uSplat3, vGroundUV));
+          vec4 h = vec4(t0.r, t1.r, t2.r, t3.r);
+          vec4 w = pow(max(vSplat + h, vec4(1e-4)), vec4(uSplatK)) * vSplat;
+          w /= max(dot(w, vec4(1.0)), 1e-5);
+          diffuseColor.rgb *= t0.rgb * w.x + t1.rgb * w.y + t2.rgb * w.z + t3.rgb * w.w;`);
+    };
+    m.needsUpdate = true;
+  });
+}
+
 function onGLTF(g) {
     const root = g.scene;
     root.traverse((o) => {
@@ -120,6 +149,7 @@ function onGLTF(g) {
       o.receiveShadow = true;
       const m = o.material;
       if (m && /^(foliage|grass)/.test(m.name)) addWind(m);
+      if (m && m.userData && m.userData.splat) addSplat(m, g.parser);
       if (m && m.name === 'water') { m.transparent = true; m.opacity = 0.85; m.roughness = 0.08; }
     });
     scene.add(root);

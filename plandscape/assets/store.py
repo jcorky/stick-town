@@ -34,7 +34,7 @@ GENERATOR_VERSIONS = {
     "body": "body-0.1.0",
     "behavior": "behavior-0.1.1",
     "grass_patch": "grass-0.1.0",
-    "texture": "texture-0.1.1",
+    "texture": "texture-0.1.3",
     "model": "model-0.1.3",
 }
 

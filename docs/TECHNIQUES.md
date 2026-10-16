@@ -148,3 +148,23 @@ Tiling UVs (bark, ground) are shifted by whole tiles and scaled by $k = 64$:
 $$uv' = \frac{uv - \lfloor \min uv\rfloor}{k}\in[0,1]\ \to\ \text{uint16},\qquad \text{texture transform scale} = k$$
 
 Indices are uint16 when a mesh has fewer than 65,536 vertices.
+
+## 13. Height-blended ground splatting (after Terrain3D, MIT)
+`plandscape/ground/surface.py: ground_weights`; `plandscape/textures.py: height_blend`; `viewer/index.html: addSplat`; `plandscape/render.py`
+
+Four materials per vertex, $\mathbf a = (\text{litter}, \text{soil}, \text{grass}, \text{mud})$, from layers the scene already has
+(trail $G$, canopy $c$, grass density $d$, water $W$, slope $s$ in degrees), with $g = \text{clip}(1.3G)$:
+
+$$a_\text{litter} = \text{clip}\big(c\,(0.6 + \ell)\big)(1-g),\quad a_\text{soil} = \max\!\big(g,\ \text{clip}(\tfrac{s-25}{20})\big) + 0.25(1-d)(1-c)$$
+$$a_\text{grass} = d\,(1 - 0.8c)(1-g),\quad a_\text{mud} = \text{clip}\big(2\,(W * \mathcal N_{2\,\text{m}})\big)\big(1 - \text{clip}(s/45)\big)$$
+
+plus low-frequency noise jitter (amplitude 0.12) so edges wander, then $\sum_i a_i = 1$. Per pixel, with each
+grey detail map's own luminance as its height $h_i$ and sharpness $k = 8$:
+
+$$W_i = \frac{(a_i + h_i)^k\,a_i}{\sum_j (a_j + h_j)^k\,a_j},\qquad \text{albedo} = \text{COLOR\_0}\cdot\sum_i W_i\,T_i(\mathbf x_{xy}/2\,\text{m})$$
+
+so grass fills the hollows of the litter and trodden soil breaks through where the trail is strongest, not along
+triangle edges. The weights ship as a custom glTF attribute `_SPLAT` (uint8 ×4) and the four textures as material
+`extras.splat`; our viewer blends them in the fragment shader, other viewers fall back to the single base texture.
+Terrain3D's per-vertex control map holds two IDs plus a blend byte and multiplies by a bilinear weight $b$:
+$W = (b + t + h)^k\,b$ with $k = 4 + 60\cdot\text{sharpness}$; ours stores four weights directly.
