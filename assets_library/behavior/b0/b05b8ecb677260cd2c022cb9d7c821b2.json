@@ -1,0 +1,83 @@
+{
+ "key": "b05b8ecb677260cd2c022cb9d7c821b2",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 1,
+  "scene": "1373065c7c2d",
+  "species": "white_tailed_deer",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 209.2484,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "alert:human"
+   ],
+   [
+    2.8,
+    "plan:drink"
+   ],
+   [
+    17.8,
+    "flee:human"
+   ],
+   [
+    22.2,
+    "plan:explore"
+   ],
+   [
+    56.8,
+    "arrive:explore"
+   ],
+   [
+    60.0,
+    "plan:eat"
+   ],
+   [
+    109.8,
+    "snack"
+   ],
+   [
+    122.0,
+    "plan:eat"
+   ],
+   [
+    122.2,
+    "arrive:eat"
+   ],
+   [
+    135.5,
+    "plan:explore"
+   ],
+   [
+    153.5,
+    "plan:explore"
+   ],
+   [
+    176.5,
+    "plan:drink"
+   ]
+  ],
+  "species": "white_tailed_deer",
+  "state_mix": {
+   "alert": 10,
+   "eat": 100,
+   "flee": 17,
+   "idle": 7,
+   "pause": 50,
+   "travel": 536
+  },
+  "traits": {
+   "boldness": 0.849,
+   "curiosity": 0.266,
+   "laziness": 0.561,
+   "patience": 0.819,
+   "wanderlust": 0.332
+  }
+ },
+ "path": "behavior/b0/b05b8ecb677260cd2c022cb9d7c821b2.npz"
+}

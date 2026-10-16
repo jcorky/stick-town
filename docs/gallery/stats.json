@@ -22,5 +22,13 @@
   "ground_props": 209,
   "agents": 4,
   "signs": 3
+ },
+ "walk": {
+  "glb_mb": 14.39,
+  "trees": 100,
+  "tree_tris": 75414,
+  "ground_props": 339,
+  "agents": 12,
+  "signs": 2
  }
 }

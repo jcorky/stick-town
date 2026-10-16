@@ -1,0 +1,120 @@
+{
+ "key": "eef5132bb6c6bdac7ff46dbd622debed",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 5,
+  "scene": "1373065c7c2d",
+  "species": "wild_turkey",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 63.342,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:drink"
+   ],
+   [
+    2.2,
+    "alert:human"
+   ],
+   [
+    4.8,
+    "plan:drink"
+   ],
+   [
+    13.8,
+    "alert:human"
+   ],
+   [
+    16.0,
+    "plan:drink"
+   ],
+   [
+    26.0,
+    "alert:human"
+   ],
+   [
+    28.8,
+    "plan:drink"
+   ],
+   [
+    46.0,
+    "alert:human"
+   ],
+   [
+    52.0,
+    "plan:rest"
+   ],
+   [
+    53.5,
+    "snack"
+   ],
+   [
+    56.5,
+    "plan:drink"
+   ],
+   [
+    57.0,
+    "alert:human"
+   ],
+   [
+    60.8,
+    "plan:drink"
+   ],
+   [
+    73.2,
+    "alert:human"
+   ],
+   [
+    77.2,
+    "plan:drink"
+   ],
+   [
+    83.5,
+    "plan:drink"
+   ],
+   [
+    89.2,
+    "alert:human"
+   ],
+   [
+    92.5,
+    "plan:drink"
+   ],
+   [
+    99.2,
+    "arrive:drink"
+   ],
+   [
+    113.5,
+    "plan:rest"
+   ],
+   [
+    155.0,
+    "arrive:rest"
+   ]
+  ],
+  "species": "wild_turkey",
+  "state_mix": {
+   "alert": 91,
+   "drink": 56,
+   "eat": 11,
+   "idle": 10,
+   "pause": 20,
+   "rest": 100,
+   "travel": 432
+  },
+  "traits": {
+   "boldness": 0.484,
+   "curiosity": 0.378,
+   "laziness": 0.229,
+   "patience": 0.582,
+   "wanderlust": 0.088
+  }
+ },
+ "path": "behavior/ee/eef5132bb6c6bdac7ff46dbd622debed.npz"
+}

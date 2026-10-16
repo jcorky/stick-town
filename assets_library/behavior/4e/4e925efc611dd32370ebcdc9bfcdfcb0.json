@@ -1,0 +1,195 @@
+{
+ "key": "4e925efc611dd32370ebcdc9bfcdfcb0",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 6,
+  "scene": "1373065c7c2d",
+  "species": "wild_turkey",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 91.63,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:explore"
+   ],
+   [
+    4.0,
+    "plan:explore"
+   ],
+   [
+    8.2,
+    "alert:human"
+   ],
+   [
+    12.2,
+    "plan:drink"
+   ],
+   [
+    23.5,
+    "alert:human"
+   ],
+   [
+    25.5,
+    "plan:eat"
+   ],
+   [
+    39.5,
+    "alert:human"
+   ],
+   [
+    41.0,
+    "plan:eat"
+   ],
+   [
+    46.5,
+    "plan:explore"
+   ],
+   [
+    52.8,
+    "alert:human"
+   ],
+   [
+    55.2,
+    "plan:eat"
+   ],
+   [
+    66.0,
+    "alert:human"
+   ],
+   [
+    68.0,
+    "plan:drink"
+   ],
+   [
+    77.2,
+    "alert:human"
+   ],
+   [
+    81.0,
+    "plan:drink"
+   ],
+   [
+    86.2,
+    "flee:human"
+   ],
+   [
+    92.8,
+    "plan:explore"
+   ],
+   [
+    99.5,
+    "alert:human"
+   ],
+   [
+    102.2,
+    "plan:rest"
+   ],
+   [
+    110.5,
+    "snack"
+   ],
+   [
+    113.2,
+    "plan:rest"
+   ],
+   [
+    113.8,
+    "snack"
+   ],
+   [
+    114.8,
+    "plan:rest"
+   ],
+   [
+    125.2,
+    "snack"
+   ],
+   [
+    127.2,
+    "plan:drink"
+   ],
+   [
+    128.2,
+    "snack"
+   ],
+   [
+    129.2,
+    "plan:rest"
+   ],
+   [
+    131.5,
+    "snack"
+   ],
+   [
+    132.8,
+    "plan:eat"
+   ],
+   [
+    135.2,
+    "snack"
+   ],
+   [
+    136.5,
+    "plan:explore"
+   ],
+   [
+    139.8,
+    "snack"
+   ],
+   [
+    141.8,
+    "plan:explore"
+   ],
+   [
+    142.8,
+    "snack"
+   ],
+   [
+    144.2,
+    "plan:drink"
+   ],
+   [
+    148.5,
+    "snack"
+   ],
+   [
+    150.0,
+    "plan:drink"
+   ],
+   [
+    156.0,
+    "snack"
+   ],
+   [
+    157.0,
+    "plan:eat"
+   ],
+   [
+    157.2,
+    "arrive:eat"
+   ]
+  ],
+  "species": "wild_turkey",
+  "state_mix": {
+   "alert": 67,
+   "eat": 142,
+   "flee": 25,
+   "idle": 20,
+   "pause": 40,
+   "travel": 426
+  },
+  "traits": {
+   "boldness": 0.851,
+   "curiosity": 0.533,
+   "laziness": 0.22,
+   "patience": 0.161,
+   "wanderlust": 0.256
+  }
+ },
+ "path": "behavior/4e/4e925efc611dd32370ebcdc9bfcdfcb0.npz"
+}
