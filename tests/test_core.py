@@ -208,6 +208,33 @@ class NewSpecies(unittest.TestCase):
         self.assertLess(np.maximum(near, far)[band].max(), 5)  # within a few metres of the edge, either side
 
 
+class Flight(unittest.TestCase):
+    def test_flushed_heron_flies_and_lands_and_wings_fold(self):
+        from plandscape.fauna import agents as A
+        from plandscape.fauna import gait
+        hf = generate_tile(96, 1.0, "floodplain", 3)
+        z = np.zeros_like(hf.z)
+        f, _ = simulate(hf, [(5, 5, 1), (90, 90, 1)], n_trips=4, seed=1)
+        w = A.World(hf, f, obstacle_cost(hf), z, z, z, np.zeros((0, 4)))
+        h = A.spawn(w, {"great_blue_heron": 1}, seed=1)[0]
+        h.state, h.timer = "fly", 8.0
+        p0 = h.p.copy()
+        t = 0.0
+        while t < 15:
+            h.step(w, [h], t, 0.25)
+            t += 0.25
+        alt = np.array([l[3] for l in h.log]) - np.array([w.z(l[1], l[2]) for l in h.log])
+        self.assertGreater(alt.max(), A.FLY_CRUISE * 0.9)          # climbed to cruise
+        self.assertLess(abs(alt[-1]), 1e-6)                        # and landed
+        self.assertNotEqual(h.state, "fly")
+        self.assertGreater(np.hypot(*(h.p - p0)), 30)              # covered ground at flight speed
+        air = np.array([l[5] == "fly" for l in h.log])
+        tk, roll, span = gait.wing_track([l[0] for l in h.log], air)
+        self.assertAlmostEqual(float(span[0]), 1.0)                 # open while airborne
+        self.assertAlmostEqual(float(span[-1]), gait.WING_FOLD)     # folded once down
+        self.assertGreater(np.abs(roll).max(), np.radians(30))
+
+
 class Refine(unittest.TestCase):
     def test_validate_keeps_only_what_generators_honour(self):
         from plandscape.scene.planner import refine

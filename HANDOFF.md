@@ -57,7 +57,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
    - knees and planted feet are done (§26); feet still slide where the stance is out of reach (gallop);
    - torso bob, head pose (§28), lying down and the deer's flag (§29) are done; smooth turning (§30) and gaze (§31) are done; next: ear flicks, the viewer following a chosen animal's gaze;
    - multi-hour runs;
-   - raccoon, box turtle and heron are in (§32); next: cardinal, red-tailed hawk (flight), fire-ant mounds; herons should fly when flushed.
+   - raccoon, box turtle and heron are in (§32); next: cardinal, red-tailed hawk (flight), fire-ant mounds; herons fly when flushed (§33); flight values other than cruise speed are design values.
 5. **Species data is verified** (§24, `catalog/species_sources.json`). New species need the same: URL plus quote for height, d.b.h., leaf length and habit before `verified=True`. Silvics PDFs: research.fs.usda.gov/download/treesearch/1547.pdf (conifers) and 1548.pdf (hardwoods); the old srs.fs.usda.gov host fails TLS.
 6. **Real-place mode.** `load_dem()` for USGS 3DEP behind an optional `rasterio` import, NLCD/FIA species weights, OSM buildings (see `docs/DATA_SOURCES.md`).
 7. **Planner.** `refine()` + `validate()` + `claude_llm()` are done (§27, `--llm`), tested with a mocked API; not yet run against the live API (no key in session 3). Next: run it with a key on varied prompts and record failures; widen the keyword vocabulary from what the LLM gets right.

@@ -682,3 +682,20 @@ $\sigma$ = 1 cell). Shore feeders forage it and spawn on it.
 
 The planner matches the longest animal phrase first and blanks it, so "a box turtle" is one turtle, not one plus
 "a few".
+
+## 33. Herons fly when flushed
+`plandscape/fauna/agents.py: FaunaSpec.flies, "fly" state, FLY_CRUISE, FLY_CLIMB`; `gait.py: wing_track, TRAIL, phase_track(air=)`; `bodies.py: rig (wings)`
+
+A great blue heron does not run from a person; it flushes. Inside its flight-initiation distance, a species with
+`flies > 0` takes off away from the threat and flies 6–14 s at the sourced cruise of 10.7 m/s (Maine IFW GPS, 24 mph).
+It climbs and sinks at 2 m/s, cruises at 8 m and descends over the last 3 s (all three design values):
+
+$$a_{i} = \operatorname{clip}\!\big(a_{i-1} + \operatorname{clip}(a^* - a_{i-1},\ \pm 2\Delta t),\ 0,\ \infty\big), \qquad a^* = \begin{cases} 8 & \text{timer} > 3\ \text{s} \\ 0 & \text{otherwise} \end{cases}$$
+
+Ground speed ramps with height, $v = 10.7\,(0.4 + 0.6\min(a/8, 1))$. The bird passes over trees and turns back at the tile
+edge. Its logged height is ground plus climb plus altitude.
+
+**Pose.**
+- **Wings:** each is a 0.9 m blade, matching Audubon's 1.7–2.0 m wingspan. On the ground the span is squeezed to 12 %, folded. In the air it opens and flaps by roll about the body axis, $\pm 40°\,\sin(2\pi\,2.5\,\text{Hz}\;t)$ (amplitude and rate are design values), with 8 keys per beat.
+- **Legs:** they trail straight back ($\theta_\text{hip} = -80°$, knee straight). Stride phase does not advance while airborne, so no walking keys are spent.
+- **Head:** it draws back, `HEAD["fly"]` = −0.3 of the grazing angle.

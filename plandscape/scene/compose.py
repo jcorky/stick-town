@@ -412,9 +412,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
                           g.mesh(rg["neck"]["mesh"], nm + "_head", m_fauna) if rg["neck"] else None,
                           g.mesh(rg["tail"]["mesh"], nm + "_tail", m_fauna) if rg["tail"] else None,
+                          [g.mesh(w["mesh"], f"{nm}_wing{i}", m_fauna) for i, w in enumerate(rg["wings"])],
                           [(g.mesh(lg["thigh"], f"{nm}_thigh{i}", m_fauna), g.mesh(lg["shank"], f"{nm}_shank{i}", m_fauna))
                            for i, lg in enumerate(rg["legs"])])
-        rg, torso_mesh, head_mesh, tail_mesh, leg_meshes = rigs[look]
+        rg, torso_mesh, head_mesh, tail_mesh, wing_meshes, leg_meshes = rigs[look]
         torso = g.node("torso", torso_mesh)
         neck = g.node("neck", head_mesh, translation=rg["neck"]["pivot"]) if head_mesh is not None else None
         tail = g.node("tail", tail_mesh, translation=rg["tail"]["pivot"]) if tail_mesh is not None else None
@@ -427,7 +428,12 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             g.nodes[th]["rotation"] = pitch_quat(r1).tolist()
             legs.append(th)
             shanks.append(sh)
-        trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs)
+        wings = []
+        for i, (wm, w) in enumerate(zip(wing_meshes, rg["wings"])):  # folded by default (span scale, §33)
+            wn = g.node(f"wing{i}", wm, translation=w["pivot"])
+            g.nodes[wn]["scale"] = [1.0, 1.0, gait.WING_FOLD]  # span is world y = glTF z
+            wings.append(wn)
+        trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs + wings)
         node = g.node(f"{a.spec.key}_{a.id}", children=[trunk])
         akids.append(node)
         if len(a.log) > 1:  # full-rate path, turn-rate-limited heading, keys reduced (TECHNIQUES §30)
@@ -440,9 +446,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                 bob = []
                 states = [l[5] for l in a.log]
                 drop = gait.pose_track(t_, states, rg["lie"] * rg["hip"], gait.LIE, gait.LIE_EASE) if rg["lie"] else None
+                air = np.array([l[5] == "fly" for l in a.log]) if a.spec.flies else None
                 tk, ang, _ = gait.leg_ik(t_, xy, rg["hip"], [lg["knee"] for lg in rg["legs"]],
                                          "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]), bob=bob,
-                                         drop=drop)
+                                         drop=drop, air=air)
                 for i, (ln, sn) in enumerate(zip(legs, shanks)):
                     extra.append((ln, "rotation", tk, pitch_quat(ang[:, i, 0])))
                     extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
@@ -457,6 +464,14 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                 ps = np.interp(tt, t_, psi)
                 keep = motion.simplify(tt, np.zeros((len(tt), 3)), np.c_[th, ps])
                 extra.append((neck, "rotation", tt[keep], qmul(yaw_quat(ps[keep]), pitch_quat(-th[keep]))))
+            if wings:  # flap ±40° at 2.5 Hz in the air, folded on the ground (§33)
+                air = np.array([l[5] == "fly" for l in a.log])
+                wk, roll, span = gait.wing_track(t_, air)
+                for wn, w in zip(wings, rg["wings"]):
+                    ang_ = w["side"] * roll
+                    q = np.c_[np.sin(ang_ / 2), 0 * ang_, 0 * ang_, np.cos(ang_ / 2)]
+                    extra.append((wn, "rotation", wk, q))
+                    extra.append((wn, "scale", wk, np.c_[np.ones_like(span), np.ones_like(span), span]))
             if tail is not None:  # the white flag goes up when a deer flees (§29)
                 fk, fv = gait.pose_track(t_, [l[5] for l in a.log], rg["tail"]["flag"], gait.TAIL, gait.TAIL_EASE)
                 extra.append((tail, "rotation", fk, pitch_quat(-fv)))
