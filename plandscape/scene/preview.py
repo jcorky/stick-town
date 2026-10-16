@@ -18,7 +18,7 @@ def _rotz(theta, t, s):
 
 def _scene_meshes(res, near=None, foliage=True):
     """Scene meshes in world space; `near=(x, y, r)` keeps only trees and props within r metres."""
-    meshes = [res["ter"], res["grass"], res["built"], res["water"]]
+    meshes = [res["ter"], res["grass"], res["built"], res["water"]] + ([res["road"]] if res.get("road") is not None else [])
     def ok(o):
         return near is None or np.hypot(o["x"] - near[0], o["y"] - near[1]) < near[2]
     for pl in res["placements"]:
@@ -44,7 +44,7 @@ def perspective(res, path, size=(1100, 720)):
     # review render uses neutral late-morning light so form and colour are judgeable;
     # the viewer applies the scene's real time-of-day lighting
     return render(meshes, path, size=size, azimuth=200, elevation=16, fit=fit,
-                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_200_000, keep_first=4)
+                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_200_000, keep_first=5)
 
 
 def _crop(m, box):
@@ -71,7 +71,20 @@ def closeup(res, path, size=(1100, 720)):
               for m in _scene_meshes(res, near=(cx, cy, 9), foliage=False)]
     fit = ((cx - 6, cy - 6, zc - 1), (cx + 6, cy + 6, zc + 2))
     return render(meshes, path, size=size, azimuth=200, elevation=14, fit=fit,
-                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=4)
+                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=5)
+
+
+def homestead(res, path, size=(1100, 720)):
+    """The first building seen from across the road: road, ditch, fence, mailbox, porch (crowns left out)."""
+    if not res.get("buildings"):
+        return None
+    mx, my = res["buildings"][0]["mailbox"]
+    cx, cy = mx, my + 2
+    z = float(res["hf"].sample(cx, cy)[0])
+    meshes = [_crop(m, (cx - 16, cy - 12, cx + 16, cy + 16))
+              for m in _scene_meshes(res, near=(cx, cy, 16), foliage=False)]
+    return render(meshes, path, size=size, azimuth=20, elevation=22, fit=((cx - 12, cy - 8, z - 2), (cx + 12, cy + 12, z + 5)),
+                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=5)
 
 
 def map_view(res, path):

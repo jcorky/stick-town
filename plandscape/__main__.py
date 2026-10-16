@@ -7,7 +7,7 @@ import os
 
 from .scene.compose import compose
 from .scene.planner import plan
-from .scene.preview import closeup, map_view, perspective
+from .scene.preview import closeup, homestead, map_view, perspective
 
 
 def main(argv=None):
@@ -31,6 +31,7 @@ def main(argv=None):
         map_view(res, os.path.join(a.out, "map.png"))
         perspective(res, os.path.join(a.out, "preview.png"))
         closeup(res, os.path.join(a.out, "closeup.png"))
+        homestead(res, os.path.join(a.out, "homestead.png"))
     print(res["stats"])
 
 

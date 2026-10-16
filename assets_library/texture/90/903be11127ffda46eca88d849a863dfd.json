@@ -1,0 +1,30 @@
+{
+ "key": "903be11127ffda46eca88d849a863dfd",
+ "kind": "texture",
+ "version": "texture-0.1.3",
+ "params": {
+  "key": "ground/Gravel023"
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-16T04:48:31",
+  "mean": [
+   0.798,
+   0.798,
+   0.798
+  ],
+  "mime": "image/jpeg",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "Gravel023",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/Gravel023"
+  }
+ },
+ "path": "texture/90/903be11127ffda46eca88d849a863dfd.npz"
+}

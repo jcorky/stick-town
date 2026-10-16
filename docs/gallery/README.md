@@ -26,6 +26,10 @@ slopes, the plateau's sandstone cap left intact, sediment filling the hollows.
 
 ![monte sano preview](monte-sano-preview.jpg)
 ![monte sano closeup](monte-sano-closeup.jpg)
+![monte sano homestead](monte-sano-homestead.jpg)
+
+Homestead: the county road routed by Dijkstra on a slope cost, smoothed, cut and filled with a crown and
+ditches (§15); the fence leaves a gate where the trodden walk from the porch meets the mailbox.
 ![monte sano map](monte-sano-map.jpg)
 
 Close-up: photoscanned logs, a mossy boulder, stumps, ferns and deadfall placed by habitat-weighted
@@ -42,4 +46,5 @@ in orange, animal tracks driven by softmax choice (§8) and Ornstein–Uhlenbeck
 
 ![bayou preview](bayou-preview.jpg)
 ![bayou closeup](bayou-closeup.jpg)
+![bayou homestead](bayou-homestead.jpg)
 ![bayou map](bayou-map.jpg)
