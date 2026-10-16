@@ -1,0 +1,30 @@
+{
+ "key": "347491ace3163ac29c68a84e0e790d0e",
+ "kind": "texture",
+ "version": "texture-0.1.3",
+ "params": {
+  "key": "ground/ScatteredLeaves009"
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-16T04:16:43",
+  "mean": [
+   0.7944,
+   0.7944,
+   0.7944
+  ],
+  "mime": "image/jpeg",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "ScatteredLeaves009",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/ScatteredLeaves009"
+  }
+ },
+ "path": "texture/34/347491ace3163ac29c68a84e0e790d0e.npz"
+}

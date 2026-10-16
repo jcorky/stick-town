@@ -80,7 +80,8 @@ class GLB:
         self.tex_index[tex.key] = len(self.textures) - 1
         return self.tex_index[tex.key]
 
-    def material(self, name, double=False, rough=0.9, metal=0.0, alpha=1.0, texture=None):
+    def material(self, name, double=False, rough=0.9, metal=0.0, alpha=1.0, texture=None, splat=None,
+                 splat_tile=2.0, sharpness=8.0):
         """`texture` (a Texture) adds a base-colour map; one with an alpha channel is alpha-masked."""
         if name in self.mat_index:
             return self.mat_index[name]
@@ -96,6 +97,10 @@ class GLB:
             m["pbrMetallicRoughness"]["baseColorTexture"] = ti
             if texture.alpha:
                 m["alphaMode"], m["alphaCutoff"] = "MASK", 0.5
+        if splat:  # height-blended ground: our viewer reads these; other viewers show `texture`
+            m["extras"] = {"splat": {"textures": [self.texture(t) for t in splat], "tile_m": splat_tile,
+                                     "sharpness": sharpness, "attribute": "_SPLAT",
+                                     "blend": "W_i = (a_i + h_i)^k a_i / sum_j (a_j + h_j)^k a_j"}}
         self.materials.append(m)
         self.mat_index[name] = len(self.materials) - 1
         if texture is not None:
@@ -118,6 +123,9 @@ class GLB:
         attrs = {"POSITION": self._acc(P, FLOAT, "VEC3", ARRAY_BUFFER, minmax=True),
                  "NORMAL": self._acc(N8, BYTE, "VEC3", ARRAY_BUFFER, normalized=True, stride=4),
                  "COLOR_0": self._acc(C, UBYTE, "VEC4", ARRAY_BUFFER, normalized=True)}
+        if mesh.weights is not None:  # custom attribute (leading underscore per the glTF spec)
+            attrs["_SPLAT"] = self._acc(np.round(np.clip(mesh.weights, 0, 1) * 255).astype(np.uint8), UBYTE,
+                                        "VEC4", ARRAY_BUFFER, normalized=True)
         if textured:
             uv = np.asarray(mesh.uvs, np.float64)
             k = self.mat_uvscale.get(material)

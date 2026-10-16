@@ -23,7 +23,7 @@ from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna.bodies import body
 from ..flora.species import SPECIES
 from ..flora.tree import generate_tree
-from ..ground.surface import BIOME_GRASS, grass_density, grass_mesh, terrain_mesh
+from ..ground.surface import BIOME_GRASS, grass_density, grass_mesh, ground_weights, terrain_mesh
 from ..mesh import Mesh, MeshBuilder
 from ..paths.desire import TrailField, obstacle_cost, simulate
 from ..rng import rng as make_rng
@@ -250,6 +250,9 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                        litter=0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2)
     ter.uvs = (ter.positions[:, :2] / textures.TILE_M["ground"]).astype(np.float32)
     ter.texture = textures.ground_key(plan.biome)
+    litter_amt = 0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2
+    ter.weights = ground_weights(hf, dens, field.G, canopy, litter=litter_amt, seed=plan.seed)
+    ter.splat = textures.splat_keys(plan.biome)
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
     grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season)
@@ -285,6 +288,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     def mat(mesh, name, **kw):
         """One material per (role, texture); untextured meshes share the plain role material."""
         tex = textures.get(mesh.texture, store) if (mesh.texture and mesh.uvs is not None) else None
+        if mesh.splat is not None and mesh.weights is not None:
+            kw["splat"] = [textures.get(k, store) for k in mesh.splat]
+            kw["splat_tile"] = textures.TILE_M["ground"]
+            kw["sharpness"] = textures.SPLAT_SHARPNESS
         return g.material(f"{name}:{tex.key}" if tex else name, texture=tex, **kw)
 
     m_grass = g.material("grass", double=True, rough=0.8)

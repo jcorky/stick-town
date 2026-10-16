@@ -1,0 +1,36 @@
+{
+ "key": "138bf2fedbda0ad01fc2b1e4862dfaf6",
+ "kind": "texture",
+ "version": "texture-0.1.3",
+ "params": {
+  "key": "leaf/LeafSet004"
+ },
+ "meta": {
+  "alpha": true,
+  "bbox": [
+   0.2246,
+   0.125,
+   0.709,
+   0.9824
+  ],
+  "created": "2026-10-16T04:16:44",
+  "mean": [
+   0.7867,
+   0.7867,
+   0.7867
+  ],
+  "mime": "image/png",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "LeafSet004",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/LeafSet004"
+  }
+ },
+ "path": "texture/13/138bf2fedbda0ad01fc2b1e4862dfaf6.npz"
+}

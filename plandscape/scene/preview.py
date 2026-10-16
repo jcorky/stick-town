@@ -53,7 +53,7 @@ def _crop(m, box):
         return m
     cen = m.positions[m.indices].mean(1)
     keep = (cen[:, 0] > box[0]) & (cen[:, 0] < box[2]) & (cen[:, 1] > box[1]) & (cen[:, 1] < box[3])
-    return Mesh(m.positions, m.colors, m.indices[keep], m.uvs, m.texture)
+    return Mesh(m.positions, m.colors, m.indices[keep], m.uvs, m.texture, m.weights, m.splat)
 
 
 def closeup(res, path, size=(1100, 720)):

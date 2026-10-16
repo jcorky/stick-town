@@ -4,7 +4,7 @@ Code adapted from third-party sources is recorded here: source repo, commit, fil
 
 | Our file | Source | Commit | Licence | What |
 |---|---|---|---|---|
-| — | — | — | — | Nothing adapted yet. All v0.1 code is original, implemented from the papers cited in `sources.json`. |
+| `plandscape/textures.py: height_blend`, `viewer/index.html: addSplat` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/shaders/main.glsl` | 854a457 | MIT | Height-blend weight form $W = (a + h)^k a$ (re-derived for four per-vertex weights; no code copied) |
 
 ## Imported assets (all CC0-1.0)
 

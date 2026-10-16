@@ -18,6 +18,8 @@ class Mesh:
     indices: np.ndarray    # (M,3) uint32
     uvs: np.ndarray | None = None  # (N,2) float32 texture coordinates, v down (glTF convention)
     texture: str | None = None     # key into plandscape.textures; colours stay the final look
+    weights: np.ndarray | None = None  # (N,4) splat weights for height-blended ground (sum to 1)
+    splat: tuple | None = None         # 4 texture keys the weights refer to
 
     @staticmethod
     def empty() -> "Mesh":

@@ -16,25 +16,33 @@ def _gather(meshes):
     """Concatenate meshes keeping per-triangle texture ids and per-vertex UVs."""
     from . import textures
     P, C, I, U, T, texs, off = [], [], [], [], [], [], 0
+    W = []
     for m in meshes:
         if m is None or not len(m.positions) or not m.n_tris:
             continue
         tex = textures.get(m.texture) if (m.texture and m.uvs is not None) else None
         tid = -1
-        if tex is not None:
+        if m.weights is not None and m.splat:
+            # splat ground: tid encodes a 4-texture group; per-vertex weights ride in W
+            texs.append(tuple(textures.get(k) for k in m.splat))
+            tid = len(texs) - 1
+            tex = None
+        elif tex is not None:
             texs.append(tex)
             tid = len(texs) - 1
         P.append(m.positions)
         C.append(m.colors)
         I.append(m.indices + off)
         U.append(m.uvs if tex is not None else np.zeros((len(m.positions), 2), np.float32))
+        W.append(m.weights if (m.weights is not None and m.splat) else np.zeros((len(m.positions), 4), np.float32))
         T.append(np.full(m.n_tris, tid, np.int32))
         off += len(m.positions)
     if not P:
         z = np.zeros((0, 3), np.float32)
-        return z, z, np.zeros((0, 3), np.uint32), np.zeros((0, 2), np.float32), np.zeros(0, np.int32), []
+        return (z, z, np.zeros((0, 3), np.uint32), np.zeros((0, 2), np.float32), np.zeros(0, np.int32), [],
+                np.zeros((0, 4), np.float32))
     return (np.concatenate(P).astype(np.float64), np.concatenate(C).astype(np.float32), np.concatenate(I),
-            np.concatenate(U).astype(np.float32), np.concatenate(T), texs)
+            np.concatenate(U).astype(np.float32), np.concatenate(T), texs, np.concatenate(W).astype(np.float32))
 
 
 def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
@@ -42,7 +50,7 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
     """Meshes after the first `keep_first` may be thinned to `max_tris` for speed;
     the leading meshes (terrain, buildings) are never thinned, or the ground gets holes."""
     meshes = list(meshes) if isinstance(meshes, (list, tuple)) else [meshes]
-    P, COL, tri, UV, TID, texs = _gather(meshes)
+    P, COL, tri, UV, TID, texs, WS = _gather(meshes)
     n_solid = sum(m.n_tris for m in meshes[:keep_first] if m is not None)
     budget = max(max_tris - n_solid, 0)
     if len(tri) - n_solid > budget:
@@ -50,7 +58,7 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
         sel = np.r_[np.arange(n_solid), np.sort(keep)]
         tri, TID = tri[sel], TID[sel]
     m = Mesh(P, COL, tri)
-    means = [np.asarray(t.mean, np.float32) for t in texs]
+    means = [np.asarray(t[0].mean if isinstance(t, tuple) else t.mean, np.float32) for t in texs]
     az, el = np.radians(azimuth), np.radians(elevation)
     fwd = np.array([np.cos(el) * np.sin(az), np.cos(el) * np.cos(az), -np.sin(el)])
     right = np.array([np.cos(az), -np.sin(az), 0.0])
@@ -110,6 +118,22 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
         sub = zbuf[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1]
         win = inside & (zz < sub)
         t = TID[i]
+        if t >= 0 and win.any() and isinstance(texs[t], tuple):  # height-blended ground (TECHNIQUES §13)
+            from .textures import TILE_M, height_blend
+            tv = tri[i]
+            wx = l1 * P[tv[0], 0] + l2 * P[tv[1], 0] + l3 * P[tv[2], 0]
+            wy = l1 * P[tv[0], 1] + l2 * P[tv[1], 1] + l3 * P[tv[2], 1]
+            a = (l1[..., None] * WS[tv[0]] + l2[..., None] * WS[tv[1]] + l3[..., None] * WS[tv[2]])[win]
+            s_ = np.stack([tx.sample(wx[win] / TILE_M["ground"], wy[win] / TILE_M["ground"])[..., 0]
+                           for tx in texs[t]], -1)
+            g_ = (height_blend(a, s_) * s_).sum(-1)
+            # Gouraud: interpolate vertex colours inside the triangle (keeps the per-triangle light C[i])
+            cv = COL[tv]
+            gour = (l1[..., None] * cv[0] + l2[..., None] * cv[1] + l3[..., None] * cv[2])[win]
+            gour = gour / np.maximum(cv.mean(0), 1e-3)
+            sub[win] = zz[win]
+            frame[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1][win] = np.clip(C[i] * gour * g_[:, None] / means[t], 0, 1)
+            continue
         if t >= 0 and win.any():  # alpha-tested texture lookup, modulated so its mean maps to the vertex colour
             uv = UV[tri[i]]
             u = l1 * uv[0, 0] + l2 * uv[1, 0] + l3 * uv[2, 0]
