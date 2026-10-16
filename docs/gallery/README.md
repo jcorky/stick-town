@@ -21,6 +21,25 @@ that space colonisation bridged with vertical stems, giving boxy right angles. S
 
 ![dogwood tiers](dogwood-tiers.jpg)
 
+## Wind (§34)
+
+![wind](wind.jpg)
+
+One gust field drives everything that sways. Top row: Kaimal gusts against each level's transfer function (trunk,
+limb, branch, leaf flutter); a 25 m white oak's trunk top and a typical limb- and branch-tip leaf at Beaufort 3 and 6
+(static lean plus gusts); the along-wind gust field, whose cores have moved 27 m downwind 6 s later. Bottom row: motion
+of leaves, branches, limbs and the trunk top against the NOAA land descriptions; every species' Rayleigh sway
+frequency in leaf (o) and bare (x) against two measured broadleaves (ours run high: a known gap); a 4 s long exposure.
+
+![oak in a strong breeze](wind-oak.gif)
+
+The same oak at Beaufort 6, rendered from the viewer's own equations (`plandscape/wind/sway.py`).
+
+![viewer, longleaf savanna at Beaufort 7](viewer-wind.gif)
+
+The three.js viewer on the longleaf savanna at Beaufort 7 (`scripts/wind_frames.py out/longleaf … --force 7`), frames
+0.25 s apart on a fixed wind clock.
+
 ## Animals to scale (§32)
 
 ![fauna](fauna.jpg)

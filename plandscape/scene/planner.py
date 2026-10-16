@@ -61,6 +61,15 @@ TIMES = {"dawn": 6.3, "sunrise": 6.5, "morning": 8.5, "noon": 12.5, "midday": 12
          "golden hour": 18.6, "dusk": 19.2, "sunset": 19.0, "evening": 19.5, "twilight": 19.6, "night": 22.5,
          "midnight": 0.5}
 
+# wind words → Beaufort force; directions → where the wind blows FROM (degrees clockwise from north)
+WIND_WORDS = {"dead calm": 0, "calm": 1, "still": 1, "light air": 1, "light breeze": 2, "breeze": 3, "breezy": 4,
+              "gentle breeze": 3, "fresh breeze": 5, "gusty": 5, "windy": 6, "blustery": 6, "strong wind": 7,
+              "gale": 8, "storm": 9, "stormy": 9, "thunderstorm": 9, "hurricane": 12}
+WIND_DIRS = {"north": 0, "northeast": 45, "east": 90, "southeast": 135, "south": 180, "southwest": 225,
+             "west": 270, "northwest": 315}
+# design defaults: the Gulf's southerlies in the warm months, fronts from the northwest in winter
+WIND_SEASON = {"spring": 200.0, "summer": 180.0, "fall": 45.0, "winter": 315.0}
+
 SEASONS = {"spring": "spring", "summer": "summer", "fall": "fall", "autumn": "fall", "winter": "winter",
            "april": "spring", "july": "summer", "october": "fall", "december": "winter"}
 
@@ -79,6 +88,8 @@ class ScenePlan:
     fauna: dict = field(default_factory=dict)
     hour: float = 9.0
     season: str = "summer"
+    wind_force: float = 3.0      # Beaufort (TECHNIQUES §34)
+    wind_from: float = -1.0      # degrees clockwise from north it blows from; < 0 means the season's default
     size_m: float = 128.0
     res_m: float = 1.0
     detail: str = "low"
@@ -161,6 +172,17 @@ def plan(prompt: str, seed: int | None = None, size_m: float = 128.0, detail: st
         if _has(t, (w,)):
             p.season = s_
             break
+    for w in sorted(WIND_WORDS, key=len, reverse=True):
+        if re.search(r"\b" + re.escape(w) + r"\b", t):
+            p.wind_force = float(WIND_WORDS[w])
+            p.notes.append(f"wind→Beaufort {WIND_WORDS[w]}")
+            break
+    for w in sorted(WIND_DIRS, key=len, reverse=True):  # "north wind", "from the southwest", "a westerly"
+        if re.search(r"\b(?:" + w + r"(?:ern|erly)?\s+(?:wind|breeze|gale)|from\s+the\s+" + w + r"|" + w + r"erly)\b", t):
+            p.wind_from = float(WIND_DIRS[w])
+            break
+    if p.wind_from < 0:
+        p.wind_from = WIND_SEASON[p.season]
     return p
 
 
@@ -223,6 +245,10 @@ def validate(data: dict, base: ScenePlan) -> ScenePlan:
             p.hour = float(v) % 24 if num(v) and 0 <= v <= 24 else (reject(k, v) or p.hour)
         elif k == "season":
             p.season = v if word(v, SEASON_SET) else (reject(k, v) or p.season)
+        elif k == "wind_force":
+            p.wind_force = float(v) if num(v) and 0 <= v <= 12 else (reject(k, v) or p.wind_force)
+        elif k == "wind_from":
+            p.wind_from = float(v) % 360 if num(v) and 0 <= v <= 360 else (reject(k, v) or p.wind_from)
         else:
             p.notes.append(f"refine: ignored unknown field {k}")
     if p.biome != base.biome and set(p.trees) == set(base.trees):  # a new biome with the old mix: use its own
@@ -259,7 +285,8 @@ def schema_json() -> str:
         "tree_density": "0..1", "buildings": f"list (≤{MAX_BUILDINGS}) of {list(BUILDING_KINDS)}",
         "paths": "bool", "creek": "bool",
         "fauna": {"<animal>": f"count 0..{MAX_PER_SPECIES}", "animals": sorted(FAUNA)},
-        "hour": "0..24 local solar time", "season": list(SEASON_SET)}, indent=1)
+        "hour": "0..24 local solar time", "season": list(SEASON_SET),
+        "wind_force": "Beaufort 0..12", "wind_from": "degrees clockwise from north the wind blows from"}, indent=1)
 
 
 DEFAULT_MODEL = "claude-opus-5-5"

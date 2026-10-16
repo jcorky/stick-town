@@ -138,6 +138,26 @@ Open `map.png` and `scene.json` and check:
   (x.25), or the centroid crop leaves sawteeth.
 - Review creeks with `creek.png` and the gallery creek sheet; the map's water raster is 1 m and always looks blocky.
 
+### Wind (§34)
+- One plane wave per gust frequency paints bands across the wind (trees in a line move in sync). Split each band into
+  ≥3 waves with independent lateral tilts; Davenport coherence then holds per realisation, not only on average.
+- A piecewise drag law (U² then U^{2+b}) has a jump in its log-slope β and shows as a dip in gustiness at the knot.
+  Use the smooth F ∝ U²(1 + U/U0)^b.
+- Rayleigh's quotient on the *wind-load* shape gives nonsense when the load changes (leafless trees: 3–5× f0). Use the
+  self-weight shape ω² = gΣmδ/Σmδ², and let twigs < 3 cm ride rigidly in the stem mode, or one leaf-laden 1.2 cm tip
+  dominates the quotient.
+- The drawn branch radii taper to a fixed 1.2 cm (R_TIP), far too thin to carry metres of twig: beam deflections came
+  out at 5–10 m. Floor them by elastic similarity d = c L^{3/2}, c from the tree's own trunk.
+- Leaf-card area is inflated to keep crown cover at low budgets; never turn it into leaf *mass*. Use it only as weights.
+- Python must hold the gust components as float32 or JS/GLSL and Python drift apart by 1e-5 (tested to 1e-9 now).
+- Viewer: three r128 re-uploads material uniforms only when the material changes, so per-tree uniforms need a cloned
+  material per tree (and per shadow depth material). `scene.json` must load before the GLB: the shader is generated
+  from its constants.
+- Absolute coordinates in a world-space mesh (grass) are not heights: the old grass sway scaled with elevation and
+  moved plateau grass a metre. Carry per-vertex data instead.
+- `scripts/wind_frames.py` steps the wind clock by hand for even frames; in dense forest the camera lands inside a
+  crown, so judge single trees with the Python specimen GIF (`gallery.wind_specimen`).
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.

@@ -145,6 +145,9 @@ class GLB:
         if mesh.weights is not None:  # custom attribute (leading underscore per the glTF spec)
             attrs["_SPLAT"] = self._acc(np.round(np.clip(mesh.weights, 0, 1) * 255).astype(np.uint8), UBYTE,
                                         "VEC4", ARRAY_BUFFER, normalized=True)
+        for k, v in (mesh.attrs or {}).items():  # custom vec4 attributes, normalised 8-bit (e.g. _WIND0..2)
+            v = np.ascontiguousarray(v)
+            attrs[k] = self._acc(v, BYTE if v.dtype == np.int8 else UBYTE, "VEC4", ARRAY_BUFFER, normalized=True)
         if textured:
             uv = np.asarray(mesh.uvs, np.float64)
             k = self.mat_uvscale.get(material)

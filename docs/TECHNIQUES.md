@@ -699,3 +699,126 @@ edge. Its logged height is ground plus climb plus altitude.
 - **Wings:** each is a 0.9 m blade, matching Audubon's 1.7–2.0 m wingspan. On the ground the span is squeezed to 12 %, folded. In the air it opens and flaps by roll about the body axis, $\pm 40°\,\sin(2\pi\,2.5\,\text{Hz}\;t)$ (amplitude and rate are design values), with 8 keys per beat.
 - **Legs:** they trail straight back ($\theta_\text{hip} = -80°$, knee straight). Stride phase does not advance while airborne, so no walking keys are spent.
 - **Head:** it draws back, `HEAD["fly"]` = −0.3 of the grazing angle.
+
+## 34. Wind: one gust field, four oscillators per tree, grass waves
+`plandscape/wind/field.py: Wind`; `response.py: mechanics, drag, transfer`; `sway.py` (the reference the shader mirrors); `attrs.py`; `viewer/wind.js`
+
+One deterministic field drives every moving plant, and later the animals' noses and ears. It is a sum of travelling
+sinusoids, so the viewer evaluates it per vertex with no state: scrubbing works, and Python and the GPU agree. The
+test suite checks JS against Python to 1e-9. Sources for every constant are in `catalog/wind_sources.json`.
+
+**Mean wind.** The prompt's Beaufort force sets the open-country speed $U_{10}$, the midpoint of the NOAA knot band
+(force 3 is 7–10 kn, so 4.37 m/s). The open log law (z₀ = 0.03 m, "Open") carries it to a blending height of 60 m
+(design value). From there the forest's own log law, fitted through the same speed, brings it back down. FAO-56
+gives d = ⅔h and z₀ = 0.123h. Inside the canopy the speed decays exponentially (Stull: $a$ = 1.0–1.1 for small
+evergreen trees):
+
+$$U(z) = \frac{u_*}{\kappa}\ln\frac{z-d}{z_0}\ (z\ge h),\qquad U(z) = U(h)\,e^{a(z/h-1)}\ (z<h),\qquad \kappa = 0.41$$
+
+A point with canopy cover $c$ gets the mix $(1-c)\,U_\text{open} + c\,U_\text{forest}$, so grass under the oaks is sheltered.
+At a 22 m canopy, $U_h \approx 0.46\,U_{10}$ and $u_*/U_h \approx 0.33$, typical of forests.
+
+**Gusts.** Kaimal's spectra give the shapes, $fS_u/u_*^2 = 102n/(1+33n)^{5/3}$ and $fS_v/u_*^2 = 17n/(1+9.5n)^{5/3}$
+with $n = fz/U$. They are sampled as 10 log-spaced bands (0.01–1.2 Hz) of 3 waves each, and scaled to the measured
+intensities: σ_u = 1.7 u* over canopies (2.4 in the open) and σ_v = 0.8 σ_u. At a canopy top that gives σ_u/U ≈ 0.56.
+
+$$\frac{u'}{U}(\xi,\eta,t) = \sum_k a_k \cos\!\Big(2\pi f_k\big(t - \tfrac{\xi}{U_c}\big) - \ell_k\eta + \phi_k\Big),\qquad \sum_k \tfrac12 a_k^2 = (\sigma_u/U)^2$$
+
+Here ξ runs along the wind and η across it. Taylor's frozen turbulence moves the pattern downwind at $U_c = U_h$. Each
+wave tilts across the wind by $\ell_k = 2\pi f_k c_k/U_c$, with $c_k$ drawn from a Cauchy distribution of scale γ.
+The expected coherence is then exactly Davenport's:
+
+$$\mathbb{E}[\cos \ell_k\eta] = e^{-\gamma\,2\pi f\eta/U_c} = e^{-C_y f\eta/U_c},\qquad C_y = 2\pi\gamma = 7\ \text{(design value)}$$
+
+Small gusts decorrelate within metres; large ones sweep whole stands. Three tilts per band make a single realisation
+break into patches instead of fronts. Amplitudes are stored as float32, which is exactly what the GPU holds.
+
+**Drag with streamlining (Vogel).** One smooth law covers both regimes, so its log-slope never jumps:
+
+$$F(U) = \tfrac12\rho C_{d0} A U^2 (1+U/U_0)^{b},\qquad \beta = \frac{d\ln F}{d\ln U} = 2 + b\,\frac{U/U_0}{1+U/U_0}$$
+
+- **Vogel exponent:** $b$ = −1, which is −1.1 for loblolly and ~−1 for the tuliptree leaf (Gosselin 2019, Table 1).
+- **Drag coefficient:** $C_{d0}$ is chosen so the crown has $C_d$ = 0.185 at 20 m/s, the midpoint of Vollsinger et al.'s 0.15–0.22 for hardwoods.
+- **Streamlining speed:** $U_0$ = 4 m/s (design value).
+- **Frontal area:** $A$ is the silhouette of the foliage and stem on a 25 cm grid, averaged over two views.
+
+Gusts are linearised about the mean. Along the wind $\delta F = \beta\bar F u'/\bar U$; across it $\delta F = \bar F v'/\bar U$,
+because the force turns with the wind.
+
+**Damped oscillators.** Every level responds to each sinusoid scaled by gain $|H|$ and delayed by phase $\psi$:
+
+$$H(f) = \frac{1}{1-r^2+2i\zeta r},\quad r = f/f_n,\qquad |H| = \big((1-r^2)^2+(2\zeta r)^2\big)^{-1/2},\quad \psi = \operatorname{atan2}(2\zeta r,\ 1-r^2)$$
+
+**Trunk.** Each skeleton segment is an Euler–Bernoulli beam of green wood. $E$ and specific gravity come from the USDA
+Wood Handbook, Table 4-3a; density is $\rho = 1000\,\text{SG}(1+0.8)$, where 0.8 is the green moisture content (design value).
+
+A plain cantilever formula $f_0\propto (D/H^2)\sqrt{E/\rho}$ fits conifers but not broadleaves (Jackson et al. 2019),
+because broadleaf limbs flex with the stem. Instead, $f_0$ is Rayleigh's quotient on the whole tree's static shape
+under its own weight applied sideways. Stem and limb main chains flex; twigs thinner than 3 cm ride rigidly:
+
+$$\kappa_i = \frac{M_i}{E\,\pi r_i^4/4},\quad M_i = \sum_{j\,\text{beyond}\,i} m_j g\,\lambda_{ij},\qquad
+\delta_i = \delta_p + \ell_i\,\tfrac12(\theta_p+\theta_i),\ \theta_i = \theta_p + \kappa_i\ell_i,\qquad
+\omega_0^2 = \frac{g\sum m\delta}{\sum m\delta^2}$$
+
+The lever λ is the height above the segment's base on the trunk, and the 3-D distance on limbs. Branch radii are at
+least $\tfrac12 c L^{3/2}$, McMahon's elastic similarity, with $c = D/H^{3/2}$ calibrated on the tree's own trunk.
+That is needed because the drawn radii taper to a fixed 1.2 cm tip.
+
+Leaves add 9 % of the wood mass, distributed by card area. That figure is calibrated so that bare trees sway faster
+by a mean 1.20, against Jackson's measured 1.18 ± 0.12. Damping is 8.6 % in leaf and 3.9 % bare (Jackson's pull tests).
+
+The viewer moves the trunk in the shape $\varphi(z) = 1-\cos(\pi z/2H)$, Rayleigh's classic choice. It is within 4 %
+of the exact first mode for a uniform beam, where $(z/H)^2$ is 27 % high. Its amplitude is
+
+$$m^* = \sum m_i\varphi_i^2,\quad F^* = \sum F_i\varphi_i,\quad k^* = (2\pi f_0)^2 m^*,\qquad
+\mathbf q = \frac{F^*}{k^*}\,G(U)\Big[(1+\beta r_u)\,\hat{\mathbf w} + r_v\,\hat{\mathbf p}\Big],\quad r_{u,v} = \sum_k a_k|H_k|\cos(\theta_k-\psi_k)$$
+
+with $G(U) = F(U)/F(U_\text{ref})$. Each instance runs at $f_0/s$ for its scale $s$, since $D/H^2 \propto 1/s$. Each crown
+feels $U(0.85\,sH,\ c)$ at its own position, so understory dogwoods under oaks barely move.
+
+**Limbs and branches.** Under the wind load at $U_\text{ref}$ = 4 m/s, the same beam integration, started at the trunk,
+gives each node's static deflection $\delta$. It is split into the limb's own mode $d_1$ (the deflection where a
+branch leaves its limb's main chain) and the branch's mode $d_2 = \delta - d_1$. Each limb and branch gets its own
+Rayleigh frequency, from its self-weight shape.
+
+The results: limbs sway 1.4–3× faster than their trunk. Measured values are 1.0 Hz for an isolated silver-maple branch
+against 0.33 Hz for its trunk, and de Langre's design ratio is 1:2. Limb and branch damping is 6 %, from James 2014's
+4.5–7.5 %. A limb moves at right angles to its own axis $\mathbf a$:
+
+$$\Delta_\text{limb} = d_1\,G(U)\,(1+\beta r_u^{(1)})\,(\hat{\mathbf w} - (\hat{\mathbf w}\cdot\mathbf a)\mathbf a)$$
+
+Its sum $r^{(1)}$ uses the limb's frequency, its own position (the upwind side moves first), and its own random phase.
+That phase is applied in proportion to $1-e^{-C_y f_k\ell/U_c}$, the coherence lost across the limb's size $\ell$
+(3 m for limbs, 1 m for branches; both design values).
+
+**Leaves.** A card of lever $\lambda$ tips downwind as the crown streamlines and flutters about its normal at 6 Hz.
+That is the torsional leaf mode measured on cherry, "weak dependence of leaf flutter on wind velocity" (Tadrist 2018):
+
+$$\Delta_\text{leaf} = \lambda\big[\sin\alpha\,\hat{\mathbf w} + A_f \sin(2\pi\,6\,t + 2\pi\phi_l)\,\mathbf n\big],\quad \alpha = 0.9(1-e^{-U/6}),\ A_f = 0.12\min(U/6, 1)$$
+
+The amplitudes in this equation are design values. Every vertex then drops by $\tfrac12|\Delta_h|^2/z$, so it swings
+on an arc instead of shearing.
+
+**Grass.** Each blade is a cantilever at 1.5 Hz with ζ = 0.15. It is driven by the field at its own position and
+local shelter $s = U(0.6L, c)/U_h$; the 1.5 Hz, the damping and the bend constants are design values:
+
+$$\beta_g = \operatorname{clip}\!\Big(1.25\,\frac{C}{1+C}(1+2r_u),\ 0,\ 1.45\Big),\quad C = (sU_h/4)^2,\qquad
+\Delta = \varphi L\big(\sin\beta_g\,\hat{\mathbf w} + \sin(\text{side})\,\hat{\mathbf p}\big) - \varphi L(1-\cos\beta_g)\,\hat{\mathbf z}$$
+
+Waves sweep across the grass by themselves (honami), because the field travels.
+
+**Per-vertex data.** Each vertex carries three 8-bit vec4s, 12 bytes in all. Monte Sano grew from 10.7 to 12.0 MB.
+- `_WIND0` = ($\varphi_t$, $\sqrt{d_1}$, $\sqrt{d_2}$, λ). The square roots keep both millimetre twigs and metre limbs.
+- `_WIND1` = (limb axis, limb phase).
+- `_WIND2` = ($f_1$, $f_2$, branch phase, leaf phase).
+
+Vertices find their skeleton node by k-d tree. A leaf card hangs from the node nearest its nearest-to-skeleton vertex.
+Impostors carry $\varphi_t$ only. Ground props without data sway as a low cantilever.
+
+**In the viewer.** Each tree instance's materials are cloned with its own `uTree` = ($f_0/s$, ζ, $Q$, shelter), and
+its shadow depth material is patched the same way. The bar has a Beaufort slider (0–10) with NOAA's land description
+and a direction selector. `?force=` and `?from=` set them from the URL.
+
+**Checks** (gallery `wind.jpg`):
+- **Calibration.** Motion climbs with force through the NOAA land descriptions. At force 3 leaves and twigs move about 1–2 cm. At force 6 limbs move about 10 cm and the tops of 25 m oaks about 5–15 cm.
+- **Known gap: broadleaf frequencies.** They come out 0.6–1.5 Hz, above the two measured broadleaves, 0.26 Hz (sycamore) and 0.34 Hz (19.7 m silver maple). Conifers, white oak, redbud and tulip poplar fall at 0.27–0.7 Hz. Two causes: our stems are stocky (DBH at the sourced upper range), and mass damping by branch–trunk coupling is not modelled.

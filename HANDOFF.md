@@ -32,7 +32,8 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 | `export/` | GLB with instancing, textures, quantised attributes, animations; validator |
 | `assets/` | library + bake/bake-models/prune/find/stats CLI; 36.5 MB in LFS |
 | `sources/` + `catalog/` | 23 repos probed; asset sites (Poly Haven, ambientCG) probed CC0; credits in `catalog/PROVENANCE.md` |
-| `viewer/index.html` | lighting, wind on all foliage materials, leaf-shaped shadows, timeline, follow-cam, event log |
+| `wind/` + `viewer/wind.js` | one gust field (Kaimal, frozen turbulence, Davenport coherence, log/exponential profile, NOAA Beaufort) driving trunk, limb, branch, leaf and grass oscillators per vertex (§34); constants in `catalog/wind_sources.json` |
+| `viewer/index.html` | lighting, physically based wind with Beaufort slider, leaf-shaped shadows, timeline, follow-cam, event log |
 
 **Session 2 history note:** session 1's commits were imported from the owner's bundle. Its building/body/terrain/behaviour LFS objects were never pushed and are lost; they were regenerated, and the asset commit was rewritten (owner approved) so the history only references objects that exist.
 
@@ -48,6 +49,12 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Creeks are re-cut at 25 cm inside the near windows (§22) but stay 1 m-faceted elsewhere. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
 
 ## 3. Next priorities, in order
+
+**Session 4 asked for:** wind through the foliage (done, §34) and player actions that change how animals and NPCs
+behave (in progress: sourced perception data is in the session-4 notes, see `catalog/` when it lands). Wind gaps:
+broadleaf f0 comes out 0.6–1.5 Hz vs 0.26–0.34 Hz measured (stocky stems, no branch–trunk mass damping); grass and
+leaf-flutter amplitudes and U0 are design values; Kaimal is extrapolated above 0.3 Hz.
+
 
 0. **Read `catalog/notes/`** — eight permissive repos were studied in session 2; each note lists what is queued from it.
 1. **Fidelity near the camera, continued.** Detiling, leaf flutter (§20), fine terrain windows (§22) and far-LOD impostors (§23) are done; next: a middle LOD tier (ring/segment thinning after ez-tree) (impostors far, meshes near, `detail="cm"` within ~5 m).
