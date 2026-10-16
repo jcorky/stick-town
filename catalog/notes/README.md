@@ -13,5 +13,5 @@ numbers refer to the commit in the harvest report.
 | [worldengine](worldengine.md) | MIT | Holdridge lookup queued for real-place mode |
 | [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing + angle relax adopted (TECHNIQUES §15); siting, names queued |
 | [wfc](wfc.md) | MIT | low priority |
-| [ez-tree](ez-tree.md) | MIT | chain tubes + shared rings adopted (TECHNIQUES §4); card normals queued |
+| [ez-tree](ez-tree.md) | MIT | chain tubes (§4) and rounded normals + twig-attached cards (§18) adopted; wind by uv.y queued |
 | [mesa](mesa.md) | Apache-2.0 | shuffled activation adopted (TECHNIQUES §16); vectorised neighbours not needed at ~10 agents |

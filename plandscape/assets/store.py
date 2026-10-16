@@ -28,7 +28,7 @@ from ..mesh import Mesh
 # Bump a version when its generator's output changes; old entries stay readable
 # but are no longer matched.
 GENERATOR_VERSIONS = {
-    "tree": "tree-0.3.0",
+    "tree": "tree-0.3.1",
     "building": "building-0.1.1",
     "terrain": "terrain-0.2.0",
     "body": "body-0.1.0",
@@ -182,13 +182,19 @@ def mesh_arrays(prefix, m: Mesh):
     if m.uvs is not None and m.texture:  # textured: keep UVs and the texture key (a plain unicode array)
         a[f"{prefix}_uv"] = m.uvs.astype(np.float32)
         a[f"{prefix}_tex"] = np.array(m.texture)
+    if m.nrm is not None:  # authored normals, int8 like the GLB
+        a[f"{prefix}_n"] = np.round(np.clip(m.nrm, -1, 1) * 127).astype(np.int8)
     return a
 
 
 def arrays_mesh(prefix, a):
-    uv, tex = a.get(f"{prefix}_uv"), a.get(f"{prefix}_tex")
+    uv, tex, n8 = a.get(f"{prefix}_uv"), a.get(f"{prefix}_tex"), a.get(f"{prefix}_n")
+    nrm = None
+    if n8 is not None:
+        nrm = n8.astype(np.float32) / 127.0
+        nrm /= np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-9)
     return Mesh(a[f"{prefix}_p"], a[f"{prefix}_c"].astype(np.float32) / 255.0, a[f"{prefix}_i"],
-                uv, str(tex) if tex is not None else None)
+                uv, str(tex) if tex is not None else None, nrm=nrm)
 
 
 def tree_codec():

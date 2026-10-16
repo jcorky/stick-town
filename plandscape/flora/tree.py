@@ -312,6 +312,7 @@ def _leaf_colour(sp, season, r, n):
 def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
     tex = {"broadleaf": textures.leaf_key(sp.key), "needle": textures.needle_key()}.get(sp.leaf)
     mb = MeshBuilder(tex)
+    n_cards = 0
     pos, par, rad = sk.pos, sk.parent, sk.radius
     has_child = np.zeros(len(pos), bool)
     has_child[par[par >= 0]] = True
@@ -333,7 +334,10 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
             nl = per * len(cand)
             L = float(np.clip(np.sqrt(shell * 3.2 / (nl * aspect * max(cov, 0.2) * FOLD_COVER)),
                               sp.leaf_size / 0.3, sp.leaf_size * 60))
-            anchor = np.repeat(pos[cand], per, 0) + r.normal(0, L * 0.35, (nl, 3))
+            # cards sit on their twig: a point along parent→node, plus a little spread (was N(0, 0.35 L))
+            tw = np.repeat(cand, per)
+            along = r.uniform(0.35, 1.0, (nl, 1))
+            anchor = pos[par[tw]] + (pos[tw] - pos[par[tw]]) * along + r.normal(0, L * 0.12, (nl, 3))
             outward = _norm(anchor - crown_c + r.normal(0, 0.5, (nl, 3)))
             axis = _norm(outward + [0, 0, 0.15] + r.normal(0, 0.45, (nl, 3)))
             side = _norm(np.cross(axis, _norm([0, 0, 1] + r.normal(0, 0.6, (nl, 3)))))
@@ -360,6 +364,7 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
             base = (np.arange(nl) * 6)[:, None]
             idx = np.concatenate([base + [0, 1, 4], base + [0, 4, 3], base + [1, 2, 5], base + [1, 5, 4]])
             mb.add(P, C, idx, UV)
+            n_cards = len(P)
         elif sp.leaf == "needle":
             # pines carry needles in brush-like tufts along the outer shoots: two crossed needle cards per tuft
             shoots = np.nonzero(~sk.trunk & (rad <= np.percentile(rad[~sk.trunk], 70)))[0]
@@ -386,6 +391,7 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
             col = np.tile(_leaf_colour(sp, season, r, ntuft), (2, 1))
             base = (np.arange(n) * 4)[:, None]
             mb.add(P, np.repeat(col, 4, 0), np.concatenate([base + [0, 1, 2], base + [0, 2, 3]]), np.tile(uvq, (n, 1)))
+            n_cards = len(P)
         elif sp.leaf == "scale_spray":
             per = max(1, budget // max(len(cand), 1))
             nl = per * len(cand)
@@ -436,7 +442,21 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
                 k = np.arange(segs - 1) * 2
                 idx = np.concatenate([np.c_[k, k + 1, k + 2], np.c_[k + 1, k + 3, k + 2]])
                 mb.add(P, np.array([0.56, 0.60, 0.52]) * r.uniform(0.85, 1.1), idx)
-    return mb.build()
+    m = mb.build()
+    if n_cards and m.n_tris:
+        m.nrm = _crown_normals(m.positions, m.geometric_normals(), n_cards, crown_c)
+    return m
+
+
+def _crown_normals(P, ng, n_cards, crown_c, k=0.65):
+    """Rounded canopy normals (after ez-tree): leaf cards shade like the crown's volume, not like flat sheets.
+    n = normalize(k·r̂ + (1 − k)·s·n_face), r̂ = outward from the crown centre, s flips n_face to r̂'s side."""
+    n = ng.astype(np.float64).copy()
+    rad = _norm(P[:n_cards] - crown_c)
+    f = ng[:n_cards]
+    s_ = np.where((f * rad).sum(1, keepdims=True) < 0, -1.0, 1.0)
+    n[:n_cards] = _norm(k * rad + (1 - k) * s_ * f)
+    return n.astype(np.float32)
 
 
 def _knees(r, n_max=18, texture=None) -> Mesh:

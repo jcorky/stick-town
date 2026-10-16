@@ -269,6 +269,35 @@ class Grass(unittest.TestCase):
         self.assertLess(np.median(height[on]), 0.7 * np.median(height[off]))  # trampled blades lie lower
 
 
+class CrownNormals(Base):
+    def test_cards_shade_like_a_volume_and_survive_the_library(self):
+        tm = generate_tree("southern_magnolia", seed=2, detail="low")
+        f = tm.foliage
+        self.assertIsNotNone(f.nrm)
+        P = f.positions.astype(float)
+        c = np.array([0, 0, (tm.species.crown_base + 1) / 2 * tm.height])
+        card = np.abs(f.uvs - np.float32(SOLID_UV)).sum(1) > 1e-4  # flowers/moss keep geometric normals
+        out = (f.nrm * (P - c)).sum(1) / np.maximum(np.linalg.norm(P - c, axis=1), 1e-9)
+        self.assertGreater(np.median(out[card]), 0.6)  # card normals point out of the crown
+        enc, dec = tree_codec()
+        self.store.put("tree", {"t": 2}, *enc(tm)[:2])
+        a, e = self.store.get("tree", {"t": 2})
+        back = dec(a, e.meta).foliage
+        self.assertGreater((back.nrm * f.nrm).sum(1).min(), 0.98)  # int8 round trip
+
+    def test_glb_uses_authored_normals(self):
+        tm = generate_tree("white_oak", seed=2, detail="low")
+        g = GLB()
+        mi = g.mesh(tm.foliage, "f", g.material("f"))
+        acc = g.accessors[g.meshes[mi]["primitives"][0]["attributes"]["NORMAL"]]
+        view = g.views[acc["bufferView"]]
+        n8 = np.frombuffer(bytes(g.bin[view["byteOffset"]:view["byteOffset"] + view["byteLength"]]),
+                           np.int8).reshape(-1, 4)[:, :3].astype(float) / 127
+        from plandscape.export.gltf import _to_gltf
+        want = _to_gltf(tm.foliage.nrm)
+        self.assertGreater(np.median((n8 * want).sum(1)), 0.97)
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights

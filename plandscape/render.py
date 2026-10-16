@@ -16,7 +16,7 @@ def _gather(meshes):
     """Concatenate meshes keeping per-triangle texture ids and per-vertex UVs."""
     from . import textures
     P, C, I, U, T, texs, off = [], [], [], [], [], [], 0
-    W = []
+    W, NR, AU = [], [], []
     for m in meshes:
         if m is None or not len(m.positions) or not m.n_tris:
             continue
@@ -35,14 +35,17 @@ def _gather(meshes):
         I.append(m.indices + off)
         U.append(m.uvs if tex is not None else np.zeros((len(m.positions), 2), np.float32))
         W.append(m.weights if (m.weights is not None and m.splat) else np.zeros((len(m.positions), 4), np.float32))
+        NR.append(m.nrm if m.nrm is not None else np.zeros((len(m.positions), 3), np.float32))
+        AU.append(np.full(m.n_tris, m.nrm is not None))
         T.append(np.full(m.n_tris, tid, np.int32))
         off += len(m.positions)
     if not P:
         z = np.zeros((0, 3), np.float32)
         return (z, z, np.zeros((0, 3), np.uint32), np.zeros((0, 2), np.float32), np.zeros(0, np.int32), [],
-                np.zeros((0, 4), np.float32))
+                np.zeros((0, 4), np.float32), z, np.zeros(0, bool))
     return (np.concatenate(P).astype(np.float64), np.concatenate(C).astype(np.float32), np.concatenate(I),
-            np.concatenate(U).astype(np.float32), np.concatenate(T), texs, np.concatenate(W).astype(np.float32))
+            np.concatenate(U).astype(np.float32), np.concatenate(T), texs, np.concatenate(W).astype(np.float32),
+            np.concatenate(NR).astype(np.float64), np.concatenate(AU))
 
 
 def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
@@ -50,13 +53,13 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
     """Meshes after the first `keep_first` may be thinned to `max_tris` for speed;
     the leading meshes (terrain, buildings) are never thinned, or the ground gets holes."""
     meshes = list(meshes) if isinstance(meshes, (list, tuple)) else [meshes]
-    P, COL, tri, UV, TID, texs, WS = _gather(meshes)
+    P, COL, tri, UV, TID, texs, WS, NRM, AUTH = _gather(meshes)
     n_solid = sum(m.n_tris for m in meshes[:keep_first] if m is not None)
     budget = max(max_tris - n_solid, 0)
     if len(tri) - n_solid > budget:
         keep = np.random.default_rng(0).choice(len(tri) - n_solid, budget, replace=False) + n_solid
         sel = np.r_[np.arange(n_solid), np.sort(keep)]
-        tri, TID = tri[sel], TID[sel]
+        tri, TID, AUTH = tri[sel], TID[sel], AUTH[sel]
     m = Mesh(P, COL, tri)
     means = [np.asarray(t[0].mean if isinstance(t, tuple) else t.mean, np.float32) for t in texs]
     az, el = np.radians(azimuth), np.radians(elevation)
@@ -81,6 +84,9 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
     n = np.cross(b - a, d - a)
     n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
     n = np.where((n @ fwd)[:, None] > 0, -n, n)  # two-sided
+    if AUTH.any():  # authored normals (rounded crowns) shade as given, not flipped toward the camera
+        na = NRM[tri[AUTH]].mean(1)
+        n[AUTH] = na / np.maximum(np.linalg.norm(na, axis=1, keepdims=True), 1e-12)
     s = np.asarray(sun, float) / np.linalg.norm(sun)
     shade = 0.5 + 0.6 * np.clip(n @ s, 0, 1) * min(1.0, 0.4 + s[2] * 2)
     col = m.colors[tri].mean(1) * shade[:, None]
