@@ -18,4 +18,7 @@ tube with two private rings (3,801 tubes); low and med bark identical (TWIG_CULL
 **Queued (priority order):** (1) chain tubes with shared rings, parallel-transport frames
 `u' = normalize(u − (u·t')t')`, per-chain U wraps → ~27k verts; (2) sides 8/6/4/3, tapered tips
 `r(s) = r_base(1 − 0.7 s/L)`, TWIG_CULL 0.03/0.015; (3) rounded card normals + twig-attached cards.
+**Adopted (session 2):** (1) and (2): chains via thickest child, shared rings, parallel transport, per-chain U wraps,
+ring resampling Δs = clip(8r, 0.3, 1.5) m or > 12° bend, sides 10/8/5/3 (8/6/4/3 looked boxy on live-oak limbs),
+tip taper 0.5 r (0.3 read as thorns in winter), TWIG_CULL 0.03/0.015/0.006/0. Bark verts −55 %, tris −24 %.
 **We do better:** arc-length bark V, lobed flare, north moss, crown envelopes, pipe radii, folded cards.

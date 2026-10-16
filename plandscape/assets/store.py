@@ -28,7 +28,7 @@ from ..mesh import Mesh
 # Bump a version when its generator's output changes; old entries stay readable
 # but are no longer matched.
 GENERATOR_VERSIONS = {
-    "tree": "tree-0.2.1",
+    "tree": "tree-0.3.0",
     "building": "building-0.1.1",
     "terrain": "terrain-0.1.1",
     "body": "body-0.1.0",

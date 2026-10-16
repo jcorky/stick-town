@@ -27,7 +27,7 @@ from .species import SPECIES, Species
 
 LEAF_BUDGET = {"low": 2000, "med": 9000, "high": 40000, "cm": 250000}
 FOLD_COVER = 0.92  # a folded card's projected area relative to flat (cos of the mean fold angle)
-TWIG_CULL = {"low": 0.012, "med": 0.006, "high": 0.003, "cm": 0.0}
+TWIG_CULL = {"low": 0.03, "med": 0.015, "high": 0.006, "cm": 0.0}  # twigs thinner than this hide in foliage
 
 
 @dataclass
@@ -183,75 +183,111 @@ def grow_skeleton(sp: Species, H: float, r, max_iter: int = 220) -> Skeleton:
 
 # ── bark ────────────────────────────────────────────────────────────────────
 
-def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
+def _chains(sk: Skeleton, min_r: float):
+    """Split the skeleton into chains: follow each node's thickest child; every other child starts
+    a new chain at its parent. Returns lists of (node ids, parent node id or -1 for the root)."""
     pos, par, rad = sk.pos, sk.parent, sk.radius
-    child_max = {}
+    kids = [[] for _ in range(len(pos))]
     for i in range(1, len(pos)):
-        p = par[i]
-        if p not in child_max or rad[i] > rad[child_max[p]]:
-            child_max[p] = i
-    segs = [i for i in range(1, len(pos)) if rad[i] >= min_r]  # LOD: drop twigs hidden by foliage
-    a = np.array([pos[par[i]] for i in segs])
-    b = np.array([pos[i] for i in segs])
-    r1 = np.array([rad[i] for i in segs])
-    r0 = np.array([rad[par[i]] if child_max.get(par[i]) == i else rad[i] * 1.08 for i in segs])
-    trunkseg = np.array([sk.trunk[i] for i in segs])
-    # sink the base below grade
-    a = np.vstack([[0, 0, -0.5], a])
-    b = np.vstack([pos[0], b])
-    r0 = np.r_[rad[0], r0]
-    r1 = np.r_[rad[0], r1]
-    trunkseg = np.r_[True, trunkseg]
+        kids[par[i]].append(i)
+    out, todo = [], [(0, -1)]
+    while todo:
+        start, from_ = todo.pop()
+        chain, n = [start], start
+        while True:
+            ks = [k for k in kids[n] if rad[k] >= min_r]
+            if not ks:
+                break
+            main = max(ks, key=lambda k: rad[k])
+            todo += [(k, n) for k in ks if k != main]
+            chain.append(main)
+            n = main
+        out.append((chain, from_))
+    return out
+
+
+def _bark_mesh(sp: Species, sk: Skeleton, r, min_r: float = 0.0) -> Mesh:
+    """Swept tubes along chains with shared rings (after ez-tree; TECHNIQUES §4).
+
+    One ring per skeleton node, shared by the segments either side; frames carried by parallel
+    transport u_k = normalize(u_{k-1} - (u_{k-1}·t_k) t_k), so seams don't twist at every node;
+    side count and U wraps fixed per chain; terminal tips taper to 0.5 r; rings resampled to one per
+    ds = clip(8 r, 0.3, 1.5) m of run unless the chain bends more than 12° (cos > 0.978)."""
+    pos, rad = sk.pos, sk.radius
     phase = r.uniform(0, 2 * np.pi)
     nlobes = 5 + int(r.integers(0, 3))
     mb = MeshBuilder(textures.bark_key(sp.key))
     base = np.array(sp.bark_rgb)
-    # arc length from the root, so bark texture runs continuously up the trunk and out the limbs
+    tile = textures.TILE_M["bark"]
     arc = np.zeros(len(pos))
     for i in range(1, len(pos)):
-        arc[i] = arc[par[i]] + np.linalg.norm(pos[i] - pos[par[i]])
-    va = np.r_[-0.5, np.array([arc[par[i]] for i in segs])]
-    vb = np.r_[0.0, np.array([arc[i] for i in segs])]
-    tile = textures.TILE_M["bark"]
-    for sides in (10, 7, 5, 3):
-        sel = {10: r1 > 0.12, 7: (r1 <= 0.12) & (r1 > 0.035),
-               5: (r1 <= 0.035) & (r1 > 0.012), 3: r1 <= 0.012}[sides]
-        if not sel.any():
+        arc[i] = arc[sk.parent[i]] + np.linalg.norm(pos[i] - pos[sk.parent[i]])
+    has_kids = np.zeros(len(pos), bool)
+    has_kids[sk.parent[sk.parent >= 0]] = True
+    moss = np.array([0.30, 0.40, 0.18])
+    for chain, from_ in _chains(sk, min_r):
+        ids = np.array(chain)
+        P = pos[ids].astype(np.float64)
+        R = rad[ids].astype(np.float64).copy()
+        T = sk.trunk[ids].copy()
+        V = arc[ids].copy()
+        if from_ < 0:  # root chain: start below grade so the flare sinks into the ground
+            P = np.vstack([[0, 0, -0.5], P])
+            R = np.r_[R[0], R]
+            T = np.r_[True, T]
+            V = np.r_[-0.5, V]
+        else:  # side chain starts inside its parent, slightly fatter (branch collar)
+            P = np.vstack([pos[from_], P])
+            R = np.r_[R[0] * 1.08, R]
+            T = np.r_[False, T]
+            V = np.r_[arc[from_], V]
+        if not has_kids[ids[-1]] and len(R) > 2:
+            R[-1] = max(0.004, 0.5 * R[-1])  # twig tips taper (0.3 read as thorns in winter)
+        if len(P) > 2:  # keep a ring every ds = clip(8 r, 0.3, 1.5) m of run, or where the chain bends > 12°
+            seg = _norm(np.diff(P, axis=0))
+            keep, run, last = [0], 0.0, seg[0]
+            for k in range(1, len(P) - 1):
+                run += np.linalg.norm(P[k] - P[k - 1])
+                if run >= np.clip(8 * R[k], 0.3, 1.5) or np.dot(seg[k], last) < 0.978 or T[k] != T[k + 1]:
+                    keep.append(k)
+                    run, last = 0.0, seg[k]
+            keep.append(len(P) - 1)
+            P, R, T, V = P[keep], R[keep], T[keep], V[keep]
+        m = len(P)
+        if m < 2:
             continue
-        A, B, R0, R1, T = a[sel], b[sel], r0[sel], r1[sel], trunkseg[sel]
-        t = _norm(B - A)
-        u, w = _perp_frame(t)
-        nv = sides + 1  # the seam vertex is duplicated so u can run 0 → reps without wrapping back
+        tan = np.empty_like(P)
+        tan[1:-1] = P[2:] - P[:-2]
+        tan[0], tan[-1] = P[1] - P[0], P[-1] - P[-2]
+        tan = _norm(tan)
+        U = np.empty_like(P)
+        U[0] = _perp_frame(tan[0])[0][0]
+        for k in range(1, m):  # parallel transport
+            u = U[k - 1] - np.dot(U[k - 1], tan[k]) * tan[k]
+            nu = np.linalg.norm(u)
+            U[k] = u / nu if nu > 1e-6 else _perp_frame(tan[k])[0][0]
+        W = np.cross(tan, U)
+        r0 = R[0]
+        sides = 10 if r0 > 0.12 else 8 if r0 > 0.05 else 5 if r0 > 0.02 else 3
+        nv = sides + 1
         ang = np.linspace(0, 2 * np.pi, nv)
-        ca, sa = np.cos(ang), np.sin(ang)
-        dirs = u[:, None, :] * ca[None, :, None] + w[:, None, :] * sa[None, :, None]  # (S,nv,3)
-        rings = []
-        for C, RR in ((A, R0), (B, R1)):
-            z = C[:, 2:3]
-            flare = 1 + T[:, None] * sp.flare * np.exp(-np.maximum(z, 0) / 0.45) * \
-                (1 + 0.45 * np.cos(nlobes * ang[None, :] + phase))
-            rings.append(C[:, None, :] + dirs * (RR[:, None] * flare)[..., None])
-        P = np.concatenate([rings[0], rings[1]], axis=1).reshape(-1, 3)
-        S = len(A)
+        dirs = U[:, None, :] * np.cos(ang)[None, :, None] + W[:, None, :] * np.sin(ang)[None, :, None]
+        z = P[:, 2:3]
+        flare = 1 + T[:, None] * sp.flare * np.exp(-np.maximum(z, 0) / 0.45) * \
+            (1 + 0.45 * np.cos(nlobes * ang[None, :] + phase))
+        ring = P[:, None, :] + dirs * (R[:, None] * flare)[..., None]
         k = np.arange(sides)
-        k1 = k + 1
-        quad = np.stack([k, k1, k + nv, k1, k1 + nv, k + nv], -1).reshape(-1, 3)
-        idx = (quad[None] + (np.arange(S) * 2 * nv)[:, None, None]).reshape(-1, 3)
-        reps = np.maximum(1, np.round(2 * np.pi * np.maximum(R0, R1) / tile))  # texel size stays ~constant
-        U = (ang[None, :] / (2 * np.pi)) * reps[:, None]
-        V0 = np.repeat(va[sel][:, None] / tile, nv, 1)
-        V1 = np.repeat(vb[sel][:, None] / tile, nv, 1)
-        UV = np.stack([np.concatenate([U, U], 1), np.concatenate([V0, V1], 1)], -1).reshape(-1, 2)
-        # bark: vertical furrows + north-side moss low on trunk
-        zz = np.concatenate([np.repeat(A[:, 2:3], nv, 1), np.repeat(B[:, 2:3], nv, 1)], 1)
-        dd = np.concatenate([dirs, dirs], 1)
-        furrow = 0.82 + 0.18 * np.sin(np.concatenate([ang, ang])[None, :] * 9 + zz * 1.7) ** 2
-        jitter = r.uniform(0.9, 1.1, (S, 1))
-        col = base[None, None, :] * (furrow * jitter)[..., None]
-        north = np.clip(dd[..., 1], 0, 1) * np.exp(-np.maximum(zz, 0) / 2.5)
-        moss = np.array([0.30, 0.40, 0.18])
+        quad = np.stack([k, k + 1, k + nv, k + 1, k + 1 + nv, k + nv], -1).reshape(-1, 3)
+        idx = (quad[None] + (np.arange(m - 1) * nv)[:, None, None]).reshape(-1, 3)
+        reps = max(1.0, round(2 * np.pi * r0 / tile))  # constant per chain: no texel-density jumps
+        uv = np.stack([np.broadcast_to(ang / (2 * np.pi) * reps, (m, nv)),
+                       np.broadcast_to(V[:, None] / tile, (m, nv))], -1).reshape(-1, 2)
+        zz = np.broadcast_to(z, (m, nv))
+        furrow = 0.82 + 0.18 * np.sin(ang[None, :] * 9 + zz * 1.7) ** 2
+        col = base[None, None, :] * (furrow * r.uniform(0.9, 1.1))[..., None]
+        north = np.clip(dirs[..., 1], 0, 1) * np.exp(-np.maximum(zz, 0) / 2.5)
         col = col * (1 - 0.55 * north[..., None]) + moss * 0.55 * north[..., None]
-        mb.add(P, col.reshape(-1, 3), idx, UV)
+        mb.add(ring.reshape(-1, 3), col.reshape(-1, 3), idx, uv)
     return mb.build()
 
 

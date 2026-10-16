@@ -157,6 +157,19 @@ class Library(Base):
         self.assertTrue((cosang < 0.97).all())  # every card has a real fold
 
 
+class Bark(Base):
+    def test_chain_tubes_share_rings_and_detail_matters(self):
+        from plandscape.flora.tree import _chains
+        lo = generate_tree("sweetgum", seed=3, detail="low")
+        hi = generate_tree("sweetgum", seed=3, detail="high")
+        self.assertLess(lo.bark.n_tris, hi.bark.n_tris * 0.9)  # TWIG_CULL now actually culls at low
+        chains = _chains(lo.skeleton, 0.0)
+        nodes = sum(len(c) for c, _ in chains)
+        self.assertEqual(nodes, len(lo.skeleton.pos))  # every node in exactly one chain
+        # shared rings: far fewer vertices than two private rings per skeleton segment
+        self.assertLess(len(lo.bark.positions), 2 * len(lo.skeleton.pos) * 4)
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights
