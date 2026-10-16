@@ -83,6 +83,33 @@ def terrain_sheet(path, seed=7):
     return path
 
 
+def creek_sheet(path, seed=135121):
+    """Creek networks per province (TECHNIQUES §21): hillshade, wetted channel (blue), centrelines (red)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from matplotlib.colors import LightSource
+    from plandscape.terrain.heightfield import generate_tile
+    provs = ("cumberland_plateau", "piedmont", "ridge_and_valley", "floodplain")
+    fig, ax = plt.subplots(1, 4, figsize=(20, 5.6))
+    ls = LightSource(315, 35)
+    for a, prov in zip(ax, provs):
+        hf = generate_tile(128, 1.0, prov, seed)
+        a.imshow(ls.hillshade(hf.z, vert_exag=3), cmap="gray", origin="lower")
+        a.imshow(np.ma.masked_less(hf.layers["water"], 0.5), cmap="Blues", vmin=0, vmax=1.2, origin="lower")
+        c = hf.channels
+        for rid in np.unique(c[:, 4]):
+            q = c[c[:, 4] == rid]
+            a.plot(q[:, 0], q[:, 1], lw=0.7, color="#c0392b")
+        a.set_title(f"{prov.replace('_', ' ')}: {len(np.unique(c[:, 4]))} reaches, wetted ≤ {c[:, 3].max():.1f} m")
+        a.axis("off")
+    fig.tight_layout()
+    fig.savefig(path, dpi=80)
+    plt.close(fig)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -94,12 +121,13 @@ def main(argv=None):
         if not a.reuse or not os.path.exists(os.path.join(d, "preview.png")):
             from plandscape.__main__ import main as run
             run([prompt, "--out", d])
-        for img in ("preview", "closeup", "homestead", "map"):
+        for img in ("preview", "closeup", "homestead", "creek", "map"):
             if os.path.exists(os.path.join(d, f"{img}.png")):
                 _jpeg(os.path.join(d, f"{img}.png"), os.path.join(OUT, f"{name}-{img}.jpg"))
         s = json.load(open(os.path.join(d, "scene.json")))["stats"]
         stats[name] = {k: s.get(k) for k in ("glb_mb", "trees", "tree_tris", "ground_props", "agents", "signs")}
     _jpeg(terrain_sheet(os.path.join(ROOT, "out", "terrain.png")), os.path.join(OUT, "terrain-erosion.jpg"), 1500)
+    _jpeg(creek_sheet(os.path.join(ROOT, "out", "creeks.png")), os.path.join(OUT, "creeks.jpg"), 1500)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

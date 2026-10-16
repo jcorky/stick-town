@@ -3,6 +3,8 @@
 ## Unreleased
 
 **Added**
+- Creeks as channels (TECHNIQUES §21). Pits are filled (Priority-Flood + ε) and filled flats are tilted toward their centrelines (after Garbrecht & Martz). Flow is routed by jittered D8 (after Rho8) and traced into joined polylines, with parallel threads on fans pruned. Each reach is sized by hydraulic geometry (w ∝ A^0.5, d ∝ A^0.4) and meandered by a Kinoshita sine-generated curve that straightens with slope. Beds are graded to run only downhill and cut as a parabolic channel with faded banks. The water surface is a smooth ribbon at the stage height instead of 1 m squares. The bayou in flat country uses the same machinery. `hf.channels` and the `stage` layer are stored in the library. terrain-0.3.0.
+- `creek.png` review render, framed on the widest reach in the middle of the tile. The gallery adds a creek-network sheet for four provinces.
 - Lattice detiling of the ground textures (TECHNIQUES §20, after Terrain3D): hashed rotation and offset per lattice node, four corners blended by `(b+s)^8 b`; in the viewer shader and the preview renderer. Leaf flutter in the viewer (after ez-tree): card tips move along their normal, weighted by `1 − v`.
 - `scripts/viewer_shot.py`: headless-Chromium screenshot of the three.js viewer for a scene, printing console errors so shader failures show up in review.
 

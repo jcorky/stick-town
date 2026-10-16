@@ -9,5 +9,7 @@ Whole-planet generator; all thresholds are quantiles (`simulations/basic.py:47-8
 - Rivers (`erosion.py`): D4 descent, sources with flow ≥ 0.02 spaced ≥ 9 cells, A* to lower cell or lake;
   `cleanUpFlow` makes beds non-increasing downstream; valley carve `e += (e_river − e)·{0.2, 0.05}` at radius 1, 2.
 
+**Adopted (session 3, §21):** the monotone-bed idea (`cleanUpFlow`) as a cumulative minimum of the bank-full level
+downstream; the valley carve became a parabolic bed plus a 0.6 bank cut faded over w + 2 m.
 **Queued:** Holdridge lookup fed with *physical* values (latitude + lapse-rate temperature + sourced precipitation
-normals) for real-place mode; monotone-bed cleanup + valley carve for our D8 creeks. Humidity sign quirk: don't copy.
+normals) for real-place mode. Humidity sign quirk: don't copy.

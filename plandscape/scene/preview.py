@@ -87,6 +87,25 @@ def homestead(res, path, size=(1100, 720)):
                   sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=5)
 
 
+def creek(res, path, size=(1100, 720)):
+    """The creek where it is widest in the middle of the tile: banks, bed cut, water surface (crowns left out)."""
+    c = res["hf"].channels
+    if c is None or not len(c):
+        return None
+    S = res["hf"].size[0]
+    mid = (c[:, 0] > 0.2 * S) & (c[:, 0] < 0.8 * S) & (c[:, 1] > 0.2 * S) & (c[:, 1] < 0.8 * S)
+    k = int(np.argmax(np.where(mid, c[:, 3], -1) if mid.any() else c[:, 3]))
+    cx, cy = float(round(c[k, 0])) + 0.25, float(round(c[k, 1])) + 0.25  # box edges off the grid lines: clean crop
+    r = 10.0
+    meshes = [_crop(m, (cx - r, cy - r, cx + r, cy + r))
+              for m in _scene_meshes(res, near=(cx, cy, r), foliage=False)]
+    gx, gy = np.meshgrid(np.linspace(cx - r, cx + r, 21), np.linspace(cy - r, cy + r, 21))
+    zs = res["hf"].sample(gx.ravel(), gy.ravel())  # frame the real relief: creeks often sit in steep ravines
+    fit = ((cx - r, cy - r, float(zs.min()) - 1), (cx + r, cy + r, float(zs.max()) + 1))
+    return render(meshes, path, size=size, azimuth=200, elevation=35, fit=fit,
+                  sky=(0.70, 0.80, 0.90), sun=(0.35, -0.45, 0.8), max_tris=1_500_000, keep_first=5)
+
+
 def map_view(res, path):
     import matplotlib
     matplotlib.use("Agg")

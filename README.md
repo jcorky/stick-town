@@ -6,7 +6,7 @@ Type a sentence, get a living place:
 python3 -m plandscape "Monte Sano hardwood cove with a dogtrot cabin, a creek, two deer, three squirrels and a turkey flock at golden hour in fall" --out out/monte-sano
 ```
 
-You get `scene.glb` (textured terrain, trees, grass, photoscanned ground props, buildings, water, animated animals), `scene.json` (the plan, stats, every tree, prop and animal, asset credits), `map.png` (trails, canopy, tracks, signs of life), `preview.png`, `closeup.png` (ground level, where the props are), and `index.html` — a three.js viewer with wind, a timeline and follow-cam.
+You get `scene.glb` (textured terrain, trees, grass, photoscanned ground props, buildings, water, animated animals), `scene.json` (the plan, stats, every tree, prop and animal, asset credits), `map.png` (trails, canopy, tracks, signs of life), `preview.png`, `closeup.png` (ground level, where the props are), `homestead.png`, `creek.png`, and `index.html` — a three.js viewer with wind, a timeline and follow-cam.
 
 ![Monte Sano cove, fall](docs/gallery/monte-sano-preview.jpg)
 
@@ -14,7 +14,7 @@ More renders in the [gallery](docs/gallery/README.md).
 
 ## What's in it
 
-- **Terrain** for five Southern physiographic provinces — Coastal Plain sand, Delta alluvium, Piedmont red clay, Cumberland Plateau mesas (Monte Sano), Ridge and Valley — with erosion, creek routing, bayous, slope and moisture layers.
+- **Terrain** for five Southern physiographic provinces — Coastal Plain sand, Delta alluvium, Piedmont red clay, Cumberland Plateau mesas (Monte Sano), Ridge and Valley — with erosion, creeks traced from routed flow, sized by hydraulic geometry and meandered (Kinoshita curves), bayous, slope and moisture layers.
 - **Trees** grown, not modelled: space colonisation, pipe-model branch radii, root flare and cypress buttresses, north-side moss, Spanish moss on horizontal limbs, cypress knees, palm fronds, flowers and season-correct colour. Crowns are alpha-masked cards showing photographed leaf sprigs (shape-matched per species) and pine needle fascicles; bark carries a tiling photo texture. Twelve Southern species so far.
 - **Ground**: province soil colour with a photo detail texture per biome (leaf litter, forest floor, swamp soil, grass), warm-season grasses that go dormant in winter, individual grass blades near the camera.
 - **Ground props**: photoscanned stumps, fallen logs, deadfall, mossy sandstone rocks, ferns and shrubs from Poly Haven, decimated to a few thousand triangles and scattered by habitat around the camera.

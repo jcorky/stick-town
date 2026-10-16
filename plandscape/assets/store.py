@@ -30,7 +30,7 @@ from ..mesh import Mesh
 GENERATOR_VERSIONS = {
     "tree": "tree-0.3.1",
     "building": "building-0.1.1",
-    "terrain": "terrain-0.2.0",
+    "terrain": "terrain-0.3.0",
     "body": "body-0.1.0",
     "behavior": "behavior-0.2.0",
     "grass_patch": "grass-0.1.0",
@@ -232,11 +232,14 @@ def terrain_codec():
 
     def enc(hf):
         a = {"z": hf.z.astype(np.float32), **{f"L_{k}": v.astype(np.float32) for k, v in hf.layers.items()}}
+        if hf.channels is not None:
+            a["channels"] = hf.channels.astype(np.float32)
         return a, dict(province=hf.province, res=hf.res, origin=list(hf.origin), shape=list(hf.z.shape)), None
 
     def dec(a, meta):
         hf = Heightfield(a["z"].astype(np.float64), float(meta["res"]), tuple(meta["origin"]), meta["province"])
         hf.layers = {k[2:]: a[k].astype(np.float64) for k in a if k.startswith("L_")}
+        hf.channels = a["channels"].astype(np.float64) if "channels" in a else None
         return hf
     return enc, dec
 

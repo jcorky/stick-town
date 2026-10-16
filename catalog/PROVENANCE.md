@@ -8,6 +8,17 @@ Code adapted from third-party sources is recorded here: source repo, commit, fil
 | `plandscape/terrain/erosion.py` | [SebLague/Hydraulic-Erosion](https://github.com/SebLague/Hydraulic-Erosion) `Assets/Scripts/Erosion.cs`, `ComputeShaders/Erosion.compute` | f245576 | MIT | Droplet erosion rules and constants (capacity, deposit/erode, brush weights, speed update), re-implemented batched in numpy |
 | `plandscape/flora/tree.py: _chains, _bark_mesh` | [dgreenheck/ez-tree](https://github.com/dgreenheck/ez-tree) `src/lib/tree.js` | dcf309b | MIT | Shared-ring branch tubes, tapered tips, per-branch U wraps (re-implemented on our space-colonisation skeleton; no code copied) |
 | `plandscape/textures.py: height_blend`, `viewer/index.html: addSplat` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/shaders/main.glsl` | 854a457 | MIT | Height-blend weight form $W = (a + h)^k a$ (re-derived for four per-vertex weights; no code copied) |
+| `plandscape/textures.py: detile_sample`, `viewer/index.html: detile` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/shaders/main.glsl` | 854a457 | MIT | Per-node rotation and offset detiling (re-done on a regular lattice with our height-blend weights; no code copied) |
+| `viewer/index.html: addWind` (leaf flutter) | [dgreenheck/ez-tree](https://github.com/dgreenheck/ez-tree) `src/lib/tree.js` | dcf309b | MIT | uv.y-weighted three-sine leaf motion (re-written for three.js r128 `onBeforeCompile`; no code copied) |
+| `plandscape/terrain/channels.py` | [Mindwerks/worldengine](https://github.com/Mindwerks/worldengine) `worldengine/simulations/erosion.py` | b2adbb6 | MIT | Idea of a non-increasing river bed (re-done as a cumulative minimum along traced reaches; no code copied) |
+
+## Methods from the literature (no code)
+
+- Priority-Flood + ε: Barnes, Lehman & Mulla (2014), *Computers & Geosciences* 62, 117–127.
+- Flat-area drainage away from higher terrain: Garbrecht & Martz (1997), *J. Hydrology* 193, 204–213.
+- Rho8 (randomised D8, the inspiration for our jitter): Fairfield & Leymarie (1991), *Water Resources Research* 27(5).
+- Hydraulic geometry: Leopold & Maddock (1953), USGS Professional Paper 252.
+- Sine-generated meanders: Langbein & Leopold (1966), USGS Professional Paper 422-H; Kinoshita (1961); coefficients after Abad & Garcia (2009), *Water Resources Research* 45.
 
 ## Imported assets (all CC0-1.0)
 

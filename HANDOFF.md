@@ -21,14 +21,14 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 
 | Module | State |
 |---|---|
-| `terrain/` | 5 provinces, thermal + batched droplet erosion, creeks, bayous; `load_dem()` is a stub |
+| `terrain/` | 5 provinces, thermal + batched droplet erosion; creeks as traced, sized, meandered, graded channels with a ribbon water surface (§21), one bayou in flat country; `load_dem()` is a stub |
 | `flora/` | 12 species, all `verified=False`; broadleaf crowns are textured leaf-sprig cards, pines crossed needle cards, bark textured |
 | `textures.py` | leaf/needle cards from ambientCG atlases, bark and ground detail maps, procedural fallbacks |
 | `models.py` | glTF importer, crack-free decimator, card thinning; 10 Poly Haven models / 29 variants in the library |
 | `ground/surface.py` + `scene/groundcover.py` | soil colour + biome detail texture; grass blades in the central 56 m; photoscanned props in the central 80 m |
 | `paths/desire.py` | active-walker trails, batched |
 | `fauna/` | 6 species with planning, memory, deviation, signs; bodies are static low-poly shapes that slide (no gait) |
-| `scene/` | planner (keyword-based, LLM hook `refine()` unused), composer, 5 building types, props, review renders (`preview`, `closeup`, `map`) |
+| `scene/` | planner (keyword-based, LLM hook `refine()` unused), composer, 5 building types, props, review renders (`preview`, `closeup`, `homestead`, `creek`, `map`) |
 | `export/` | GLB with instancing, textures, quantised attributes, animations; validator |
 | `assets/` | library + bake/bake-models/prune/find/stats CLI; 36.5 MB in LFS |
 | `sources/` + `catalog/` | 23 repos probed; asset sites (Poly Haven, ambientCG) probed CC0; credits in `catalog/PROVENANCE.md` |
@@ -45,6 +45,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
+- Creeks are carved into the terrain but the 1 m grid can only hold so much: a 1.5 m wetted branch is one or two cells of bed. Near-camera detail (`detail="cm"`) should re-carve at 25 cm from `hf.channels`. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
 
 ## 3. Next priorities, in order
 

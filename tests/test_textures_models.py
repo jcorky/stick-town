@@ -191,6 +191,49 @@ class Erosion(unittest.TestCase):
         self.assertGreater(d[sinks].mean(), d[~sinks].mean())  # sediment settles where flow gathers
 
 
+class Creeks(unittest.TestCase):
+    def test_priority_flood_drains_every_cell(self):
+        from plandscape.terrain import channels as C
+        from plandscape.rng import rng
+        z = rng("test", "pits").uniform(0, 5, (40, 40))
+        f = C.routing_surface(z)
+        self.assertTrue((f >= z - 0.05).all())  # fills (the flat tilt may shave a few mm)
+        tgt = C.receivers(f).reshape(z.shape)
+        self.assertTrue((tgt[1:-1, 1:-1] >= 0).all())  # no interior pit is left
+        self.assertTrue((C.receivers(f, seed=3).reshape(z.shape)[1:-1, 1:-1] >= 0).all())  # jitter keeps drainage
+
+    def test_hydraulic_geometry_and_meander(self):
+        from plandscape.terrain import channels as C
+        w, d = C.geometry(np.array([100, 400, 1600]), 100)
+        np.testing.assert_allclose(w, C.W0 * np.array([1, 2, 4]))  # w ∝ A^0.5
+        self.assertTrue((np.diff(d) > 0).all())
+        s = np.arange(0, 120, 0.5)
+        flat = C.meander_offset(s, np.full_like(s, 2.0), np.zeros_like(s), 0.3)
+        steep = C.meander_offset(s, np.full_like(s, 2.0), np.full_like(s, 0.2), 0.3)
+        self.assertAlmostEqual(flat[0], 0, places=6)
+        self.assertAlmostEqual(flat[-1], 0, places=6)
+        self.assertGreater(np.abs(flat).max(), 2.5 * np.abs(steep).max())  # flat creeks loop, steep ones wander
+
+    def test_tile_creeks_connect_and_run_downhill(self):
+        from plandscape.terrain import channels as C
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(96, 1.0, "piedmont", 11)
+        c = hf.channels
+        self.assertGreater(len(c), 50)
+        self.assertGreater(hf.layers["water"].sum(), 30)
+        for rid in np.unique(c[:, 4]):
+            q = c[c[:, 4] == rid]
+            q = q[np.argsort(q[:, 5])]
+            self.assertTrue((np.diff(q[:, 2]) <= 1e-4).all())  # water surface never climbs downstream
+            self.assertGreaterEqual(q[-1, 3], q[0, 3] - 1e-6)  # and the creek widens (or holds) downstream
+        np.testing.assert_array_equal(hf.z, generate_tile(96, 1.0, "piedmont", 11).z)  # deterministic
+        m = C.water_mesh(c)
+        self.assertGreater(m.n_tris, 50)
+        bay = generate_tile(96, 1.0, "floodplain", 11)
+        self.assertEqual(len(np.unique(bay.channels[:, 4])), 1)  # one bayou laid across flat country
+        self.assertGreater(bay.channels[:, 3].min(), 3.5)
+
+
 class Road(unittest.TestCase):
     def test_route_grade_ribbon(self):
         from plandscape.scene.roads import ROAD_WIDTH, grade, ribbon, route, smooth

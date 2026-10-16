@@ -315,3 +315,70 @@ $$w_\text{tip} = \operatorname{clamp}(1 - v,\ 0,\ 1), \qquad f(t) = 0.5\sin(4t +
 $$\Delta p = 0.05\ \text{m}\cdot w_\text{tip}\, f(t)\, \hat n,$$
 
 with $\phi = 2\pi\,\operatorname{frac}(0.37x + 0.71z)$ a per-vertex phase from object position. The twig end never moves, so cards stay attached.
+
+## 21. Creeks as channels: routed, sized, meandered, graded (literature methods; width idea after Fantasy-Map-Generator, MIT)
+`plandscape/terrain/channels.py`; `plandscape/terrain/heightfield.py: generate_tile`; `plandscape/scene/compose.py` (water surface); `preview.creek`
+
+Creeks used to be the 1 % of cells with the most flow: grid-aligned strips of one width, broken wherever a pit
+stopped the flow, under a water surface of 1 m squares. Now each creek is a polyline carried through six steps.
+
+**1. Routing surface.** *Priority-Flood + ε* (Barnes, Lehman & Mulla 2014) fills every pit. It grows inward from
+the tile border in height order, and each newly reached cell $n$, reached from $c$, becomes
+
+$$z'(n) = \max\big(z(n),\ z'(c) + \varepsilon\big), \qquad \varepsilon = 10^{-3}\ \text{m}.$$
+
+Filled ponds are then tilted toward their own centreline, after Garbrecht & Martz (1997), "away from higher
+terrain":
+
+$$z_r = \mathrm{PF}\big(\mathrm{PF}(z) - \kappa\,\varepsilon\, d_\text{edge}\big), \qquad \kappa = 0.3,$$
+
+where $d_\text{edge}$ is the distance to the flat's rim. Because $\kappa < 1$, the outlet gradient still wins, so no new pit can form.
+
+**2. Jittered D8.** Plain D8 snaps flow to 8 directions, so a valley trending 10° off an axis drains in a
+dead-straight grid line. Each candidate slope is instead scaled by noise keyed per cell and direction, in the
+spirit of Rho8 (Fairfield & Leymarie 1991):
+
+$$\tilde S_k = \frac{z - z_k}{\ell_k}\,(1 + \epsilon_k), \qquad \epsilon_k \sim \mathcal U(-0.35, 0.35).$$
+
+The steepest $\tilde S_k$ is the receiver. Flow accumulation $A$ (cells) runs high to low over these receivers.
+
+**3. Trace.** Channel cells satisfy $A \ge A_c = \max(P_{98.8}(A),\ 150)$, at least 3 cells from the tile edge.
+- Each head (a channel cell with no channel donor), highest first, is walked downstream until it reaches the edge band or a reach traced before it, which makes a junction.
+- Lines shorter than 20 cells that join nothing are dropped.
+- A line that runs within 6 m of a bigger kept line for more than 40 % of its length is also dropped, because flow spreading over a fan in parallel threads is one creek, not five.
+
+**4. Size: hydraulic geometry** (Leopold & Maddock 1953; FMG grows river width with flux$^{0.7}$):
+
+$$w = \min\!\big(1.2\,(A/A_c)^{0.5},\ 9\big)\ \text{m}, \qquad d = \min\!\big(0.35\,(A/A_c)^{0.4},\ 1.6\big)\ \text{m}.$$
+
+**5. Meander: a sine-generated curve with Kinoshita's terms** (Langbein & Leopold 1966; Kinoshita 1961;
+$J_s = 1/32$, $J_f = 1/192$ after Abad & Garcia 2009). D8 lines are first Gaussian-smoothed ($\sigma$ = 2 cells,
+ends pinned) and Chaikin-cut twice. Then, along arc length $s$,
+
+$$\theta(s) = \theta_0 \sin(ks) + \theta_0^3\big(\pm J_s \cos 3ks - J_f \sin 3ks\big), \qquad k = \frac{2\pi}{\lambda}, \quad \lambda = 11\,\bar w,$$
+$$\theta_0 = \theta_\text{min} + (\theta_\text{max} - \theta_\text{min})\,\operatorname{clip}\!\left(1 - \frac{S}{0.08}\right), \qquad \theta_\text{min} = 20°, \quad \theta_\text{max} = 80°,$$
+$$y(s) = \Big(\int_0^s \sin\theta\, ds' - G_{\lambda/2} * \!\int\Big)\ \cdot\ \operatorname{smoothstep}\!\Big(\frac{\min(s,\ L - s)}{\lambda/2}\Big).$$
+
+- $S$ is the reach's channel slope.
+- The offset $y$ is applied along the normal.
+- The high-pass $G_{\lambda/2}$ removes drift.
+- The smoothstep pins both ends.
+- Steep step-pool branches only wander; flat-country creeks loop.
+- A tributary's last 20 m is bent onto the meandered point of the stem it joins.
+- Flat provinces (floodplain, coastal plain) get one 4.8–7.2 m bayou laid across the tile, meandered the same way.
+
+**6. Grade and cut.** The bank-full level runs only downhill. It is the downstream cumulative minimum of the terrain smoothed
+along the reach ($\sigma$ = 4 m),
+
+$$z_b(s) = \min_{s' \le s}\ (G_4 * z)(s'),$$
+
+and a tributary is held at or below the stem's $z_b$ at the junction. With $r$ the exact distance to the nearest
+centreline sample (KD-tree over 0.5 m samples),
+
+$$z \leftarrow \begin{cases} \min\!\big(z,\ z_b - d\,(1 - (2r/w)^2)\big) & r \le w/2 \quad\text{(parabolic bed)}\\ \min\!\big(z,\ z_b + 0.6\,(r - w/2)\big) & r > w/2 \quad\text{(bank)}\end{cases}$$
+
+The bank cut is blended back to the untouched slope by a smoothstep over $w + 2$ m. Water stands at
+$z_w = z_b - 0.4\,d$, which wets $r < w\sqrt{0.6}/2$. That gives the `water` and `stage` layers.
+
+The surface itself is a ribbon along each reach at $z_w$, 1.15 × the wetted width (the excess tucks under the banks).
+Stage is monotone downstream, so water never climbs.

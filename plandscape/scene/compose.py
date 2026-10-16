@@ -27,6 +27,7 @@ from ..ground.surface import BIOME_GRASS, grass_density, grass_mesh, ground_weig
 from ..mesh import Mesh, MeshBuilder
 from ..paths.desire import TrailField, obstacle_cost, simulate
 from ..rng import rng as make_rng
+from ..terrain.channels import water_mesh as creek_surface
 from ..terrain.heightfield import generate_tile
 from .buildings import clothesline, fence, generate_building, mailbox
 from .groundcover import scatter
@@ -308,7 +309,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     log(f"ground props: {len(gprops)} placed from {len({g_['model'] for g_ in gprops})} variants "
         f"({time.time() - t0:.1f}s)")
     wmb = MeshBuilder()
-    wy, wx = np.nonzero(water > 0.5)
+    rib = creek_surface(hf.channels) if hf.channels is not None and len(hf.channels) else None
+    if rib is not None:  # creek surfaces follow the channel at its stage (TECHNIQUES §21)
+        wmb.add(rib.positions, rib.colors, rib.indices)
+    wy, wx = np.nonzero(water > 0.5) if rib is None else ((), ())
     for i, j in zip(wy, wx):
         z = hf.z[max(i - 1, 0):i + 2, max(j - 1, 0):j + 2].max() + 0.05
         x, y = j * hf.res, i * hf.res

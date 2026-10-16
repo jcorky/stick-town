@@ -18,6 +18,10 @@ instead of Catmull-Rom, cut-and-fill crown 8 cm, ditch 35 cm, 4 m blend, gravel 
 12 cm under the ribbon (3 cm let the 1 m terrain poke through).
 Siting (§19): FMG's `hab + flux·250 − (h−50)/5` rewritten for a 1 m tile as slope, water, rise-above-road and a
 creek-distance bonus, greedy with 30 m spacing. Names (§19): Southern patterns, not FMG's Markov syllables.
+**Adopted (session 3), creeks (§21):** FMG grows width with flux^0.7; we size channels by Leopold–Maddock hydraulic
+geometry instead (w ∝ A^0.5, d ∝ A^0.4: field-measured exponents, and at tile scale 0.7 makes the main stem too
+wide against its branches). FMG's meander points (`m = 0.5 + 1/step …`) are replaced by a Kinoshita sine-generated
+curve whose angle shrinks with channel slope.
 **Was queued:** a real road surface — Dijkstra on our grid with cost `d·(1 + slope term)·(0.5 on desire paths)`,
 angle relax, Catmull-Rom, crowned cut-and-fill profile with ditches, gravel ribbon mesh; FMG-style house siting;
 creek width ∝ flux^0.7; Southern name patterns.
