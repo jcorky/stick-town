@@ -35,7 +35,7 @@ class FaunaSpec:
     run: float
     perceive: float             # metres
     fears: tuple                # keys of agents it flees
-    eats: str                   # world layer: forage|mast|prey
+    eats: str                   # world layer: forage|mast|prey|shore (the creek's edge, §32)
     active: tuple               # hours (start, end) of peak activity; may wrap midnight
     crepuscular: bool = False
     group: tuple = (1, 1)
@@ -45,6 +45,7 @@ class FaunaSpec:
     hunts: tuple = ()
     size: float = 1.0
     rgb: tuple = (0.5, 0.4, 0.3)
+    withdraws: bool = False     # meets a threat by shutting in (box turtle) instead of fleeing
 
 
 FAUNA: dict[str, FaunaSpec] = {f.key: f for f in [
@@ -97,6 +98,21 @@ class World:
 
     def z(self, x, y):
         return float(self.hf.sample(x, y)[0])
+
+    @property
+    def shore(self):
+        """0..1 band along the water's edge, 1.5 m in and 3 m out: where herons wade and raccoons feel for food."""
+        if getattr(self, "_shore", None) is None:
+            w = self.hf.layers["water"] > 0.5
+            if not w.any():
+                self._shore = np.zeros_like(self.cost)
+            else:
+                band = ndimage.binary_dilation(w, iterations=3) & ~ndimage.binary_erosion(w, iterations=2)
+                self._shore = np.clip(ndimage.gaussian_filter(band.astype(float), 1.0) * 1.6, 0, 1)
+        return self._shore
+
+    def food(self, eats):
+        return {"forage": self.forage, "mast": self.mast, "shore": self.shore}.get(eats)
 
     @property
     def bounds(self):
@@ -210,8 +226,8 @@ class Agent:
         s, nd, tr = self.spec, self.needs, self.trait
         act = activity(s, world.hour)
         opts = []
-        if s.eats in ("forage", "mast"):
-            layer = world.forage if s.eats == "forage" else world.mast
+        if s.eats in ("forage", "mast", "shore"):
+            layer = world.food(s.eats)
             loc, v = self.recall("food", t)
             if loc is None or self.r.uniform() < tr["curiosity"] * 0.5:
                 loc, v = self.scan(world, layer, "food", t)
@@ -322,7 +338,10 @@ class Agent:
             closing = np.dot(a.p - self.p, np.array([np.cos(a.heading), np.sin(a.heading)])) < 0
             if d < fid and (closing or d < fid * 0.5) and self.cooldown <= 0:
                 nd["fear"] = min(1, nd["fear"] + 0.6)
-                if s.climbs and len(world.trees) and self.climb <= 0:
+                if s.withdraws:  # a box turtle shuts its shell and waits it out
+                    self.state, self.timer = "freeze", r.uniform(30, 120)
+                    self.events.append((round(t, 1), f"withdraw:{a.spec.key}"))
+                elif s.climbs and len(world.trees) and self.climb <= 0:
                     i = int(np.argmin(np.hypot(world.trees[:, 0] - self.p[0], world.trees[:, 1] - self.p[1])))
                     self.set_goal(world, ("climb", 1, tuple(world.trees[i, :2]), i), t)
                     self.events.append((round(t, 1), f"escape_up:{a.spec.key}"))
@@ -394,8 +413,8 @@ class Agent:
         err = (desired - self.heading + np.pi) % (2 * np.pi) - np.pi
         self.heading += (2.0 * err + self.omega) * dt
         # opportunism: food underfoot beats the plan if hungry
-        if s.eats in ("forage", "mast") and r.uniform() < 0.02 * dt * 10:
-            here = world.sample(world.forage if s.eats == "forage" else world.mast, *self.p)[0]
+        if s.eats in ("forage", "mast", "shore") and r.uniform() < 0.02 * dt * 10:
+            here = world.sample(world.food(s.eats), *self.p)[0]
             if here > 0.5 and nd["hunger"] > 0.35:
                 self.state, self.timer = "eat", r.uniform(3, 15) * tr["patience"]
                 self.remember("food", *self.p, here, t)
@@ -499,6 +518,10 @@ def spawn(world: World, counts: dict, seed=0):
             gs = int(r.integers(spec.group[0], spec.group[1] + 1))
             gid = f"{key}-{g}" if spec.group[1] > 1 else None
             c = r.uniform([b[0] + 5, b[1] + 5], [b[2] - 5, b[3] - 5])
+            if spec.eats == "shore" and world.shore.max() > 0.5:  # start on the creek's edge
+                ii, jj = np.nonzero(world.shore > 0.5)
+                k = int(r.integers(0, len(ii)))
+                c = np.array([world.hf.origin[0] + jj[k] * world.hf.res, world.hf.origin[1] + ii[k] * world.hf.res])
             for _ in range(min(gs, n - placed)):
                 agents.append(Agent(spec, c + r.normal(0, 3, 2), (seed, placed), world, gid, agent_id=len(agents)))
                 placed += 1

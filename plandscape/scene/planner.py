@@ -54,7 +54,8 @@ BUILDINGS = {"shotgun": "shotgun", "dogtrot": "dogtrot", "barn": "barn", "church
 
 FAUNA_WORDS = {"deer": "white_tailed_deer", "squirrel": "gray_squirrel", "turkey": "wild_turkey",
                "armadillo": "armadillo", "coyote": "coyote", "people": "human", "person": "human",
-               "kids": "human", "walker": "human", "hiker": "human"}
+               "kids": "human", "walker": "human", "hiker": "human", "raccoon": "raccoon",
+               "turtle": "box_turtle", "heron": "great_blue_heron"}
 
 TIMES = {"dawn": 6.3, "sunrise": 6.5, "morning": 8.5, "noon": 12.5, "midday": 12.5, "afternoon": 15.5,
          "golden hour": 18.6, "dusk": 19.2, "sunset": 19.0, "evening": 19.5, "twilight": 19.6, "night": 22.5,
