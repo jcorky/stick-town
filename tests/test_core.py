@@ -88,6 +88,52 @@ class Gaits(unittest.TestCase):
         self.assertTrue(np.all(z > -h))  # swing feet are lifted
 
 
+class Refine(unittest.TestCase):
+    def test_validate_keeps_only_what_generators_honour(self):
+        from plandscape.scene.planner import refine
+        good = {"province": "coastal_plain", "biome": "pine_savanna", "trees": {"longleaf_pine": 3, "live_oak": 1},
+                "fauna": {"wild_turkey": 4}, "hour": 6.5, "season": "spring", "buildings": ["church"],
+                "seed": 999, "detail": "cm"}
+        p = refine("a church in the longleaf at dawn", lambda prompt, schema: good)
+        self.assertEqual((p.province, p.biome, p.season, p.hour), ("coastal_plain", "pine_savanna", "spring", 6.5))
+        self.assertAlmostEqual(p.trees["longleaf_pine"], 0.75)
+        self.assertEqual(p.fauna, {"wild_turkey": 4})
+        base = plan("a church in the longleaf at dawn")
+        self.assertEqual((p.seed, p.detail), (base.seed, base.detail))  # never from the LLM
+        bad = {"province": "Narnia", "trees": {"baobab": 1}, "fauna": {"wild_turkey": 500}, "hour": True,
+               "season": ["fall"], "buildings": ["castle"], "tree_density": 3, "color": "blue"}
+        q = refine("a quiet hollow", lambda prompt, schema: bad)
+        base = plan("a quiet hollow")
+        for k in ("province", "trees", "fauna", "hour", "season", "buildings", "tree_density"):
+            self.assertEqual(getattr(q, k), getattr(base, k), k)
+        self.assertEqual(sum("kept planner value" in n for n in q.notes), 7)
+        self.assertTrue(any("unknown field color" in n for n in q.notes))
+
+    def test_failures_fall_back_and_client_parses(self):
+        import json
+        from unittest import mock
+        from plandscape.scene import planner
+        def boom(prompt, schema):
+            raise OSError("offline")
+        p = planner.refine("a quiet hollow", boom)
+        self.assertTrue(any("LLM unavailable (OSError)" in n for n in p.notes))
+        self.assertEqual(planner.extract_json('Sure! {"season": "fall", "x": {"a": 1}} done'),
+                         {"season": "fall", "x": {"a": 1}})
+        self.assertIsNone(planner.extract_json("no json here"))
+        reply = json.dumps({"content": [{"type": "text", "text": 'Plan: {"season": "winter", "hour": 7}'}]}).encode()
+
+        class R:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return reply
+        with mock.patch("urllib.request.urlopen", return_value=R()) as u:
+            q = planner.refine("a cold morning in the cove", planner.claude_llm(api_key="test", model="m"))
+            req = u.call_args[0][0]
+            self.assertEqual(req.full_url, "https://api.anthropic.com/v1/messages")
+            self.assertEqual(json.loads(req.data)["model"], "m")
+        self.assertEqual((q.season, q.hour), ("winter", 7.0))
+
+
 class Determinism(unittest.TestCase):
     def test_terrain_same_seed_same_world(self):
         a = generate_tile(64, 1.0, "piedmont", 7)

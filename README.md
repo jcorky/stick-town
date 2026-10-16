@@ -44,6 +44,7 @@ Python 3.10+ with numpy, scipy, Pillow and matplotlib. Nothing else — it runs 
 | `python3 -m plandscape.sources.sites probe` | re-read the asset sites' licence pages |
 | `python3 -m plandscape.sources.harvest probe \| clone \| index \| discover` | catalog upkeep |
 | `python3 -m unittest discover -s tests` | tests |
+| `python3 -m plandscape "<prompt>" --llm` | let Claude fill the scene plan (needs `ANTHROPIC_API_KEY`; validated, falls back to the keyword planner) |
 | `python3 scripts/gallery.py` | regenerate `docs/gallery` (reference scenes + species sheets) |
 | `python3 scripts/viewer_shot.py out/x out/x/viewer.png` | screenshot the three.js viewer headless; prints shader/console errors |
 

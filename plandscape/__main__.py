@@ -6,7 +6,7 @@ import argparse
 import os
 
 from .scene.compose import compose
-from .scene.planner import plan
+from .scene.planner import claude_llm, plan, refine
 from .scene.preview import closeup, creek, homestead, map_view, perspective
 
 
@@ -27,8 +27,12 @@ def main(argv=None):
     ap.add_argument("--detail", default="low", choices=["low", "med", "high", "cm"])
     ap.add_argument("--sim", type=float, default=180.0, help="seconds of animal life to simulate")
     ap.add_argument("--no-preview", action="store_true")
+    ap.add_argument("--llm", action="store_true", help="refine the plan with Claude (needs ANTHROPIC_API_KEY)")
     a = ap.parse_args(argv)
-    p = plan(a.prompt, seed=a.seed, size_m=a.size, detail=a.detail)
+    if a.llm:
+        p = refine(a.prompt, claude_llm(), seed=a.seed, size_m=a.size, detail=a.detail)
+    else:
+        p = plan(a.prompt, seed=a.seed, size_m=a.size, detail=a.detail)
     print(p.to_json())
     res = compose(p, a.out, sim_seconds=a.sim)
     write_viewer(a.out)
