@@ -150,25 +150,35 @@ def gait_sheet(path, key="white_tailed_deer"):
 
 
 def pose_sheet(path):
-    """Head pose by behaviour state (TECHNIQUES §28) for deer, coyote and turkey, from the GLB's rig."""
+    """Poses by behaviour state (TECHNIQUES §28–29): head pitch, the deer's flag, lying down to rest."""
     import numpy as np
     from plandscape.fauna import gait
     from plandscape.fauna.bodies import _pitch, posed_legs, rig
     from plandscape.mesh import Mesh, box
     from plandscape.render import render
-    states = ("eat", "rest", "travel", "pause", "alert")
+    states = ("eat", "rest", "travel", "alert", "flee")
     rows = []
     for key, rgb in (("white_tailed_deer", (0.55, 0.42, 0.30)), ("coyote", (0.55, 0.5, 0.42)),
                      ("wild_turkey", (0.25, 0.2, 0.15))):
         rg = rig(key, rgb)
-        n = rg["neck"]
+        h = rg["hip"]
         ground = box((0.1, 0, -0.01), (2.6, 0.6, 0.02), (0.45, 0.45, 0.42))
         frames = []
         for st in states:
-            d = gait.HEAD[st] * n["graze"]
-            head = Mesh(_pitch(n["mesh"].positions, -d) + np.asarray(n["pivot"], np.float32), n["mesh"].colors,
-                        n["mesh"].indices)
-            img = render([ground, rg["torso"], head] + posed_legs(rg), None, size=(220, 160), azimuth=0, elevation=4,
+            drop = gait.LIE.get(st, 0.0) * rg["lie"] * h
+            lift = np.array([0, 0, -drop], np.float32)
+
+            def part(p_, ang):
+                return Mesh(_pitch(p_["mesh"].positions, -ang) + np.asarray(p_["pivot"], np.float32) + lift,
+                            p_["mesh"].colors, p_["mesh"].indices)
+            parts = [Mesh(rg["torso"].positions + lift, rg["torso"].colors, rg["torso"].indices)]
+            if rg["neck"]:
+                parts.append(part(rg["neck"], gait.HEAD.get(st, 0.0) * rg["neck"]["graze"]))
+            if rg["tail"]:
+                parts.append(part(rg["tail"], gait.TAIL.get(st, 0.0) * rg["tail"]["flag"]))
+            ang = [gait.two_bone(0.0, -(h - drop), lg["l1"], lg["l2"], lg["knee"]) for lg in rg["legs"]]
+            parts += [Mesh(m.positions + lift, m.colors, m.indices) for m in posed_legs(rg, ang)]
+            img = render([ground] + parts, None, size=(220, 160), azimuth=0, elevation=4,
                          fit=((-1.2, -0.5, -0.05), (1.4, 0.5, 1.75)) if key != "wild_turkey" else
                          ((-0.6, -0.3, -0.03), (0.6, 0.3, 1.1)), keep_first=99)
             im = Image.fromarray(img)

@@ -63,7 +63,7 @@ class Gaits(unittest.TestCase):
         for k in ("white_tailed_deer", "wild_turkey", "human", "gray_squirrel"):
             r = rig(k, (0.5, 0.4, 0.3))
             b = body(k, (0.5, 0.4, 0.3))
-            neck = r["neck"]["mesh"].n_tris if r["neck"] else 0
+            neck = sum(r[k]["mesh"].n_tris for k in ("neck", "tail") if r[k])
             self.assertEqual(b.n_tris, r["torso"].n_tris + neck + sum(lg["thigh"].n_tris + lg["shank"].n_tris
                                                                       for lg in r["legs"]))
             for lg in r["legs"]:  # rest pose puts the foot on the ground, slightly flexed
@@ -110,6 +110,33 @@ class Behaviour(unittest.TestCase):
         fz = -0.5 * np.cos(th1) - 0.5 * np.cos(th1 + th2) + bob  # foot height above the ground (hip at h + b)
         self.assertGreater(np.isclose(fz, -0.95, atol=1e-4).mean(), 0.4)  # in stance about half the time
         self.assertTrue(np.all(fz >= -0.95 - 1e-4))  # never below the ground
+
+
+class LyingAndFlag(unittest.TestCase):
+    def test_rest_folds_legs_and_flee_raises_the_flag(self):
+        from plandscape.fauna import gait
+        from plandscape.fauna.bodies import rig
+        r = rig("white_tailed_deer", (0.5, 0.4, 0.3))
+        h = r["hip"]
+        t = np.arange(0, 20, 0.25)
+        states = ["idle"] * 20 + ["rest"] * 40 + ["flee"] * 20
+        x = np.where(t >= 15, (t - 15) * 8.0, 0.0)  # lies down, then bolts
+        drop = gait.pose_track(t, states, r["lie"] * h, gait.LIE, gait.LIE_EASE)
+        bob = []
+        lg = r["legs"][2]
+        tk, ang, _ = gait.leg_ik(t, np.c_[x, 0 * x], h, [l_["knee"] for l_ in r["legs"]], "quad",
+                                 seg=(lg["l1"], lg["l2"]), bob=bob, drop=drop)
+        bob = np.asarray(bob)
+        lying = (tk > 5.99) & (tk < 14.9)  # fully down from 6 s (5 s + 1 s ease) until it bolts at 15 s
+        self.assertGreater(lying.sum(), 0)
+        self.assertTrue(np.allclose(bob[lying], -r["lie"] * h))  # trunk lowered 62 % of hip height
+        th1, th2 = ang[lying, 2, 0], ang[lying, 2, 1]
+        foot = -lg["l1"] * np.cos(th1) - lg["l2"] * np.cos(th1 + th2) + bob[lying]
+        np.testing.assert_allclose(foot, -h, atol=1e-4)  # folded legs still reach the ground
+        self.assertGreater(np.degrees(np.abs(th2)).min(), 90)  # sharply folded
+        fk, fv = gait.pose_track(t, states, r["tail"]["flag"], gait.TAIL, gait.TAIL_EASE)
+        self.assertAlmostEqual(float(fv[-1]), r["tail"]["flag"])  # fleeing: flag up
+        self.assertAlmostEqual(float(np.interp(10, fk, fv)), 0.0)
 
 
 class Refine(unittest.TestCase):

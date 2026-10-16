@@ -608,3 +608,18 @@ follows the agent's logged behaviour state, as a fraction of the species' grazin
 Each change eases over 0.4 s: keys at the change, with the old pose, and 0.4 s later, with the new one. Overlapping eases
 collapse to the later change. A grazing deer now drops its head, and an alarmed one lifts it, in step with the event log in
 the viewer.
+
+## 29. Lying down to rest, and the deer's flag
+`plandscape/fauna/gait.py: pose_track, LIE, TAIL, leg_ik(drop=)`; `bodies.py: rig (tail, lie)`; `scene/compose.py`
+
+**Lying.** "Rest" lowers the trunk by $d = 0.62\,h$ for quadrupeds and $0.4\,h$ for the turkey; people stand. The drop
+eases over 1 s, and its keys join the leg timeline. Resting feet aim at $z = -(h - d)$, so the same two-bone IK (§26) folds
+the legs under the body, with the knee bent past 90°. The feet stay on the ground, and the trunk node carries $b = -d$ (plus
+any gait bob).
+
+**Flag.** A white-tailed deer raises its white tail when it bolts, the signal the species is named for. The tail is
+its own node pivoting at the rump. It lifts by a fraction of a 100° flag angle: 1.0 to flee, 0.4 when alert, 0 otherwise.
+The pitch is $-\theta$ about the lateral axis, because the tail lies behind its pivot. It eases over 0.3 s.
+
+Head pitch (§28), the flag and the lying drop all come from one helper, `pose_track(times, states, full, table, ease)`:
+a state→fraction table, keys at each change and one `ease` later, and overlapping eases collapsed.

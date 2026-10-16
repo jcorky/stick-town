@@ -29,12 +29,12 @@ The deer rig through one stride at 1, 3 and 8 m/s. The Froude number picks walk,
 λ = 2.3 h Fr^0.3. Feet follow stance and swing paths, and hips and knees come from two-bone IK (§26), the same
 angles keyed into the GLB by stride phase. The grey line is the ground.
 
-## Head pose by behaviour (§28)
+## Poses by behaviour (§28–29)
 
 ![poses](poses.jpg)
 
-The head pitches by the agent's logged state: down to eat or drink, raised when alert. The same keys drive the GLB's
-neck nodes, easing over 0.4 s at each change.
+The head pitches by the agent's logged state: down to eat or drink, raised when alert. Resting animals lie down,
+with legs folded by the same IK, and a fleeing deer raises its white flag. The same keys drive the GLB's nodes.
 
 ## Terrain: droplet erosion (§14)
 
