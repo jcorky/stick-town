@@ -1,0 +1,26 @@
+{
+ "monte-sano": {
+  "glb_mb": 11.66,
+  "trees": 118,
+  "tree_tris": 171870,
+  "ground_props": 400,
+  "agents": 10,
+  "signs": 4
+ },
+ "longleaf": {
+  "glb_mb": 12.48,
+  "trees": 33,
+  "tree_tris": 222864,
+  "ground_props": 139,
+  "agents": 3,
+  "signs": 0
+ },
+ "bayou": {
+  "glb_mb": 13.48,
+  "trees": 41,
+  "tree_tris": 255666,
+  "ground_props": 209,
+  "agents": 1,
+  "signs": 0
+ }
+}
