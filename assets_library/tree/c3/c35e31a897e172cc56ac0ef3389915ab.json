@@ -13,10 +13,10 @@
   "species": "white_oak"
  },
  "meta": {
-  "created": "2026-10-16T08:14:09",
+  "created": "2026-10-16T08:29:36",
   "height": 25.6895,
   "species": "white_oak",
-  "tris": 24552,
+  "tris": 9902,
   "trunk_radius": 0.5491
  },
  "path": "tree/c3/c35e31a897e172cc56ac0ef3389915ab.npz"

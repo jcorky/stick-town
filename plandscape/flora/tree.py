@@ -28,6 +28,7 @@ from .species import SPECIES, Species
 LEAF_BUDGET = {"low": 2000, "med": 9000, "high": 40000, "cm": 250000}
 FOLD_COVER = 0.92  # a folded card's projected area relative to flat (cos of the mean fold angle)
 TWIG_CULL = {"low": 0.03, "med": 0.015, "high": 0.006, "cm": 0.0}  # twigs thinner than this hide in foliage
+R_TIP = 0.012  # m, radius of the branchlets the foliage hangs on, the same for every species (see grow_skeleton)
 
 
 @dataclass
@@ -174,6 +175,12 @@ def grow_skeleton(sp: Species, H: float, r, max_iter: int = 220) -> Skeleton:
             acc[parent[i]] += rad[i] ** n
     dbh = r.uniform(*sp.dbh) * (0.6 + 0.4 * H / sp.height[1])
     rad *= (dbh / 2.0) / rad[0]
+    # A skeleton has ~10² tips, a tree ~10⁴ twigs, so pure pipe radii leave tips at r0 · N^(−1/n) ≈ 8–12 % of the
+    # trunk (4–6 cm on a sourced 1.2 m sweetgum). Remap linearly so the trunk keeps d.b.h./2 and the thinnest
+    # tips become R_TIP, order preserved (TECHNIQUES §24):  r' = R_TIP + (r − r_min)(r0 − R_TIP)/(r0 − r_min)
+    r0, rmin = rad[0], rad.min()
+    if r0 > rmin > R_TIP:
+        rad = R_TIP + (rad - rmin) * (r0 - R_TIP) / (r0 - rmin)
     # taper the leader so excurrent trunks narrow smoothly toward the top
     tz = nodes[:, 2] / H
     rad = np.where(np.array(trunk), np.maximum(rad, dbh / 2 * (1 - 0.85 * tz) ** 1.4), rad)
@@ -536,7 +543,8 @@ def generate_tree(species: str, seed=0, season="summer", detail="med",
                       np.array([sp.dbh[0] / 2] * 2), np.array([True, True]))
         return TreeModel(sp, (species, seed), H, sk, bark, fol)
     sk = grow_skeleton(sp, H, r)
-    bark = _bark_mesh(sp, sk, r, TWIG_CULL[detail])
+    bare = sp.deciduous and season == "winter"  # nothing hides the twigs: keep them at every detail
+    bark = _bark_mesh(sp, sk, r, min(TWIG_CULL[detail], TWIG_CULL["high"]) if bare else TWIG_CULL[detail])
     if sp.knees and moisture > 0.65:
         bark = Mesh.merge([bark, _knees(r, texture=bark.texture)])
     fol = _foliage_mesh(sp, sk, H, season, detail, r, moisture)

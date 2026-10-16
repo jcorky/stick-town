@@ -484,3 +484,12 @@ params:
 - impostors carry `tree = "tree-…"`.
 
 `prune` drops an entry when any param named after a kind holds a version string of that kind that is no longer current. Bumping the tree generator therefore retires its impostors, and bumping terrain retires the clips lived on it.
+
+**Branchlet radius.** Sourced d.b.h. made a flaw in the pipe model (§3) visible. A skeleton has about $10^2$ tips where a
+real tree has about $10^4$ twigs, so radii distributed down from the trunk leave the tips at $r_0 N^{-1/n}$, which is 8–12 % of
+the trunk radius: 4–6 cm on a 1.2 m sweetgum, thick enough that no twig was culled. The pipe radii are now remapped
+linearly, keeping their order:
+
+$$r' = r_\text{tip} + (r - r_\text{min})\,\frac{r_0 - r_\text{tip}}{r_0 - r_\text{min}}, \qquad r_\text{tip} = 1.2\ \text{cm}.$$
+
+The trunk keeps d.b.h./2, and the branchlets the foliage hangs on are the same size on every species.

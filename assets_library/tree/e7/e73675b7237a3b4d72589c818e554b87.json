@@ -13,10 +13,10 @@
   "species": "water_oak"
  },
  "meta": {
-  "created": "2026-10-16T08:14:12",
+  "created": "2026-10-16T08:29:37",
   "height": 18.7652,
   "species": "water_oak",
-  "tris": 20670,
+  "tris": 9084,
   "trunk_radius": 0.4597
  },
  "path": "tree/e7/e73675b7237a3b4d72589c818e554b87.npz"

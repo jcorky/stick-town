@@ -13,10 +13,10 @@
   "species": "tulip_poplar"
  },
  "meta": {
-  "created": "2026-10-16T08:14:08",
+  "created": "2026-10-16T08:29:35",
   "height": 44.1058,
   "species": "tulip_poplar",
-  "tris": 16480,
+  "tris": 7614,
   "trunk_radius": 0.4673
  },
  "path": "tree/cf/cfd366ce2367ca4b6ac03af1d19c2f81.npz"

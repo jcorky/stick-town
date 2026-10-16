@@ -13,10 +13,10 @@
   "species": "sweetgum"
  },
  "meta": {
-  "created": "2026-10-16T08:14:07",
+  "created": "2026-10-16T08:29:34",
   "height": 25.1559,
   "species": "sweetgum",
-  "tris": 9792,
+  "tris": 5212,
   "trunk_radius": 0.5125
  },
  "path": "tree/0a/0a73691a2d118705c0b0e6e3962c625f.npz"

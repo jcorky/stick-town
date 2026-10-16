@@ -13,10 +13,10 @@
   "species": "live_oak"
  },
  "meta": {
-  "created": "2026-10-16T08:14:02",
+  "created": "2026-10-16T08:29:32",
   "height": 22.9938,
   "species": "live_oak",
-  "tris": 80130,
+  "tris": 41732,
   "trunk_radius": 0.5713
  },
  "path": "tree/bc/bc92142a0005689aa5da84c57280a434.npz"

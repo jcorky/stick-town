@@ -13,10 +13,10 @@
   "species": "longleaf_pine"
  },
  "meta": {
-  "created": "2026-10-16T08:14:03",
+  "created": "2026-10-16T08:29:33",
   "height": 36.5414,
   "species": "longleaf_pine",
-  "tris": 10136,
+  "tris": 5136,
   "trunk_radius": 0.3574
  },
  "path": "tree/35/35a34ee8e444c3351e9f7a344dcb68b6.npz"

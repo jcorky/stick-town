@@ -13,10 +13,10 @@
   "species": "loblolly_pine"
  },
  "meta": {
-  "created": "2026-10-16T08:14:02",
+  "created": "2026-10-16T08:29:33",
   "height": 32.8601,
   "species": "loblolly_pine",
-  "tris": 10600,
+  "tris": 4708,
   "trunk_radius": 0.3268
  },
  "path": "tree/6e/6ea9b927aa48c8137ad8dcd1a7b4a1b3.npz"

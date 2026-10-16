@@ -13,10 +13,10 @@
   "species": "bald_cypress"
  },
  "meta": {
-  "created": "2026-10-16T08:14:05",
+  "created": "2026-10-16T08:29:34",
   "height": 32.5191,
   "species": "bald_cypress",
-  "tris": 19389,
+  "tris": 10051,
   "trunk_radius": 0.5486
  },
  "path": "tree/3a/3a906b9b45f131c815db3b161b2af1db.npz"
