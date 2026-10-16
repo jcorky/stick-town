@@ -179,3 +179,22 @@ triangle edges. The weights ship as a custom glTF attribute `_SPLAT` (uint8 ×4)
 `extras.splat`; our viewer blends them in the fragment shader, other viewers fall back to the single base texture.
 Terrain3D's per-vertex control map holds two IDs plus a blend byte and multiplies by a bilinear weight $b$:
 $W = (b + t + h)^k\,b$ with $k = 4 + 60\cdot\text{sharpness}$; ours stores four weights directly.
+
+## 14. Droplet hydraulic erosion, batched (after Sebastian Lague, MIT)
+`plandscape/terrain/erosion.py: droplet_erosion` (run after thermal erosion, before D8 creeks)
+
+Heights are normalised to $[0,1]$ ($\tilde z = (z - z_\min)/H$), eroded, and scaled back. Droplets start at keyed
+random positions, 0.5 per cell, in batches of 2048 advanced in lockstep for 30 steps. Per step, with fractional
+offsets $(f_x, f_y)$ in the cell and corner heights NW, NE, SW, SE:
+
+$$g_x = (h_{NE}-h_{NW})(1-f_y) + (h_{SE}-h_{SW})f_y,\qquad g_y = (h_{SW}-h_{NW})(1-f_x) + (h_{SE}-h_{NE})f_x$$
+$$\mathbf d \leftarrow \widehat{\mathbf d\,\iota - \mathbf g\,(1-\iota)}\ (\lVert\cdot\rVert \ge 0.01),\qquad \mathbf p \leftarrow \mathbf p + \mathbf d,\qquad \Delta h = h(\mathbf p_\text{new}) - h(\mathbf p_\text{old})$$
+$$c = \max(-\Delta h\,v\,w\,C,\ 0.01)$$
+
+If $s > c$ or $\Delta h > 0$: deposit $\min(\Delta h, s)$ (uphill) or $(s-c)\,k_d$, split bilinearly over the four corners.
+Otherwise erode $\min\big((c-s)\,k_e,\ -\Delta h\big)$ over a brush of radius $r$ with weights $w_i \propto 1 - d_i/r$,
+never taking more than a node's height. Then $v \leftarrow \sqrt{\max(0,\ v^2 + g\,\Delta h)}$, $w \leftarrow w(1-\epsilon)$.
+
+Constants: inertia $\iota = 0.4$, capacity $C = 4$, $k_e = k_d = 0.3$, $\epsilon = 0.01$, gravity 4, brush $r = 5$
+(Lague: $r = 3$, $\iota$ = 0.05–0.3, which carves hair-fine rills at our 1 m cells). Scatter-adds use `np.bincount`.
+Strength 0.25 on floodplains and 0.5 on the coastal plain so flat country doesn't gully.

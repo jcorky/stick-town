@@ -12,4 +12,6 @@ Droplet erosion. CPU `Assets/Scripts/Erosion.cs`, GPU `ComputeShaders/Erosion.co
 
 **Pitfalls for our port:** heights ~0..1 there (×10 at mesh time) → normalise our metres or retune C; per-node clamp
 assumes h ≥ 0; pad by r and crop; batch droplets with `np.bincount` scatter; keyed spawn jitter; apron ~8 m for seams.
-**Queued:** terrain priority 1, after thermal erosion and before D8. Expect gullies, filled hollows, small fans.
+**Adopted (session 2):** `plandscape/terrain/erosion.py`, batched 2048 droplets in lockstep, normalised heights,
+pad = r, GPU-style NaN guards. Tuned for 1 m cells: r = 5, inertia 0.4, 0.5 droplets/cell (Lague's r = 3 gave
+hair-fine rills). Province strength 0.25 floodplain, 0.5 coastal plain. No apron yet: tiles are standalone.

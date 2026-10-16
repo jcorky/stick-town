@@ -1,0 +1,68 @@
+{
+ "key": "3d8590ceaa90f41ec481909f1085f282",
+ "kind": "behavior",
+ "version": "behavior-0.1.1",
+ "params": {
+  "agent": 7,
+  "scene": "d104f2e15255",
+  "species": "wild_turkey"
+ },
+ "meta": {
+  "created": "2026-10-16T04:37:58",
+  "distance": 53.136,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:drink"
+   ],
+   [
+    7.2,
+    "plan:explore"
+   ],
+   [
+    39.0,
+    "arrive:explore"
+   ],
+   [
+    42.2,
+    "plan:eat"
+   ],
+   [
+    55.0,
+    "plan:explore"
+   ],
+   [
+    64.0,
+    "plan:rest"
+   ],
+   [
+    77.0,
+    "plan:rest"
+   ],
+   [
+    93.2,
+    "plan:rest"
+   ],
+   [
+    110.5,
+    "arrive:rest"
+   ]
+  ],
+  "species": "wild_turkey",
+  "state_mix": {
+   "idle": 6,
+   "pause": 85,
+   "rest": 278,
+   "travel": 351
+  },
+  "traits": {
+   "boldness": 0.187,
+   "curiosity": 0.335,
+   "laziness": 0.216,
+   "patience": 0.685,
+   "wanderlust": 0.265
+  }
+ },
+ "path": "behavior/3d/3d8590ceaa90f41ec481909f1085f282.npz"
+}

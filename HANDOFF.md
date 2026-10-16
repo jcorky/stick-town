@@ -21,7 +21,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 
 | Module | State |
 |---|---|
-| `terrain/heightfield.py` | 5 provinces, erosion, creeks, bayous; `load_dem()` is a stub |
+| `terrain/` | 5 provinces, thermal + batched droplet erosion, creeks, bayous; `load_dem()` is a stub |
 | `flora/` | 12 species, all `verified=False`; broadleaf crowns are textured leaf-sprig cards, pines crossed needle cards, bark textured |
 | `textures.py` | leaf/needle cards from ambientCG atlases, bark and ground detail maps, procedural fallbacks |
 | `models.py` | glTF importer, crack-free decimator, card thinning; 10 Poly Haven models / 29 variants in the library |

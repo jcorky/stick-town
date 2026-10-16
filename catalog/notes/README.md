@@ -9,7 +9,7 @@ numbers refer to the commit in the harvest report.
 |---|---|---|
 | [terrain3d](terrain3d.md) | MIT | height blend adopted (TECHNIQUES §13) |
 | [ocean](ocean.md) | MIT | water ideas queued |
-| [seblague-erosion](seblague-erosion.md) | MIT | droplet erosion queued (priority 1 terrain) |
+| [seblague-erosion](seblague-erosion.md) | MIT | droplet erosion adopted (TECHNIQUES §14) |
 | [worldengine](worldengine.md) | MIT | Holdridge lookup queued for real-place mode |
 | [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing, siting, names queued |
 | [wfc](wfc.md) | MIT | low priority |

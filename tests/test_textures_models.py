@@ -170,6 +170,27 @@ class Bark(Base):
         self.assertLess(len(lo.bark.positions), 2 * len(lo.skeleton.pos) * 4)
 
 
+class Erosion(unittest.TestCase):
+    def test_droplets_cut_gullies_and_fill_hollows(self):
+        from plandscape.terrain.erosion import droplet_erosion
+        from plandscape.terrain.heightfield import _thermal_erosion, flow_accumulation
+        from plandscape import noise
+        n = 96
+        Y, X = np.mgrid[0:n, 0:n].astype(float)
+        z = 0.4 * X + 3 * noise.fbm(X / 30, Y / 30, 3, octaves=4)  # a tilted, lumpy slope (~40 m relief)
+        z = _thermal_erosion(z, 1.0, iters=5)
+        a = droplet_erosion(z, seed=1)
+        np.testing.assert_array_equal(a, droplet_erosion(z, seed=1))  # deterministic
+        self.assertTrue(np.isfinite(a).all())
+        d = a - z
+        self.assertLess(np.abs(d).max(), 0.2 * np.ptp(z))  # reshapes, doesn't wreck
+        rough = lambda h: np.abs(np.diff(h, axis=0)).mean()  # across-slope roughness = gullies
+        self.assertGreater(rough(a), rough(z) * 1.05)
+        acc = flow_accumulation(z)
+        sinks = acc > np.percentile(acc, 98)
+        self.assertGreater(d[sinks].mean(), d[~sinks].mean())  # sediment settles where flow gathers
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights
