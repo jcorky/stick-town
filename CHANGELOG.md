@@ -3,6 +3,18 @@
 ## Unreleased
 
 **Added**
+- Sculpted animals (TECHNIQUES §36). Every species is rebuilt from blended anatomical forms (signed distance functions, smooth minimum), meshed by surface nets, projected onto the true surface, and lit by gradient normals.
+  - **Anatomy:** real heads, ears, eyes, muzzles, hooves and paws, sourced proportions, and painted markings (the deer's flag and eye ring, the raccoon's mask and rings, the armadillo's nine bands, the turkey's bare blue head, the heron's dagger bill and plume).
+  - **Sizes:** checked against new sourced dimensions in `catalog/fauna_sources.json` (deer withers 0.80–1.05 m, coyote ≤ 0.61 m, raccoon 0.23–0.30 m). Legs have unequal segments where sourced: the deer's hock-to-hoof is 0.45 m.
+  - **Rigs:** one rig per species and coat, sized by node scale.
+  - **Gallery:** `fauna.jpg` is now a portrait grid plus the to-scale lineup. `viewer_shot.py --focus <node>` frames one animal. body-0.2.0.
+
+**Fixed**
+- Animal vertex colours were exported as display values, so they looked washed out in the viewer; they are now linear.
+- Grass meshes over 65,536 vertices used 32-bit indices; grass is now exported in 16-bit chunks (−0.36 MB on the walk scene).
+- Folded heron wings stuck out of the body like fins; they now tuck in (WING_FOLD 0.03), and the body carries sculpted folded wings.
+
+**Added**
 - The asset library lives in GitHub (Git LFS in this repo), as the owner decided. It now holds every species × 4 seasons × 4 variants × 2 moistures at `low` and `med` (768 trees), each with its far-LOD impostor (`assets bake` now bakes them together). It also has 20 buildings and behaviour clips and terrains from 20 new scenes (`scripts/bake_scenes.py`, every province, biome, season, hour and wind; every GLB 7–14 MB). Total 213 MB, 1751 entries.
 
 **Fixed**

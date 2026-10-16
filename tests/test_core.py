@@ -188,8 +188,13 @@ class NewSpecies(unittest.TestCase):
             for f in ("walk", "run"):
                 if f in s:
                     self.assertAlmostEqual(getattr(sp, f), s[f]["value"], places=6)
-        lo, hi = src["raccoon"]["shoulder"]["value"]
-        self.assertTrue(lo <= rig("raccoon", (0.5, 0.5, 0.5))["hip"] <= hi)
+        for k in ("raccoon", "white_tailed_deer", "coyote"):   # withers measured on the sculpted torso
+            r = rig(k, (0.5, 0.5, 0.5))
+            sx = r["legs"][0]["hip"][0]
+            P = r["torso"].positions
+            withers = float(P[np.abs(P[:, 0] - sx) < 0.05, 2].max())
+            lo, hi = src[k]["shoulder"]["value"]
+            self.assertTrue(lo <= withers <= hi, (k, withers))
         heron = body("great_blue_heron", (0.5, 0.5, 0.5))
         self.assertLess(abs(float(heron.positions[:, 2].max()) - src["great_blue_heron"]["height"]["value"]), 0.12)
         turtle = body("box_turtle", (0.5, 0.5, 0.5))

@@ -167,7 +167,7 @@ def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None, drop=None, air=
     return tk, out, names
 
 
-FLAP_HZ, FLAP_AMP, WING_FOLD = 2.5, np.radians(40), 0.12  # design values (§33)
+FLAP_HZ, FLAP_AMP, WING_FOLD = 2.5, np.radians(40), 0.03  # design values (§33); folded wings tuck into the body (§36)
 
 
 def wing_track(times, air):

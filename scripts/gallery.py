@@ -244,27 +244,48 @@ def motion_sheet(path):
 
 
 def fauna_sheet(path):
-    """Every species' rig in its rest pose, side by side to scale on a 1 m-gridded ground (§32)."""
+    """Every species (§32, sculpted §36): a portrait of each in three-quarter view, then all of them to scale."""
     import numpy as np
     from plandscape.fauna.agents import FAUNA
     from plandscape.fauna.bodies import body
     from plandscape.mesh import Mesh, box
     from plandscape.render import render
-    parts, x = [], 0.0
+    try:
+        from PIL import ImageFont
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
+        small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
+    except OSError:
+        font = small = None
+    W, H = 560, 420
+    tiles, parts, x = [], [], 0.0
     for key, spec in FAUNA.items():
         b = body(key, spec.rgb)
+        lo, hi = b.positions.min(0), b.positions.max(0)
+        c, r = (lo + hi) / 2, float(np.max(hi - lo)) * 0.62
+        im = render([b], None, size=(W, H), azimuth=-38, elevation=12,
+                    fit=((c[0] - r, c[1] - r, lo[2] - 0.05 * r), (c[0] + r, c[1] + r, lo[2] + 1.6 * r)))
+        tile = Image.fromarray(im)
+        d = ImageDraw.Draw(tile)
+        d.text((12, 10), spec.common, fill=(20, 26, 22), font=font)
+        d.text((12, 36), f"{b.n_tris:,} triangles · {float(hi[2]):.2f} m tall", fill=(70, 80, 72), font=small)
+        tiles.append(tile)
         w = float(np.ptp(b.positions[:, 0]))
         x += w / 2 + 0.25
-        parts.append(Mesh(b.positions + np.array([x - b.positions[:, 0].mean(), 0, 0], np.float32), b.colors, b.indices))
+        m = Mesh(b.positions + np.array([x - b.positions[:, 0].mean(), 0, 0], np.float32), b.colors, b.indices)
+        m.nrm = b.nrm
+        parts.append(m)
         x += w / 2 + 0.25
     ground = [box((x / 2, 0, -0.01), (x + 0.4, 1.0, 0.02), (0.55, 0.55, 0.5))]
     ground += [box((i, 0.3, 0.0), (0.02, 0.4, 0.004), (0.2, 0.2, 0.2)) for i in range(int(x) + 1)]  # 1 m ticks
-    render(ground + parts, path, size=(1500, 420), azimuth=0, elevation=6, keep_first=99,
-           fit=((-0.2, -0.5, -0.05), (x + 0.2, 0.5, 1.9)))
-    im = Image.open(path)
-    d = ImageDraw.Draw(im)
-    d.text((8, 8), "all species to scale; ticks every 1 m: " + ", ".join(s.common for s in FAUNA.values()), fill=(0, 0, 0))
-    im.save(path)
+    line = Image.fromarray(render(ground + parts, None, size=(3 * W, 470), azimuth=-12, elevation=8, keep_first=99,
+                                  fit=((-0.2, -0.6, -0.05), (x + 0.2, 0.6, 1.9))))
+    ImageDraw.Draw(line).text((12, 10), "all to scale, ticks every 1 m", fill=(20, 26, 22), font=font)
+    rows = (len(tiles) + 2) // 3
+    sheet = Image.new("RGB", (3 * W, rows * H + line.height), (247, 248, 242))
+    for i, t in enumerate(tiles):
+        sheet.paste(t, ((i % 3) * W, (i // 3) * H))
+    sheet.paste(line, (0, rows * H))
+    sheet.save(path)
     return path
 
 

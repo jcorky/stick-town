@@ -419,8 +419,16 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     m_bld, m_water = g.material("building", rough=0.6), g.material("water", rough=0.08, alpha=0.85)
     m_fauna = g.material("fauna", rough=0.8)
     g.node("terrain", g.mesh(ter, "terrain", mat(ter, "terrain", rough=1.0)))
-    if grass.n_tris:
-        g.node("grass", g.mesh(grass, "grass", m_grass))
+    if grass.n_tris:  # in chunks under 65,536 vertices, so indices fit in 16 bits (blades are 5 vertices, 3 triangles)
+        per = 65530 // 5
+        nb = len(grass.positions) // 5
+        for c, b0 in enumerate(range(0, nb, per)):
+            b1 = min(nb, b0 + per)
+            sl = slice(b0 * 5, b1 * 5)
+            tri = grass.indices[(grass.indices[:, 0] >= b0 * 5) & (grass.indices[:, 0] < b1 * 5)] - b0 * 5
+            part = Mesh(grass.positions[sl], grass.colors[sl], tri.astype(np.uint32))
+            part.attrs = {k: v[sl] for k, v in (grass.attrs or {}).items()}
+            g.node("grass" if c == 0 else f"grass_{c}", g.mesh(part, "grass" if c == 0 else f"grass_{c}", m_grass))
     if water_mesh.n_tris:
         g.node("water", g.mesh(water_mesh, "water", m_water))
     built = Mesh.merge(bmeshes + props)
@@ -466,15 +474,27 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         # a few quantised looks per species, so individuals share meshes
         rgb = np.clip(np.array(a.spec.rgb) * [0.88, 1.0, 1.12][int(rr.integers(0, 3))], 0, 1)
         sc = [0.9, 1.0, 1.1][int(rr.integers(0, 3))]
-        look = (a.spec.key, sc, tuple(np.round(rgb, 2)))
+        # one sculpted rig per (species, coat); size is the agent node's scale, so the 3 sizes share meshes (§36)
+        look = (a.spec.key, tuple(np.round(rgb, 2)))
         if look not in rigs:  # torso + legs pivoting at the hips (TECHNIQUES §25)
-            rg = rig(a.spec.key, rgb, scale=sc)
+            rg = rig(a.spec.key, rgb, scale=1.0)
             nm = f"{a.spec.key}_{len(rigs)}"
-            rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
-                          g.mesh(rg["neck"]["mesh"], nm + "_head", m_fauna) if rg["neck"] else None,
-                          g.mesh(rg["tail"]["mesh"], nm + "_tail", m_fauna) if rg["tail"] else None,
-                          [g.mesh(w["mesh"], f"{nm}_wing{i}", m_fauna) for i, w in enumerate(rg["wings"])],
-                          [(g.mesh(lg["thigh"], f"{nm}_thigh{i}", m_fauna), g.mesh(lg["shank"], f"{nm}_shank{i}", m_fauna))
+            memo = {}
+
+            def fm(m, name):  # sculpt colours are display (sRGB) values; glTF vertex colours are linear
+                lin = Mesh(m.positions, np.clip(m.colors, 0, 1) ** 2.2, m.indices)
+                lin.nrm = m.nrm
+                return g.mesh(lin, name, m_fauna)
+
+            def once(m, name):  # left and right legs share one mesh
+                if id(m) not in memo:
+                    memo[id(m)] = fm(m, name)
+                return memo[id(m)]
+            rigs[look] = (rg, fm(rg["torso"], nm + "_torso"),
+                          fm(rg["neck"]["mesh"], nm + "_head") if rg["neck"] else None,
+                          fm(rg["tail"]["mesh"], nm + "_tail") if rg["tail"] else None,
+                          [fm(w["mesh"], f"{nm}_wing{i}") for i, w in enumerate(rg["wings"])],
+                          [(once(lg["thigh"], f"{nm}_thigh{i}"), once(lg["shank"], f"{nm}_shank{i}"))
                            for i, lg in enumerate(rg["legs"])])
         rg, torso_mesh, head_mesh, tail_mesh, wing_meshes, leg_meshes = rigs[look]
         torso = g.node("torso", torso_mesh)
@@ -502,14 +522,14 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                     graze=round(float(rg["neck"]["graze"]), 4) if rg["neck"] else 0.0,
                     flag=round(float(rg["tail"]["flag"]), 4) if rg["tail"] else 0.0,
                     walk=a.spec.walk, run=a.spec.run, flies=a.spec.flies, climbs=a.spec.climbs,
-                    withdraws=a.spec.withdraws, eats=a.spec.eats)
-        node = g.node(f"{a.spec.key}_{a.id}", children=[trunk], extras={"rig": live})
+                    withdraws=a.spec.withdraws, eats=a.spec.eats, scale=sc)
+        node = g.node(f"{a.spec.key}_{a.id}", children=[trunk], extras={"rig": live}, scale=sc)
         akids.append(node)
         if len(a.log) > 1:  # full-rate path, turn-rate-limited heading, keys reduced (TECHNIQUES §30)
             tracks.append((node, *motion.export_track(a.log, a.spec.key)))
         if len(a.log) > 1:  # legs swing by gait, by stride phase (keys only while moving)
             t_ = np.array([l[0] for l in a.log])
-            xy = np.array([(l[1], l[2]) for l in a.log])
+            xy = np.array([(l[1], l[2]) for l in a.log]) / sc  # the rig is unit-size inside the scaled node
             if legs:  # hip and knee by two-bone IK on planted-foot paths (§26), trunk bob (§28)
                 lg0 = rg["legs"][0]
                 bob = []

@@ -27,7 +27,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 | `models.py` | glTF importer, crack-free decimator, card thinning; 10 Poly Haven models / 29 variants in the library |
 | `ground/surface.py` + `scene/groundcover.py` | soil colour + biome detail texture; grass blades in the central 56 m; photoscanned props in the central 80 m |
 | `paths/desire.py` | active-walker trails, batched |
-| `fauna/` | 6 species with planning, memory, deviation, signs; bodies are static low-poly shapes that slide (no gait) |
+| `fauna/` | 9 species with planning, memory, deviation, signs, gaits/IK; bodies sculpted from blended SDF forms with sourced proportions and painted markings (§36) |
 | `scene/` | planner (keyword-based, LLM hook `refine()` unused), composer, 5 building types, props, review renders (`preview`, `closeup`, `homestead`, `creek`, `map`) |
 | `export/` | GLB with instancing, textures, quantised attributes, animations; validator |
 | `assets/` | library + bake/bake-models/prune/find/stats CLI; 213 MB in Git LFS on GitHub (owner decision): 768 trees + impostors at low/med, 106 behaviour clips |

@@ -1,0 +1,14 @@
+{
+ "key": "60684182a410b0ed0c72fb79dd665808",
+ "kind": "body",
+ "version": "body-0.2.0",
+ "params": {
+  "scale": 1.0,
+  "species": "wild_turkey"
+ },
+ "meta": {
+  "created": "2026-10-16T21:03:39",
+  "tris": 5056
+ },
+ "path": "body/60/60684182a410b0ed0c72fb79dd665808.npz"
+}

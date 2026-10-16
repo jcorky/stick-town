@@ -171,6 +171,19 @@ Open `map.png` and `scene.json` and check:
 - Scratch scenes for testing go through `PLANDSCAPE_ASSETS=<copy of the library>` so their behaviour clips stay out
   of the real library.
 
+### Sculpted bodies (§36)
+- Very flat ellipsoids (aspect > ~8) have a poor approximate SDF: Newton projection wobbles and the mesh goes jagged.
+  Put thin relief (bands, seams, keels) in a displacement on a smooth shape; gradient normals shade it like a bump map.
+- Detail thinner than ~2 grid cells (ears, hooves, claws, eyes) disappears or spikes: make it its own sculpture
+  with its own triangle budget and merge.
+- A neck part that starts as a fat sphere at its pivot shows a collar; bury it in a torso-side neck root that is wider.
+- Keep the rig's `hip` = leg length (gaits use it); the back sits above it. Measure withers on the torso mesh in
+  tests, never use `hip` as shoulder height.
+- glTF COLOR_0 is linear: convert sculpt colours (picked as display values) with c^2.2 at export, or animals look
+  bleached in the viewer while the Python renders look right.
+- Budget by measuring the GLB by category before cutting detail; the walk scene's surplus was grass index width,
+  not the animals.
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
