@@ -96,8 +96,10 @@ def _sample_crown(sp: Species, H: float, n: int, r) -> np.ndarray:
         elif sp.crown == "columnar":
             ok = rr ** 2 + ((v - 0.55) / 0.55) ** 2 <= 1
         elif sp.crown == "layered":
-            tier = np.abs(((v * 3.0) % 1.0) - 0.5) < 0.18
-            ok = (rr <= 1.0 - 0.35 * v) & tier
+            # soft tiers: density peaks in three layers, p = 0.3 + 0.7 cos²(π(frac(3v) − ½)), but the gaps are never
+            # empty; hard tiers made space colonisation bridge each gap with a vertical stem (boxy right angles)
+            tier = 0.3 + 0.7 * np.cos(np.pi * ((v * 3.0) % 1.0 - 0.5)) ** 2
+            ok = (rr <= 1.0 - 0.35 * v) & (r.uniform(0, 1, m) < tier)
         else:
             ok = rr <= 1
         pts = np.c_[u[ok] * R, zb + v[ok] * hc]

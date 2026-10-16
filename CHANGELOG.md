@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+**Fixed**
+- Bare dogwoods grew boxy, right-angled twig runs. The layered crown kept attraction points only in three thin tiers, and space colonisation bridged the empty gaps with vertical stems. Tiers are now soft: point density is p(v) = 0.3 + 0.7 cos²(π(frac(3v) − ½)). tree-0.3.3.
+
 **Added**
 - Sourced species data (TECHNIQUES §24): height, d.b.h. and leaf/needle length for all 12 species from Silvics, FEIS, USDA PLANTS and EDIS. Each value is stored with its URL and a verbatim quote in `catalog/species_sources.json`. All species are `verified=True`, and a test keeps code and sources in agreement. Pipe-model radii are remapped so the thinnest branchlets are 1.2 cm on every species (they were 8–12 % of the trunk radius, 4–6 cm on a sourced sweetgum), and the twig cull works again. Bare deciduous trees in winter keep their twigs at every detail. tree-0.3.2.
 - Southern ground textures: pine straw (Ground077) under pines, Coastal Plain sand (Ground080) and Delta alluvium (Ground036) as the soil layer. Splat lookup is by biome, then province.

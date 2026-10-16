@@ -45,7 +45,6 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
-- Bare winter dogwoods show boxy, right-angled twig runs in their tiered crown (visible since branchlets became 1.2 cm, §24). Probably the layered-crown attraction points; look at `grow_skeleton` for `crown="layered"`.
 - Creeks are re-cut at 25 cm inside the near windows (§22) but stay 1 m-faceted elsewhere. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
 
 ## 3. Next priorities, in order
