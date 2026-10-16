@@ -298,6 +298,32 @@ class CrownNormals(Base):
         self.assertGreater(np.median((n8 * want).sum(1)), 0.97)
 
 
+class Names(unittest.TestCase):
+    def test_names_keyed_and_regional(self):
+        from plandscape.scene.names import scene_names
+        from plandscape.scene.planner import plan
+        a = scene_names(plan("Monte Sano cove with a dogtrot cabin", seed=3), n_houses=1)
+        b = scene_names(plan("Monte Sano cove with a dogtrot cabin", seed=3), n_houses=1)
+        self.assertEqual(a, b)
+        self.assertTrue(a["road"].endswith("Rd") and a["homesteads"][0].startswith("the "))
+        delta = scene_names(plan("cypress bayou floodplain with a shotgun house", seed=3), n_houses=1)
+        self.assertTrue(any(w in delta["creek"] for w in ("Bayou", "Slough")))
+
+    def test_siting_prefers_flat_dry_frontage(self):
+        from plandscape.scene.names import site_scores
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(96, 1.0, "piedmont", 2, creek=False)
+        hf.layers["slope"][:] = 2.0
+        hf.layers["slope"][:, 60:] = 30.0      # steep east half
+        hf.layers["water"][:] = 0.0
+        hf.layers["water"][20:40, 10:25] = 1.0  # a pond on the west frontage
+        road = np.c_[np.arange(5, 90, 1.0), np.full(85, 10.0)]
+        nrm = np.tile([0.0, 1.0], (len(road), 1))
+        s = site_scores(hf, road, nrm, 15.0)
+        best = road[int(np.argmax(s)), 0]
+        self.assertTrue(30 <= best <= 55)  # flat, dry middle stretch
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights

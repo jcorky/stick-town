@@ -1,8 +1,8 @@
 {
  "monte-sano": {
-  "glb_mb": 9.69,
+  "glb_mb": 9.86,
   "trees": 118,
-  "tree_tris": 125510,
+  "tree_tris": 133518,
   "ground_props": 400,
   "agents": 10,
   "signs": 4
@@ -16,9 +16,9 @@
   "signs": 0
  },
  "bayou": {
-  "glb_mb": 11.34,
+  "glb_mb": 11.87,
   "trees": 41,
-  "tree_tris": 204062,
+  "tree_tris": 222578,
   "ground_props": 209,
   "agents": 1,
   "signs": 0

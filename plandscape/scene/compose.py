@@ -30,6 +30,7 @@ from ..rng import rng as make_rng
 from ..terrain.heightfield import generate_tile
 from .buildings import clothesline, fence, generate_building, mailbox
 from .groundcover import scatter
+from .names import scene_names, site_scores
 from .roads import ROAD_WIDTH, grade, ribbon, route, smooth
 from .planner import ScenePlan
 
@@ -108,7 +109,19 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         def along(x):
             k = int(np.argmin(np.abs(road[:, 0] - x)))
             return road[k], tan[k] * (1 if tan[k, 0] >= 0 else -1), nrm[k]
-        xs = np.linspace(S * 0.2, S * 0.8, len(plan.buildings))
+        # house sites: best-scoring road frontage, greedily, at least 30 m apart (TECHNIQUES §19)
+        sc = site_scores(hf, road, nrm, ROAD_WIDTH / 2 + 12.0)
+        sc = sc + make_rng("siting", plan.seed).uniform(0, 0.3, len(sc))  # break ties between equal sites
+        sc[(road[:, 0] < S * 0.12) | (road[:, 0] > S * 0.88)] = -1e9
+        xs = []
+        for k in np.argsort(-sc):
+            if len(xs) == len(plan.buildings):
+                break
+            if all(abs(road[k, 0] - x) >= 30 for x in xs):
+                xs.append(float(road[k, 0]))
+        while len(xs) < len(plan.buildings):  # crowded tile: fall back to even spacing
+            xs.append(float(S * (0.2 + 0.6 * len(xs) / max(len(plan.buildings) - 1, 1))))
+        xs = sorted(xs)
         for k, (kind, bx) in enumerate(zip(plan.buildings, xs)):
             bseed = [0, int(make_rng("bpick", plan.seed, k).integers(0, 4))] if library_pool else [plan.seed, k]
             m, meta = store.get_or_build("building", dict(kind=kind, seed=bseed),
@@ -387,7 +400,11 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                  terrain_tris=ter.n_tris, agents=len(agents), signs=len(world.signs),
                  trodden_cells=int((field.G > 0.35).sum()), glb_mb=round(size_mb, 2),
                  seconds=round(time.time() - t0, 1), library=store.stats())
-    scene = dict(plan=asdict(plan), stats=stats, lighting=light, buildings=info,
+    names = scene_names(plan, n_houses=len(info), has_creek=bool(water.any()))
+    for i_, h_ in zip(info, names["homesteads"]):
+        h_ = f"{names['church']}" if i_["kind"] == "church" else h_
+        i_["name"] = h_
+    scene = dict(plan=asdict(plan), stats=stats, lighting=light, buildings=info, names=names,
                  trees=[{k: v for k, v in pl.items() if k != "model"} for pl in placements], signs=world.signs,
                  ground_props=[dict(gp, model=f"{gp['model'][0]}/{gp['model'][1]}") for gp in gprops],
                  credits=sorted({(p_.meta["source"]["url"], p_.meta["source"]["licence"],
@@ -401,5 +418,6 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     log(f"exported {glb} ({size_mb:.1f} MB) in {time.time() - t0:.1f}s")
     return dict(dir=out_dir, glb=glb, stats=stats, hf=hf, field=field, canopy=canopy, agents=agents,
                 world=world, placements=placements, variants=variants, ter=ter, grass=grass,
-                ground_props=gprops, prop_parts=gparts, road=road_mesh, buildings=info,
+                ground_props=gprops, prop_parts=gparts, road=road_mesh, buildings=info, names=names,
+                road_line=road,
                 built=built, water=water_mesh, light=light)

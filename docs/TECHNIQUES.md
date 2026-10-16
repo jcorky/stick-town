@@ -274,3 +274,19 @@ $$\mathbf n = \widehat{k\,\hat{\mathbf r} + (1-k)\,s\,\mathbf n_\text{face}},\qq
 Flowers and Spanish moss keep geometric normals. `Mesh.nrm` carries authored normals through transforms
 ($\mathbf n' = \widehat{R\mathbf n}$), the library (int8) and the GLB; the preview renderer shades authored-normal triangles
 with their mean vertex normal, unflipped.
+
+## 19. House siting and place names (siting after Fantasy-Map-Generator, MIT)
+`plandscape/scene/names.py: site_scores, scene_names`; `plandscape/scene/compose.py`
+
+**Siting.** Every road point $k$ proposes a plot $W_r/2 + 12$ m off the road; within a $\pm 6$ m footprint
+
+$$s_k = -\frac{\overline{\text{slope}}}{6} - 6\max W - 2\,\big|\Delta z_{\text{plot}-\text{road}} - 1\,\text{m}\big| + 1.5\,e^{-\left(\frac{d_\text{creek} - 30}{20}\right)^2} + \mathcal U(0, 0.3)$$
+
+(flat, dry, a metre above the road, near but not in the creek; the noise only breaks ties). Plots in the outer 12 %
+of the tile are excluded; houses take the best scores greedily, at least 30 m apart, then sort west→east.
+
+**Names** are invented by Southern naming patterns rather than a syllable chain, keyed by `rng("names", seed, province)`:
+creek = (nature word | family) + regional water word (Branch / Creek / Fork in the hills, Bayou / Slough in the Delta);
+road = one of *family* Rd, *nature landform* Rd, *church* Church Rd, Old *landform* Rd, *creek word* Rd;
+church = (Pleasant Hill | Mount Zion | New Hope | Shiloh | …) + (Baptist | Methodist | Missionary Baptist | A.M.E. | …);
+homestead = "the *family* place". Names go into `scene.json` and are labelled on `map.png`.
