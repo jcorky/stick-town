@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- Trunk bob and head pose by behaviour (TECHNIQUES §28). The trunk rises and falls b = A h cos 2φ, and the IK keeps the feet planted. Deer, coyotes and turkeys lower their heads to eat or drink and raise them when alert, easing over 0.4 s at each state change. Gallery adds `poses.jpg`.
 - `--llm`: an optional Claude pass fills the scene plan from free-form prompts (TECHNIQUES §27). A validator keeps only values the generators can honour; seed, size and detail always stay the keyword planner's, and every rejection is noted in the plan. The client is stdlib-only (`urllib`), with `ANTHROPIC_API_KEY` and an optional `PLANDSCAPE_MODEL`. Offline, or on any failure, the keyword plan is used.
 - Knees and planted feet (TECHNIQUES §26). Legs are thigh plus shank. Feet follow stance and swing paths (S = λβ on the ground, a smoothstep arc lifted 0.12–0.3 h in swing), and hips and knees come from two-bone IK. Knees bend their anatomical way: fore carpus and bird intertarsal joints backward, stifle and human knee forward. The gallery's `gaits.jpg` now shows planted feet.
 - Animals walk (TECHNIQUES §25). Bodies are rigs with legs pivoting at the hips. Stride is λ = 2.3 h Fr^0.3 (Alexander 1976), and the gait (walk, trot or gallop) is chosen by Froude number (Alexander & Jayes 1983), with footfall offsets and duty factors per gait. Leg swing θ = θmax sin(φ − 2π o) is keyed by stride phase, 8 keys per stride. Squirrels bound. Gallery adds `gaits.jpg`. body-0.1.1.

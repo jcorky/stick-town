@@ -28,13 +28,14 @@ def ellipsoid(c, r, rgb, nu=10, nv=6):
 
 def rig(key, rgb, scale=1.0):
     """Body split for gait animation: dict(torso=Mesh, legs=[dict(thigh, shank, hip, knee, l1, l2)],
-    hip=hip height h (m), kind='quad'|'biped'|'hop'|'none'). Legs are ordered LF, RF, LH, RH (bipeds L, R).
+    neck=dict(mesh, pivot, graze) or None, hip=hip height h (m), kind='quad'|'biped'|'hop'|'none'). Legs are ordered LF, RF, LH, RH (bipeds L, R).
     Thigh and shank hang straight down from their own origins (hip, knee); together they are h / 0.95 long, so
     the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward (stifle, human knee), −1 backward
     (a deer's carpus, a bird's intertarsal joint)."""
     from .gait import REACH
     rgb = np.asarray(rgb)
     parts, legs, hip, kind = [], [], 0.0, "none"
+    neck = None  # dict(mesh relative to the pivot, pivot xyz, graze=head-down pitch in radians)
 
     def leg(x, y, h, w, col, knee):
         L = h * REACH
@@ -45,9 +46,12 @@ def rig(key, rgb, scale=1.0):
     if key in ("white_tailed_deer", "coyote"):
         L = 0.75 if key == "white_tailed_deer" else 0.5
         h = 0.95 if key == "white_tailed_deer" else 0.5
-        parts += [ellipsoid((0, 0, h), (L, 0.22 * L / 0.75 + 0.05, 0.25 * L / 0.75 + 0.03), rgb),
-                  ellipsoid((L * 0.8, 0, h + 0.3 * L), (0.12, 0.07, 0.25 * L), rgb),
-                  ellipsoid((L * 1.05, 0, h + 0.55 * L), (0.2 * L / 0.75 + 0.05, 0.07, 0.08), rgb * 0.9)]
+        parts += [ellipsoid((0, 0, h), (L, 0.22 * L / 0.75 + 0.05, 0.25 * L / 0.75 + 0.03), rgb)]
+        pv = np.array([L * 0.7, 0, h + 0.05])
+        neck = dict(mesh=Mesh.merge([ellipsoid(np.array([L * 0.8, 0, h + 0.3 * L]) - pv, (0.12, 0.07, 0.25 * L), rgb),
+                                     ellipsoid(np.array([L * 1.05, 0, h + 0.55 * L]) - pv,
+                                               (0.2 * L / 0.75 + 0.05, 0.07, 0.08), rgb * 0.9)]),
+                    pivot=tuple(pv), graze=np.radians(110))
         for x, knee in ((L * 0.6, -1.0), (-L * 0.6, 1.0)):  # fore (carpus bends back), then hind (stifle forward)
             for y in (0.1, -0.1):                            # left (+y), then right
                 leg(x, y, h, 0.06, rgb * 0.8, knee)
@@ -63,9 +67,11 @@ def rig(key, rgb, scale=1.0):
         hip, kind = 0.1, "hop"
     elif key == "wild_turkey":
         parts += [ellipsoid((0, 0, 0.55), (0.32, 0.2, 0.22), rgb),
-                  ellipsoid((0.3, 0, 0.82), (0.04, 0.04, 0.16), (0.55, 0.65, 0.75)),
-                  ellipsoid((0.33, 0, 0.98), (0.06, 0.04, 0.05), (0.7, 0.15, 0.15)),
                   ellipsoid((-0.3, 0, 0.6), (0.12, 0.25, 0.08), rgb * 0.8)]
+        pv = np.array([0.25, 0, 0.65])
+        neck = dict(mesh=Mesh.merge([ellipsoid(np.array([0.3, 0, 0.82]) - pv, (0.04, 0.04, 0.16), (0.55, 0.65, 0.75)),
+                                     ellipsoid(np.array([0.33, 0, 0.98]) - pv, (0.06, 0.04, 0.05), (0.7, 0.15, 0.15))]),
+                    pivot=tuple(pv), graze=np.radians(120))
         for y in (0.08, -0.08):
             leg(0.02, y, 0.36, 0.03, (0.6, 0.35, 0.3), -1.0)  # the visible "knee" is the intertarsal joint
         hip, kind = 0.36, "biped"
@@ -85,13 +91,16 @@ def rig(key, rgb, scale=1.0):
         hip, kind = 0.9, "biped"
     torso = Mesh.merge(parts)
     torso.positions *= scale
+    if neck is not None:
+        neck["mesh"].positions *= scale
+        neck["pivot"] = tuple(c * scale for c in neck["pivot"])
     for lg in legs:
         lg["thigh"].positions *= scale
         lg["shank"].positions *= scale
         lg["hip"] = tuple(c * scale for c in lg["hip"])
         lg["l1"] *= scale
         lg["l2"] *= scale
-    return dict(torso=torso, legs=legs, hip=hip * scale, kind=kind)
+    return dict(torso=torso, legs=legs, neck=neck, hip=hip * scale, kind=kind)
 
 
 def _pitch(P, th):
@@ -116,4 +125,8 @@ def posed_legs(r, angles=None):
 def body(key, rgb, scale=1.0):
     """The rig merged into one static mesh in its rest pose (previews, the asset library)."""
     r = rig(key, rgb, scale)
-    return Mesh.merge([r["torso"]] + posed_legs(r))
+    parts = [r["torso"]] + posed_legs(r)
+    if r["neck"] is not None:
+        n = r["neck"]
+        parts.append(Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors, n["mesh"].indices))
+    return Mesh.merge(parts)

@@ -63,7 +63,9 @@ class Gaits(unittest.TestCase):
         for k in ("white_tailed_deer", "wild_turkey", "human", "gray_squirrel"):
             r = rig(k, (0.5, 0.4, 0.3))
             b = body(k, (0.5, 0.4, 0.3))
-            self.assertEqual(b.n_tris, r["torso"].n_tris + sum(lg["thigh"].n_tris + lg["shank"].n_tris for lg in r["legs"]))
+            neck = r["neck"]["mesh"].n_tris if r["neck"] else 0
+            self.assertEqual(b.n_tris, r["torso"].n_tris + neck + sum(lg["thigh"].n_tris + lg["shank"].n_tris
+                                                                      for lg in r["legs"]))
             for lg in r["legs"]:  # rest pose puts the foot on the ground, slightly flexed
                 th1, th2 = gait.rest_pose(r["hip"], lg["l1"], lg["l2"], lg["knee"])
                 foot_z = -lg["l1"] * np.cos(th1) - lg["l2"] * np.cos(th1 + th2)
@@ -86,6 +88,28 @@ class Gaits(unittest.TestCase):
             self.assertTrue(np.all(np.sign(kx - x / 2) == knee))
         x, z = gait.foot_path(np.linspace(0.7, 0.95, 6), 0.65, 0.6, h, 0.12)
         self.assertTrue(np.all(z > -h))  # swing feet are lifted
+
+
+class Behaviour(unittest.TestCase):
+    def test_head_track_and_bob_keep_feet_down(self):
+        from plandscape.fauna import gait
+        t = np.arange(0, 10, 0.25)
+        states = ["travel"] * 10 + ["eat"] * 10 + ["eat"] * 10 + ["alert"] * 10
+        tk, hv = gait.head_track(t, states, np.radians(110))
+        self.assertTrue(np.all(np.diff(tk) > 0))
+        self.assertAlmostEqual(float(np.interp(5.0, tk, hv)), np.radians(110))  # grazing: head down
+        self.assertLess(float(hv[-1]), 0)  # alert: head up
+        # moving with bob: the IK still lands stance feet on the ground
+        x = 1.5 * t
+        bob = []
+        tk2, ang, names = gait.leg_ik(t, np.c_[x, 0 * x], 0.95, [-1.0, -1.0, 1.0, 1.0], "quad", seg=(0.5, 0.5), bob=bob)
+        bob = np.asarray(bob)
+        self.assertEqual(len(bob), len(tk2))
+        self.assertGreater(np.abs(bob).max(), 0.005)
+        th1, th2 = ang[:, 2, 0], ang[:, 2, 1]
+        fz = -0.5 * np.cos(th1) - 0.5 * np.cos(th1 + th2) + bob  # foot height above the ground (hip at h + b)
+        self.assertGreater(np.isclose(fz, -0.95, atol=1e-4).mean(), 0.4)  # in stance about half the time
+        self.assertTrue(np.all(fz >= -0.95 - 1e-4))  # never below the ground
 
 
 class Refine(unittest.TestCase):
