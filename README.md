@@ -8,6 +8,10 @@ python3 -m plandscape "Monte Sano hardwood cove with a dogtrot cabin, a creek, t
 
 You get `scene.glb` (textured terrain, trees, grass, photoscanned ground props, buildings, water, animated animals), `scene.json` (the plan, stats, every tree, prop and animal, asset credits), `map.png` (trails, canopy, tracks, signs of life), `preview.png`, `closeup.png` (ground level, where the props are), and `index.html` — a three.js viewer with wind, a timeline and follow-cam.
 
+![Monte Sano cove, fall](docs/gallery/monte-sano-preview.jpg)
+
+More renders in the [gallery](docs/gallery/README.md).
+
 ## What's in it
 
 - **Terrain** for five Southern physiographic provinces — Coastal Plain sand, Delta alluvium, Piedmont red clay, Cumberland Plateau mesas (Monte Sano), Ridge and Valley — with erosion, creek routing, bayous, slope and moisture layers.
@@ -40,6 +44,7 @@ Python 3.10+ with numpy, scipy, Pillow and matplotlib. Nothing else — it runs 
 | `python3 -m plandscape.sources.sites probe` | re-read the asset sites' licence pages |
 | `python3 -m plandscape.sources.harvest probe \| clone \| index \| discover` | catalog upkeep |
 | `python3 -m unittest discover -s tests` | tests |
+| `python3 scripts/gallery.py` | regenerate `docs/gallery` (reference scenes + species sheets) |
 
 Open `DIR/index.html` through any static server (`python3 -m http.server -d DIR`) to explore the scene.
 
