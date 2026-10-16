@@ -28,6 +28,11 @@ slopes, the plateau's sandstone cap left intact, sediment filling the hollows.
 ![monte sano closeup](monte-sano-closeup.jpg)
 ![monte sano homestead](monte-sano-homestead.jpg)
 
+The same scene in the three.js viewer (`scripts/viewer_shot.py`, headless Chromium, software WebGL):
+detiled splat ground (§20), wind with leaf flutter, the event log of what the animals did.
+
+![monte sano viewer](monte-sano-viewer.jpg)
+
 Homestead: the county road routed by Dijkstra on a slope cost, smoothed, cut and filled with a crown and
 ditches (§15); the fence leaves a gate where the trodden walk from the porch meets the mailbox.
 ![monte sano map](monte-sano-map.jpg)

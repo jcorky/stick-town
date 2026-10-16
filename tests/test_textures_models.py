@@ -349,6 +349,27 @@ class Splat(Base):
         np.testing.assert_allclose(w[0], [1, 0, 0, 0], atol=1e-9)  # zero weight stays zero
         self.assertGreater(w[1, 1], 0.99)  # equal weights: the higher texel wins (k = 8)
 
+    def test_detile_breaks_repetition(self):
+        rgba = (textures.make_rng("t", "detile").random((32, 32, 4)) * 255).astype(np.uint8)
+        rgba[..., 3] = 255
+        tex = textures.Texture.from_rgba("test/noise", rgba)
+        u, v = np.meshgrid(np.linspace(0, 1, 40), np.linspace(0, 1, 40))
+        plain = tex.sample(u, v)
+        self.assertLess(np.abs(plain - tex.sample(u + 3, v + 2)).mean(), 0.01)  # a plain texture repeats every tile
+        a = textures.detile_sample(tex, u, v)
+        np.testing.assert_array_equal(a, textures.detile_sample(tex, u, v))  # deterministic
+        self.assertTrue(((a >= 0) & (a <= 1)).all())
+        b = textures.detile_sample(tex, u + 3, v + 2)
+        self.assertGreater(np.abs(a - b).mean(), 0.05)  # the detiled one does not
+        # continuous: on a smooth texture, a 1 mm step across a lattice line (u = 1.5) makes no seam
+        yy, xx = np.mgrid[0:64, 0:64] / 64
+        g = np.zeros((64, 64, 4), np.uint8)
+        g[..., :3] = (127 + 120 * np.sin(2 * np.pi * xx) * np.cos(2 * np.pi * yy))[..., None]
+        g[..., 3] = 255
+        smooth = textures.Texture.from_rgba("test/smooth", g)
+        d = textures.detile_sample(smooth, np.array([1.4995, 1.5005]), np.array([0.3, 0.3]))
+        self.assertLess(np.abs(d[1] - d[0]).max(), 0.1)
+
     def test_glb_carries_splat(self):
         import json, struct
         P = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]], np.float32)

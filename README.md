@@ -45,6 +45,7 @@ Python 3.10+ with numpy, scipy, Pillow and matplotlib. Nothing else — it runs 
 | `python3 -m plandscape.sources.harvest probe \| clone \| index \| discover` | catalog upkeep |
 | `python3 -m unittest discover -s tests` | tests |
 | `python3 scripts/gallery.py` | regenerate `docs/gallery` (reference scenes + species sheets) |
+| `python3 scripts/viewer_shot.py out/x out/x/viewer.png` | screenshot the three.js viewer headless; prints shader/console errors |
 
 Open `DIR/index.html` through any static server (`python3 -m http.server -d DIR`) to explore the scene.
 

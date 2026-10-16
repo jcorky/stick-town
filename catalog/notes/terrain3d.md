@@ -16,5 +16,7 @@ Godot terrain plugin. Shaders in `src/shaders/`.
   `1 − shore_mask`, foam `clamp(shore·I·noise·1.5 − h)`.
 
 **Adopted:** height-blend form for our 4-weight splat (TECHNIQUES §13, `textures.height_blend`, viewer `addSplat`).
-**Queued:** lattice detiling (rotate/offset per 2–4 m node, blend 4 corners); macro tint; snapped side projection on
+**Adopted (session 3):** lattice detiling — hashed rotation + offset per 1.5-tile node, four corners blended with the
+height-blend weight `(b+s)^8 b` (TECHNIQUES §20; GLSL `detile` in the viewer, `textures.detile_sample` in numpy).
+**Queued:** macro tint; snapped side projection on
 slopes > 45°; baked depth-tinted water (we know depth on the CPU).
