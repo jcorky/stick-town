@@ -1,0 +1,14 @@
+{
+ "key": "243d57a9d6a14f5bb9e8967a56e4620a",
+ "kind": "body",
+ "version": "body-0.1.0",
+ "params": {
+  "scale": 1.0,
+  "species": "armadillo"
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:13",
+  "tris": 360
+ },
+ "path": "body/24/243d57a9d6a14f5bb9e8967a56e4620a.npz"
+}

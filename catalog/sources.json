@@ -1,0 +1,370 @@
+{
+ "_about": "Seed catalog of public sources for procedural landscapes. 'license' is what we expect; the harvester records what it actually finds in 'license_found' (catalog/harvest_report.json). Only permissive licenses may have code adapted; copyleft is study-only. Datasets carry their own terms.",
+ "repos": [
+  {
+   "id": "infinigen",
+   "url": "https://github.com/princeton-vl/infinigen",
+   "license": "BSD-3-Clause",
+   "topics": [
+    "trees",
+    "terrain",
+    "creatures",
+    "scatter",
+    "blender",
+    "photoreal"
+   ],
+   "why": "Fully procedural natural worlds in Blender: tree, plant, rock, terrain, creature and material generators. Closest prior art for the whole project."
+  },
+  {
+   "id": "ez-tree",
+   "url": "https://github.com/dgreenheck/ez-tree",
+   "license": "MIT",
+   "topics": [
+    "trees",
+    "three.js",
+    "parametric"
+   ],
+   "why": "Parametric three.js tree generator with presets; good reference for browser-side LOD and leaf billboards."
+  },
+  {
+   "id": "tree-js",
+   "url": "https://github.com/dgreenheck/tree-js",
+   "license": "MIT",
+   "topics": [
+    "trees",
+    "three.js"
+   ],
+   "why": "Earlier three.js procedural tree work by the same author."
+  },
+  {
+   "id": "proctree",
+   "url": "https://github.com/supereggbert/proctree.js",
+   "license": "NONE",
+   "topics": [
+    "trees",
+    "webgl"
+   ],
+   "why": "Compact classic procedural tree generator (snapshot-style trees).",
+   "study_only": true,
+   "note": "No LICENSE file in repo: all rights reserved by default. Study only."
+  },
+  {
+   "id": "wfc",
+   "url": "https://github.com/mxgmn/WaveFunctionCollapse",
+   "license": "MIT",
+   "topics": [
+    "layout",
+    "tiles",
+    "buildings"
+   ],
+   "why": "Constraint-based tile synthesis; useful for town layouts, fences, field patterns."
+  },
+  {
+   "id": "recast",
+   "url": "https://github.com/recastnavigation/recastnavigation",
+   "license": "Zlib",
+   "topics": [
+    "navmesh",
+    "pathfinding",
+    "agents"
+   ],
+   "why": "Industry-standard navmesh + crowd steering; target for scaling fauna beyond grid A*."
+  },
+  {
+   "id": "terrain3d",
+   "url": "https://github.com/TokisanGames/Terrain3D",
+   "license": "MIT",
+   "topics": [
+    "terrain",
+    "clipmap",
+    "lod",
+    "godot"
+   ],
+   "why": "Large-terrain clipmap LOD and texturing; reference for streaming tiles at multiple resolutions."
+  },
+  {
+   "id": "simple-hydrology",
+   "url": "https://github.com/weigert/SimpleHydrology",
+   "license": "NONE",
+   "topics": [
+    "terrain",
+    "erosion",
+    "rivers",
+    "vegetation"
+   ],
+   "why": "Particle hydrology with streams, pools and vegetation feedback \u2014 the next step beyond our thermal erosion + D8.",
+   "study_only": true,
+   "note": "No LICENSE file at repo root: treat as all rights reserved; study the technique (and the author's blog posts) only."
+  },
+  {
+   "id": "simple-erosion",
+   "url": "https://github.com/weigert/SimpleErosion",
+   "license": "NONE",
+   "topics": [
+    "terrain",
+    "erosion"
+   ],
+   "why": "Minimal particle-based hydraulic erosion.",
+   "study_only": true,
+   "note": "No LICENSE file at repo root: study only."
+  },
+  {
+   "id": "seblague-erosion",
+   "url": "https://github.com/SebLague/Hydraulic-Erosion",
+   "license": "MIT",
+   "topics": [
+    "terrain",
+    "erosion",
+    "unity"
+   ],
+   "why": "Clear droplet erosion implementation."
+  },
+  {
+   "id": "fastnoiselite",
+   "url": "https://github.com/Auburn/FastNoiseLite",
+   "license": "MIT",
+   "topics": [
+    "noise"
+   ],
+   "why": "Fast portable noise library (OpenSimplex2, cellular, domain warp) with Python/JS ports."
+  },
+  {
+   "id": "opensimplex2",
+   "url": "https://github.com/KdotJPG/OpenSimplex2",
+   "license": "CC0-1.0",
+   "topics": [
+    "noise"
+   ],
+   "why": "Reference OpenSimplex2 implementations; public domain."
+  },
+  {
+   "id": "terra-grass",
+   "url": "https://github.com/spacejack/terra",
+   "license": "CC-BY-NC-4.0",
+   "topics": [
+    "grass",
+    "three.js",
+    "shaders"
+   ],
+   "why": "Instanced grass field with wind in three.js \u2014 reference for blade-level grass in the viewer.",
+   "study_only": true,
+   "note": "Non-commercial licence (some individual files MIT). Do not copy; study the instanced-grass technique only."
+  },
+  {
+   "id": "mesa",
+   "url": "https://github.com/projectmesa/mesa",
+   "license": "Apache-2.0",
+   "topics": [
+    "agents",
+    "simulation"
+   ],
+   "why": "Agent-based modelling framework; patterns for schedulers, data collection and batch runs."
+  },
+  {
+   "id": "ml-agents",
+   "url": "https://github.com/Unity-Technologies/ml-agents",
+   "license": "Apache-2.0",
+   "topics": [
+    "agents",
+    "learning"
+   ],
+   "why": "Learned animal behaviours later (RL policies on top of the utility layer)."
+  },
+  {
+   "id": "worldengine",
+   "url": "https://github.com/Mindwerks/worldengine",
+   "license": "MIT",
+   "topics": [
+    "world",
+    "biomes",
+    "climate"
+   ],
+   "why": "Plate/precipitation/biome world generation \u2014 macro context for tiles."
+  },
+  {
+   "id": "fantasy-map-generator",
+   "url": "https://github.com/Azgaar/Fantasy-Map-Generator",
+   "license": "MIT",
+   "topics": [
+    "maps",
+    "settlements",
+    "roads"
+   ],
+   "why": "Settlement, road and river placement heuristics at map scale."
+  },
+  {
+   "id": "three",
+   "url": "https://github.com/mrdoob/three.js",
+   "license": "MIT",
+   "topics": [
+    "viewer",
+    "webgl"
+   ],
+   "why": "Viewer runtime (pinned r128 to match PORTOS)."
+  },
+  {
+   "id": "ocean",
+   "url": "https://github.com/jbouny/ocean",
+   "license": "MIT",
+   "topics": [
+    "water",
+    "three.js"
+   ],
+   "why": "Water shading reference for creeks, ponds and Gulf shoreline."
+  },
+  {
+   "id": "ms-building-footprints",
+   "url": "https://github.com/microsoft/USBuildingFootprints",
+   "license": "ODbL-1.0 (data)",
+   "topics": [
+    "buildings",
+    "data"
+   ],
+   "why": "US building footprints for real-place mode."
+  },
+  {
+   "id": "blender-addons",
+   "url": "https://github.com/blender/blender-addons",
+   "license": "NONE",
+   "study_only": true,
+   "topics": [
+    "trees",
+    "sapling"
+   ],
+   "why": "Sapling Tree Gen (Weber & Penn) lives here \u2014 study the parameterisation, don't copy code.",
+   "note": "No root LICENSE file; Blender add-ons are GPL by convention (per-file headers). Study only."
+  },
+  {
+   "id": "blosm",
+   "url": "https://github.com/vvoovv/blosm",
+   "license": "NONE",
+   "study_only": true,
+   "topics": [
+    "osm",
+    "buildings",
+    "blender"
+   ],
+   "why": "OSM-to-Blender buildings/terrain import; study only.",
+   "note": "No root LICENSE file found by the probe; GPL per project docs. Study only."
+  },
+  {
+   "id": "nadrin-pbr",
+   "url": "https://github.com/Nadrin/PBR",
+   "license": "MIT",
+   "topics": [
+    "rendering",
+    "pbr"
+   ],
+   "why": "Compact PBR reference for bark/leaf/soil materials."
+  }
+ ],
+ "datasets": [
+  {
+   "id": "usgs-3dep",
+   "name": "USGS 3D Elevation Program (3DEP)",
+   "url": "https://www.usgs.gov/3d-elevation-program",
+   "terms": "US public domain",
+   "use": "Lidar-derived DEMs (~1 m in much of the South) as the real terrain base."
+  },
+  {
+   "id": "naip",
+   "name": "USDA NAIP aerial imagery",
+   "url": "https://naip-usdaonline.hub.arcgis.com/",
+   "terms": "US public domain",
+   "use": "~0.6\u20131 m orthoimagery for land cover, canopy and texture guidance."
+  },
+  {
+   "id": "nlcd",
+   "name": "National Land Cover Database (NLCD)",
+   "url": "https://www.usgs.gov/centers/eros/science/national-land-cover-database",
+   "terms": "US public domain",
+   "use": "30 m land cover and tree canopy to seed biomes."
+  },
+  {
+   "id": "fia",
+   "name": "USFS Forest Inventory and Analysis (FIA)",
+   "url": "https://research.fs.usda.gov/programs/fia",
+   "terms": "US public domain (plot coordinates fuzzed)",
+   "use": "Real species mix, density and size distributions by county."
+  },
+  {
+   "id": "silvics",
+   "name": "Silvics of North America (Ag. Handbook 654)",
+   "url": "https://www.srs.fs.usda.gov/pubs/misc/ag_654/table_of_contents.htm",
+   "terms": "US public domain",
+   "use": "Species heights, diameters, habitat \u2014 verify species.py against it."
+  },
+  {
+   "id": "usda-plants",
+   "name": "USDA PLANTS Database",
+   "url": "https://plants.usda.gov/",
+   "terms": "US public domain",
+   "use": "Native ranges and plant characteristics for grasses, shrubs, trees."
+  },
+  {
+   "id": "osm",
+   "name": "OpenStreetMap",
+   "url": "https://www.openstreetmap.org/",
+   "terms": "ODbL-1.0 (attribution, share-alike for derived databases)",
+   "use": "Roads, buildings, paths, water for real-place mode."
+  },
+  {
+   "id": "polyhaven",
+   "name": "Poly Haven",
+   "url": "https://polyhaven.com/",
+   "terms": "CC0",
+   "use": "Bark, soil and ground textures/HDRIs for the viewer."
+  },
+  {
+   "id": "ambientcg",
+   "name": "ambientCG",
+   "url": "https://ambientcg.com/",
+   "terms": "CC0",
+   "use": "PBR materials (bark, gravel, metal roof, siding)."
+  },
+  {
+   "id": "movebank",
+   "name": "Movebank animal tracking",
+   "url": "https://www.movebank.org/",
+   "terms": "Per-study licences; many studies restricted",
+   "use": "Real deer/turkey movement statistics to calibrate fauna \u2014 check each study's terms."
+  }
+ ],
+ "papers": [
+  {
+   "id": "runions2007",
+   "cite": "Runions, Lane & Prusinkiewicz (2007). Modeling Trees with a Space Colonization Algorithm. Eurographics Workshop on Natural Phenomena.",
+   "used_in": "flora/tree.py"
+  },
+  {
+   "id": "weber-penn1995",
+   "cite": "Weber & Penn (1995). Creation and Rendering of Realistic Trees. SIGGRAPH.",
+   "used_in": "planned: parametric alternative / study of Sapling"
+  },
+  {
+   "id": "palubicki2009",
+   "cite": "Palubicki et al. (2009). Self-organizing Tree Models for Image Synthesis. SIGGRAPH.",
+   "used_in": "planned: light-competition growth"
+  },
+  {
+   "id": "helbing1997",
+   "cite": "Helbing, Keltsch & Moln\u00e1r (1997). Modelling the evolution of human trail systems. Nature 388.",
+   "used_in": "paths/desire.py"
+  },
+  {
+   "id": "reynolds1999",
+   "cite": "Reynolds (1999). Steering Behaviors for Autonomous Characters. GDC.",
+   "used_in": "fauna/agents.py (seek/flee/cohesion)"
+  },
+  {
+   "id": "makowski2019",
+   "cite": "Makowski et al. (2019). Synthetic Silviculture: Multi-scale Modeling of Plant Ecosystems. SIGGRAPH.",
+   "used_in": "planned: ecosystem-scale placement"
+  },
+  {
+   "id": "cordonnier2017",
+   "cite": "Cordonnier et al. (2017). Authoring Landscapes by Combining Ecosystem and Terrain Erosion Simulation. SIGGRAPH.",
+   "used_in": "planned: vegetation\u2013erosion feedback"
+  }
+ ]
+}

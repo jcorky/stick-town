@@ -1,0 +1,23 @@
+{
+ "key": "41ad8a736d30762a915171b620b05140",
+ "kind": "tree",
+ "version": "tree-0.2.1",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "fall",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "flowering_dogwood"
+ },
+ "meta": {
+  "created": "2026-10-16T03:47:36",
+  "height": 6.2947,
+  "species": "flowering_dogwood",
+  "tris": 4622,
+  "trunk_radius": 0.0597
+ },
+ "path": "tree/41/41ad8a736d30762a915171b620b05140.npz"
+}

@@ -1,0 +1,44 @@
+{
+ "key": "c28b33f161f5670673bcf7b16ca4cb05",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "dead_tree_trunk",
+  "target": 3000,
+  "variant": 0
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:31:51",
+  "id": "dead_tree_trunk",
+  "mean": [
+   0.2278,
+   0.1923,
+   0.1297
+  ],
+  "mime": "image/jpeg",
+  "name": "dead_tree_trunk",
+  "role": "log",
+  "size": [
+   3.02,
+   0.268,
+   0.267
+  ],
+  "source": {
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "id": "dead_tree_trunk",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 101802,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/dead_tree_trunk"
+  },
+  "src_tris": 101802,
+  "tex_key": "model/dead_tree_trunk/0",
+  "tris": 2859,
+  "variant": 0
+ },
+ "path": "model/c2/c28b33f161f5670673bcf7b16ca4cb05.npz"
+}

@@ -1,0 +1,13 @@
+[project]
+name = "plandscape"
+version = "0.2.0"
+description = "Procedural landscapes of the American South: terrain, trees, grass, desire paths, buildings and living animals from a prompt."
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+dependencies = ["numpy>=1.24", "scipy>=1.10", "Pillow>=9", "matplotlib>=3.6"]
+
+[project.optional-dependencies]
+real = ["rasterio"]
+
+[tool.setuptools.packages.find]
+include = ["plandscape*"]

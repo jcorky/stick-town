@@ -1,0 +1,28 @@
+{
+ "key": "eeeba2120df586f7aaa96661d95ab978",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "shotgun",
+  "seed": [
+   0,
+   1
+  ]
+ },
+ "meta": {
+  "created": "2026-10-15T18:54:13",
+  "door": [
+   3.0,
+   0.0
+  ],
+  "footprint": [
+   -12.6098,
+   -1.8976,
+   2.0,
+   1.8976
+  ],
+  "kind": "shotgun",
+  "tris": 486
+ },
+ "path": "building/ee/eeeba2120df586f7aaa96661d95ab978.npz"
+}

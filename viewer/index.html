@@ -1,0 +1,210 @@
+<title>Procedural South</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: full-bleed WebGL scene; floating field-notebook panels pinned to the corners. */
+  :root {
+    --bg:#d9e2d6; --panel:rgba(247,248,242,.88); --ink:#1f2620; --muted:#58665a; --accent:#a5551d; --line:rgba(31,38,32,.14);
+    --display:"Fraunces", Georgia, serif; --body:"Public Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#101511; --panel:rgba(16,22,18,.82); --ink:#eaf0e6; --muted:#a3b19f; --accent:#e3a463; --line:rgba(234,240,230,.14); color-scheme:dark; } }
+  :root[data-theme="dark"] {
+    --bg:#101511; --panel:rgba(16,22,18,.82); --ink:#eaf0e6; --muted:#a3b19f; --accent:#e3a463; --line:rgba(234,240,230,.14); color-scheme:dark; }
+  html, body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 var(--body); overflow:hidden; }
+  canvas { display:block; position:fixed; inset:0; }
+  .panel { background:var(--panel); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px; }
+  #hud { position:fixed; left:max(16px, env(safe-area-inset-left, 0px)); top:calc(16px + env(safe-area-inset-top, 0px));
+         max-width:min(380px, calc(100vw - 32px)); padding:12px 14px; }
+  #hud h1 { font:600 19px/1.15 var(--display); margin:0 0 4px; text-wrap:balance; }
+  #prompt { color:var(--muted); font-style:italic; margin:0 0 8px; }
+  #stats { display:flex; flex-wrap:wrap; gap:4px 12px; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
+  #stats b { color:var(--ink); font-weight:600; }
+  #controls { position:fixed; left:max(16px, env(safe-area-inset-left, 0px)); right:max(16px, env(safe-area-inset-right, 0px));
+              bottom:calc(16px + env(safe-area-inset-bottom, 0px)); display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:8px 10px; }
+  button, select { background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; cursor:pointer; }
+  button:hover, select:hover, button:focus-visible, select:focus-visible { border-color:var(--accent); outline:none; }
+  input[type=range] { flex:1; min-width:120px; accent-color:var(--accent); }
+  #t { font-variant-numeric:tabular-nums; color:var(--muted); min-width:52px; text-align:right; }
+  #log { position:fixed; right:max(16px, env(safe-area-inset-right, 0px)); top:calc(16px + env(safe-area-inset-top, 0px));
+         width:min(300px, calc(100vw - 32px)); max-height:42vh; overflow:auto; padding:10px 12px; font-size:12px; color:var(--muted); }
+  #log h2 { font:600 13px var(--display); color:var(--ink); margin:0 0 6px; }
+  #log .ev b { color:var(--accent); font-weight:600; }
+  #drop { position:fixed; inset:0; place-items:center; font-size:18px; background:rgba(0,0,0,.5); color:#fff; display:grid; }
+  #err { position:fixed; left:16px; right:16px; bottom:calc(84px + env(safe-area-inset-bottom, 0px)); color:var(--accent); }
+  @media (max-width:640px){ #log{ top:auto; bottom:calc(84px + env(safe-area-inset-bottom, 0px)); max-height:22vh; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<div id="hud" class="panel">
+  <h1>Procedural South</h1>
+  <p id="prompt">Loading the scene…</p>
+  <div id="stats"></div>
+</div>
+<div id="log" class="panel" aria-live="polite"></div>
+<div id="controls" class="panel">
+  <button id="play" aria-label="Play or pause">⏸</button>
+  <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline">
+  <span id="t">0s</span>
+  <select id="follow" aria-label="Follow an animal"><option value="">Free camera</option></select>
+  <button id="wind" aria-pressed="true">Wind</button>
+</div>
+<div id="drop" hidden>Drop a scene.glb</div>
+<div id="err"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 2000);
+camera.position.set(40, 30, 40);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI * 0.495;
+
+const hemi = new THREE.HemisphereLight(0xcfe3ff, 0x5a4a32, 0.65);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun, sun.target);
+
+let mixer = null, action = null, clipDur = 1, playing = true, wind = true;
+const windUniform = { value: 0 };
+const agents = [];
+const clock = new THREE.Clock();
+
+function applyLighting(L) {
+  const sky = new THREE.Color().fromArray(L.sky);
+  scene.background = sky;
+  scene.fog = new THREE.Fog(sky, 60, 420);
+  const d = L.sun_dir; // world z-up → glTF y-up
+  sun.position.set(d[0] * 100, d[2] * 100, -d[1] * 100);
+  sun.color.fromArray(L.sun_rgb);
+  sun.intensity = 0.25 + 1.1 * L.intensity;
+  hemi.intensity = 0.25 + 0.5 * L.intensity;
+}
+
+function addWind(mat) {
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uWind = windUniform;
+    sh.vertexShader = 'uniform float uWind;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+      `#include <begin_vertex>
+       float h = max(position.y, 0.0);
+       float s = sin(uWind * 1.7 + position.x * 0.35 + position.z * 0.27) * 0.6 + sin(uWind * 3.1 + position.x) * 0.25;
+       transformed.x += s * 0.012 * h; transformed.z += s * 0.008 * h;`);
+  };
+  mat.needsUpdate = true;
+}
+
+const m0 = (o) => (Array.isArray(o.material) ? o.material[0] : o.material);
+function alphaDepth(m) {
+  return new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: m.map, alphaTest: m.alphaTest });
+}
+
+function onGLTF(g) {
+    const root = g.scene;
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = !/terrain|water|grass/.test(o.name);
+      if (m0(o) && m0(o).alphaTest > 0) o.customDepthMaterial = alphaDepth(m0(o));  // leaf cards cast leaf-shaped shadows
+      o.receiveShadow = true;
+      const m = o.material;
+      if (m && /^(foliage|grass)/.test(m.name)) addWind(m);
+      if (m && m.name === 'water') { m.transparent = true; m.opacity = 0.85; m.roughness = 0.08; }
+    });
+    scene.add(root);
+    const box = new THREE.Box3().setFromObject(root);
+    const c = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    controls.target.copy(c);
+    camera.position.set(c.x + size.x * 0.55, c.y + size.x * 0.32, c.z + size.z * 0.55);
+    sun.target.position.copy(c);
+    const cam = sun.shadow.camera; const r = Math.max(size.x, size.z) * 0.6;
+    cam.left = -r; cam.right = r; cam.top = r; cam.bottom = -r; cam.far = 600; cam.updateProjectionMatrix();
+    root.traverse((o) => { if (/^(white_tailed_deer|gray_squirrel|wild_turkey|armadillo|coyote|human)_\d+$/.test(o.name)) agents.push(o); });
+    const sel = $('follow');
+    agents.forEach((a) => { const op = document.createElement('option'); op.value = a.name; op.textContent = a.name.replace(/_/g, ' '); sel.append(op); });
+    if (g.animations.length) {
+      mixer = new THREE.AnimationMixer(root);
+      action = mixer.clipAction(g.animations[0]);
+      clipDur = g.animations[0].duration;
+      action.play();
+    }
+}
+
+function fail() { $('err').textContent = 'No scene found next to this page. Drop a scene.glb onto it.'; }
+
+// Load scene.glb; hosts that won't serve .glb get a base64 copy (scene.glb.txt) instead.
+function load(url) {
+  const loader = new THREE.GLTFLoader();
+  if (url !== 'scene.glb') { loader.load(url, onGLTF, undefined, fail); return; }
+  fetch('scene.glb').then((r) => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+    .catch(() => fetch('scene.glb.txt').then((r) => { if (!r.ok) throw 0; return r.text(); }).then((b64) => {
+      const bin = atob(b64.trim()); const u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return u.buffer;
+    }))
+    .then((buf) => loader.parse(buf, '', onGLTF, fail))
+    .catch(fail);
+}
+
+fetch('scene.json').then((r) => r.ok ? r.json() : null).then((s) => {
+  if (!s) return;
+  $('prompt').textContent = '“' + s.plan.prompt + '”';
+  const st = s.stats;
+  const hh = Math.floor(s.plan.hour), mm = String(Math.round((s.plan.hour % 1) * 60)).padStart(2, '0');
+  $('stats').innerHTML = [
+    ['province', s.plan.province.replace(/_/g, ' ')], ['season', s.plan.season], ['time', hh + ':' + mm],
+    ['trees', st.trees], ['grass blades', st.grass_blades.toLocaleString()], ['animals', st.agents], ['life signs', st.signs]
+  ].map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join('');
+  applyLighting(s.lighting);
+  const lines = [];
+  s.agents.forEach((a) => a.events.forEach(([t, e]) => lines.push([t, a.species.replace(/_/g, ' ') + ' ' + a.id, e])));
+  lines.sort((a, b) => a[0] - b[0]);
+  $('log').innerHTML = '<h2>What the animals did</h2>' + lines.slice(0, 400).map(([t, who, e]) =>
+    `<div class="ev" data-t="${t}">${t.toFixed(0)}s · ${who} <b>${e.replace(':', ' → ')}</b></div>`).join('');
+}).catch(() => {});
+
+load('scene.glb');
+
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸' : '▶'; };
+$('wind').onclick = () => { wind = !wind; $('wind').setAttribute('aria-pressed', wind); $('wind').style.opacity = wind ? 1 : 0.5; };
+$('scrub').oninput = (e) => { if (action) { mixer.setTime((e.target.value / 1000) * clipDur); } };
+
+addEventListener('dragover', (e) => { e.preventDefault(); $('drop').hidden = false; });
+addEventListener('dragleave', () => { $('drop').hidden = true; });
+addEventListener('drop', (e) => {
+  e.preventDefault(); $('drop').hidden = true;
+  const f = e.dataTransfer.files[0]; if (f) { scene.children.filter((c) => c.type === 'Group').forEach((c) => scene.remove(c)); agents.length = 0; load(URL.createObjectURL(f)); }
+});
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+const tmp = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (mixer && playing) {
+    mixer.update(dt);
+    const t = mixer.time % clipDur;
+    $('scrub').value = Math.round((t / clipDur) * 1000);
+    $('t').textContent = t.toFixed(0) + 's';
+  }
+  if (wind) windUniform.value += dt;
+  const f = $('follow').value;
+  if (f) {
+    const a = agents.find((x) => x.name === f);
+    if (a) { a.getWorldPosition(tmp); controls.target.lerp(tmp, 0.1); }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>

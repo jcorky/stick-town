@@ -1,0 +1,18 @@
+{
+ "polyhaven": {
+  "licence_page": "https://polyhaven.com/license",
+  "home": "https://polyhaven.com",
+  "licence": "CC0-1.0",
+  "permissive": true,
+  "evidence": "this site are the original work of Poly Haven staff, or artists who willingly and directly donate/sell their work to Poly Haven. Our assets are all licensed as CC0 , which is effectively Public Domain even in jurisdictions that do not support the Public Domain. Here&#x27;s an excerpt from the CC0 FAQ page to clarify: Once",
+  "probed": "2026-10-15"
+ },
+ "ambientcg": {
+  "licence_page": "https://docs.ambientcg.com/license/",
+  "home": "https://ambientcg.com",
+  "licence": "CC0-1.0",
+  "permissive": true,
+  "evidence": "ates Logo Legal/Imprint Table of contents License Details Giving credit License information &para; All ambientCG assets are provided under the Creative Commons CC0 1.0 Universal License . This applies to the downloadable asset files and the material preview renders shown for each asset on the site. License Details &para; The",
+  "probed": "2026-10-15"
+ }
+}

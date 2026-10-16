@@ -1,0 +1,154 @@
+{
+ "key": "28a4a49a280e0eb22ec13b438e1310f2",
+ "kind": "behavior",
+ "version": "behavior-0.1.1",
+ "params": {
+  "agent": 2,
+  "scene": "899da1681562",
+  "species": "gray_squirrel"
+ },
+ "meta": {
+  "created": "2026-10-15T20:29:46",
+  "distance": 8.538,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:climb"
+   ],
+   [
+    0.2,
+    "arrive:climb"
+   ],
+   [
+    8.8,
+    "plan:rest"
+   ],
+   [
+    9.0,
+    "arrive:rest"
+   ],
+   [
+    35.5,
+    "plan:climb"
+   ],
+   [
+    35.8,
+    "arrive:climb"
+   ],
+   [
+    41.2,
+    "plan:climb"
+   ],
+   [
+    41.5,
+    "arrive:climb"
+   ],
+   [
+    61.8,
+    "plan:drink"
+   ],
+   [
+    62.0,
+    "arrive:drink"
+   ],
+   [
+    75.8,
+    "plan:climb"
+   ],
+   [
+    76.0,
+    "arrive:climb"
+   ],
+   [
+    100.8,
+    "plan:drink"
+   ],
+   [
+    101.0,
+    "arrive:drink"
+   ],
+   [
+    113.0,
+    "plan:explore"
+   ],
+   [
+    113.2,
+    "arrive:explore"
+   ],
+   [
+    117.8,
+    "plan:climb"
+   ],
+   [
+    118.0,
+    "arrive:climb"
+   ],
+   [
+    134.2,
+    "plan:explore"
+   ],
+   [
+    134.5,
+    "arrive:explore"
+   ],
+   [
+    139.2,
+    "plan:climb"
+   ],
+   [
+    139.5,
+    "arrive:climb"
+   ],
+   [
+    151.0,
+    "plan:explore"
+   ],
+   [
+    151.2,
+    "arrive:explore"
+   ],
+   [
+    156.0,
+    "plan:drink"
+   ],
+   [
+    156.2,
+    "arrive:drink"
+   ],
+   [
+    166.8,
+    "plan:explore"
+   ],
+   [
+    167.0,
+    "arrive:explore"
+   ],
+   [
+    173.2,
+    "plan:climb"
+   ],
+   [
+    173.5,
+    "arrive:climb"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "drink": 142,
+   "freeze": 367,
+   "idle": 14,
+   "pause": 77,
+   "rest": 105,
+   "travel": 15
+  },
+  "traits": {
+   "boldness": 0.085,
+   "curiosity": 0.088,
+   "laziness": 0.641,
+   "patience": 0.414,
+   "wanderlust": 0.519
+  }
+ },
+ "path": "behavior/28/28a4a49a280e0eb22ec13b438e1310f2.npz"
+}

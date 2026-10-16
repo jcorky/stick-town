@@ -1,0 +1,36 @@
+{
+ "key": "2f8b20cebfca7150faf20569ba02b771",
+ "kind": "texture",
+ "version": "texture-0.1.1",
+ "params": {
+  "key": "needle/PineNeedles001"
+ },
+ "meta": {
+  "alpha": true,
+  "bbox": [
+   0.1348,
+   0.2188,
+   0.8398,
+   0.9746
+  ],
+  "created": "2026-10-15T20:35:07",
+  "mean": [
+   0.7937,
+   0.7937,
+   0.7937
+  ],
+  "mime": "image/png",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "PineNeedles001",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/PineNeedles001"
+  }
+ },
+ "path": "texture/2f/2f8b20cebfca7150faf20569ba02b771.npz"
+}

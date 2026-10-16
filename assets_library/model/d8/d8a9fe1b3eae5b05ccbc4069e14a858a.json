@@ -1,0 +1,44 @@
+{
+ "key": "d8a9fe1b3eae5b05ccbc4069e14a858a",
+ "kind": "model",
+ "version": "model-0.1.3",
+ "params": {
+  "id": "tree_stump_02",
+  "target": 2500,
+  "variant": 0
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-15T20:31:50",
+  "id": "tree_stump_02",
+  "mean": [
+   0.3752,
+   0.3076,
+   0.2217
+  ],
+  "mime": "image/jpeg",
+  "name": "tree_stump_02",
+  "role": "stump",
+  "size": [
+   1.313,
+   1.207,
+   0.4
+  ],
+  "source": {
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "id": "tree_stump_02",
+   "licence": "CC0-1.0",
+   "licence_page": "https://polyhaven.com/license",
+   "polycount": 62345,
+   "site": "polyhaven",
+   "url": "https://polyhaven.com/a/tree_stump_02"
+  },
+  "src_tris": 62345,
+  "tex_key": "model/tree_stump_02/0",
+  "tris": 2128,
+  "variant": 0
+ },
+ "path": "model/d8/d8a9fe1b3eae5b05ccbc4069e14a858a.npz"
+}
