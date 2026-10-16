@@ -305,7 +305,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     ter.texture = textures.ground_key(plan.biome)
     litter_amt = 0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2
     ter.weights = ground_weights(hf, dens, field.G, canopy, litter=litter_amt, seed=plan.seed)
-    ter.splat = textures.splat_keys(plan.biome)
+    ter.splat = textures.splat_keys(plan.biome, plan.province)
     # near-camera refinement: fine windows on the focus and the creek (TECHNIQUES §22)
     _, h_near = refine.WINDOW[plan.detail]
     protect = None if road_dist is None else (road_dist <= ROAD_WIDTH / 2 + 2.5).astype(float)

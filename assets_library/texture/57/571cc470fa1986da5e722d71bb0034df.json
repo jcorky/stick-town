@@ -1,0 +1,30 @@
+{
+ "key": "571cc470fa1986da5e722d71bb0034df",
+ "kind": "texture",
+ "version": "texture-0.1.3",
+ "params": {
+  "key": "ground/Ground036"
+ },
+ "meta": {
+  "alpha": false,
+  "created": "2026-10-16T08:07:38",
+  "mean": [
+   0.7755,
+   0.7755,
+   0.7755
+  ],
+  "mime": "image/jpeg",
+  "size": [
+   512,
+   512
+  ],
+  "source": {
+   "id": "Ground036",
+   "licence": "CC0-1.0",
+   "licence_page": "https://docs.ambientcg.com/license/",
+   "site": "ambientcg",
+   "url": "https://ambientcg.com/a/Ground036"
+  }
+ },
+ "path": "texture/57/571cc470fa1986da5e722d71bb0034df.npz"
+}

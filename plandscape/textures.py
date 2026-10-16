@@ -48,19 +48,26 @@ BARK_SET = {
     "sabal_palmetto": "Bark004",
 }
 NEEDLE_SET = "PineNeedles001"  # atlas of needle fascicles, used for pine foliage cards
-GROUND_SET = {"pine_savanna": "Ground078", "pine_plantation": "Ground078", "hardwood": "ScatteredLeaves009",
+GROUND_SET = {"pine_savanna": "Ground077", "pine_plantation": "Ground077", "hardwood": "ScatteredLeaves009",
               "swamp": "Ground048", "pasture": "Grass004", "lawn": "Grass004", "old_field": "Grass004"}
 
 
 # Height-blended ground (splat): four materials per vertex, in this order.
 SPLAT_LAYERS = ("litter", "soil", "grass", "mud")
-SPLAT_SET = {"litter": {"pine_savanna": "Ground078", "pine_plantation": "Ground078", "_": "ScatteredLeaves009"},
-             "soil": {"_": "Ground026"}, "grass": {"_": "Grass004"}, "mud": {"_": "Ground048"}}
+# Southern grounds (all ambientCG, CC0): pine straw (Ground077) under pines, rippled sand (Ground080) on the
+# Coastal Plain, dark alluvium (Ground036) in the Delta, compacted dirt (Ground026, tinted red on the Piedmont).
+# Layers look up the biome first, then the province, then "_".
+SPLAT_SET = {"litter": {"pine_savanna": "Ground077", "pine_plantation": "Ground077", "_": "ScatteredLeaves009"},
+             "soil": {"coastal_plain": "Ground080", "floodplain": "Ground036", "_": "Ground026"},
+             "grass": {"_": "Grass004"}, "mud": {"_": "Ground048"}}
 SPLAT_SHARPNESS = 8.0  # k in W_i = (a_i + h_i)^k a_i
 
 
-def splat_keys(biome):
-    return tuple(f"ground/{SPLAT_SET[l].get(biome, SPLAT_SET[l]['_'])}" for l in SPLAT_LAYERS)
+def splat_keys(biome, province=None):
+    def pick(layer):
+        t = SPLAT_SET[layer]
+        return t.get(biome) or t.get(province) or t["_"]
+    return tuple(f"ground/{pick(l)}" for l in SPLAT_LAYERS)
 
 
 def height_blend(a, h, k=SPLAT_SHARPNESS):
@@ -115,7 +122,7 @@ def card_box(key, store=None):
 
 
 def ground_key(biome):
-    return f"ground/{GROUND_SET.get(biome, 'Ground078')}"
+    return f"ground/{GROUND_SET.get(biome, 'Ground077')}"
 
 
 @dataclass

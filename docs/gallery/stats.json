@@ -8,7 +8,7 @@
   "signs": 3
  },
  "longleaf": {
-  "glb_mb": 11.37,
+  "glb_mb": 11.35,
   "trees": 33,
   "tree_tris": 174576,
   "ground_props": 139,
@@ -16,7 +16,7 @@
   "signs": 0
  },
  "bayou": {
-  "glb_mb": 12.2,
+  "glb_mb": 12.26,
   "trees": 41,
   "tree_tris": 204062,
   "ground_props": 209,

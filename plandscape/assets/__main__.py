@@ -49,7 +49,8 @@ def bake(store, variants, detail, seasons, moistures=(0.5, 0.8)):
     n0 = time.time()
     keys = {textures.leaf_key(k) for k in SPECIES} | {textures.bark_key(k) for k in SPECIES} | \
         {textures.ground_key(b) for b in textures.GROUND_SET} | {textures.needle_key()} | \
-        {k for b in textures.GROUND_SET for k in textures.splat_keys(b)} | {"ground/Gravel023"}
+        {k for b in textures.GROUND_SET for p in (None, *textures.SPLAT_SET["soil"]) for k in textures.splat_keys(b, p)} | \
+        {"ground/Gravel023"}
     for key in sorted(keys):
         textures.get(key, store)
     for sp in SPECIES:
