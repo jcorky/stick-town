@@ -22,5 +22,5 @@ tube with two private rings (3,801 tubes); low and med bark identical (TWIG_CULL
 ring resampling Δs = clip(8r, 0.3, 1.5) m or > 12° bend, sides 10/8/5/3 (8/6/4/3 looked boxy on live-oak limbs),
 tip taper 0.5 r (0.3 read as thorns in winter), TWIG_CULL 0.03/0.015/0.006/0. Bark verts −55 %, tris −24 %.
 (3) adopted too: rounded normals `normalize(0.65 r̂ + 0.35 s n_face)` (ez-tree adds n_face + (v − origin));
-anchors along the parent→node segment, spread N(0, 0.12 L). Still queued: uv.y-weighted wind in the viewer.
+anchors along the parent→node segment, spread N(0, 0.12 L). uv.y-weighted leaf flutter adopted in the viewer's `addWind` (TECHNIQUES §20).
 **We do better:** arc-length bark V, lobed flare, north moss, crown envelopes, pipe radii, folded cards.

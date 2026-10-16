@@ -10,7 +10,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 
 1. `CLAUDE.md` is loaded automatically. Load the **procedural-landscape** skill (`.claude/skills/procedural-landscape/SKILL.md`) and follow it; section 6 lists every trap already hit.
 2. If `assets_library/**/*.npz` are small text pointer files, run `git lfs pull`. If that fails (LFS quota or network), run `python3 -m plandscape.assets bake --variants 2 --seasons fall summer` to regenerate them; generation is deterministic.
-3. `python3 -m unittest discover -s tests` (20 tests, ~20 s) and `python3 -m plandscape.assets stats`.
+3. `python3 -m unittest discover -s tests` (36 tests, ~25 s) and `python3 -m plandscape.assets stats`.
 4. Make one scene and look at it before changing anything:
    `python3 -m plandscape "Monte Sano hardwood cove with a dogtrot cabin, a creek, two deer, three squirrels and a turkey flock at golden hour in fall" --out out/demo`
    then open `out/demo/preview.png`, `out/demo/closeup.png` and `out/demo/map.png`.
@@ -49,7 +49,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 ## 3. Next priorities, in order
 
 0. **Read `catalog/notes/`** — eight permissive repos were studied in session 2; each note lists what is queued from it.
-1. **Fidelity near the camera, continued.** Lattice detiling for the ground splat (terrain3d note); LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
+1. **Fidelity near the camera, continued.** Lattice detiling and leaf flutter are done (§20); next: LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals that walk.** Skeletal gaits matched to speed, head/tail motion for alert and feeding states, multi-hour runs, more species (heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds).
@@ -76,3 +76,4 @@ Purpose-keyed seeding · zero-dependency core · 1 cm synthesised near the camer
 - Session 2 pushed with the Claude GitHub app on `jcorky/stick-town`. If pushing fails, ask the owner to reconnect GitHub in claude.ai Settings → Connectors.
 - `jcorky/ace-combat-mods` documents more asset sources (`asset_library.md`), but the game rips (AC7, Assault Horizon), FlightGear jets and osm2city textures are not usable here (rips / GPL).
 - Prompts naming Monte Sano or Huntsville map to the Cumberland Plateau province (the owner lives there; it's the default demo).
+- `python3 scripts/viewer_shot.py out/<scene> out/<scene>/viewer.png` screenshots the three.js viewer in headless Chromium (Playwright, swiftshader WebGL; ~30 s). Use it after any viewer shader change: tests never see GLSL compile errors.

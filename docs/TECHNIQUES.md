@@ -290,3 +290,28 @@ creek = (nature word | family) + regional water word (Branch / Creek / Fork in t
 road = one of *family* Rd, *nature landform* Rd, *church* Church Rd, Old *landform* Rd, *creek word* Rd;
 church = (Pleasant Hill | Mount Zion | New Hope | Shiloh | …) + (Baptist | Methodist | Missionary Baptist | A.M.E. | …);
 homestead = "the *family* place". Names go into `scene.json` and are labelled on `map.png`.
+
+## 20. Lattice detiling and leaf flutter (detiling after Terrain3D, MIT; flutter after ez-tree, MIT)
+`plandscape/textures.py: detile_sample`; `plandscape/render.py`; `viewer/index.html: detile, addWind`
+
+**Detiling.** A ground texture repeated every 2 m shows a grid from any height. Over a lattice of spacing
+$L = 1.5$ tiles, each node $c$ gets a hash, a rotation and an offset
+
+$$h_c = \operatorname{frac}\!\big(\sin(c \cdot (127.1,\ 311.7)) \cdot 43758.5453\big), \qquad \theta_c = 2\pi h_c, \qquad o_c = \big(h_c,\ \operatorname{frac}(7.13\,h_c)\big)$$
+
+and the texel at $p$ (in tiles) samples the texture once per surrounding node, $s_c = T(R(\theta_c)\,p + o_c)$.
+The four samples are mixed with bilinear weights $b_c$ sharpened by the samples' own luminance, like the splat (§13):
+
+$$W_c = (b_c + s_c)^{k}\, b_c, \quad k = 8, \qquad T_\text{detiled}(p) = \frac{\sum_c W_c\, s_c}{\sum_c W_c}.$$
+
+$b_c \to 0$ on the far side of every lattice line, so the result is continuous; the luminance term makes the
+transition follow pebbles and leaf edges instead of a smear. The viewer runs the same function in GLSL with
+`textureGrad` (rotation would otherwise break mip selection); the preview renderer uses the numpy version.
+
+**Leaf flutter.** On top of the existing trunk sway, each leaf card's vertices move along their normal, weighted
+by distance from the twig ($v = 1$ at the attachment, $v = 0$ at the tip):
+
+$$w_\text{tip} = \operatorname{clamp}(1 - v,\ 0,\ 1), \qquad f(t) = 0.5\sin(4t + \phi) + 0.3\sin(8t + 1.3\phi) + 0.2\sin(20t + 1.5\phi),$$
+$$\Delta p = 0.05\ \text{m}\cdot w_\text{tip}\, f(t)\, \hat n,$$
+
+with $\phi = 2\pi\,\operatorname{frac}(0.37x + 0.71z)$ a per-vertex phase from object position. The twig end never moves, so cards stay attached.

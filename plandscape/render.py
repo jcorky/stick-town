@@ -125,12 +125,12 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
         win = inside & (zz < sub)
         t = TID[i]
         if t >= 0 and win.any() and isinstance(texs[t], tuple):  # height-blended ground (TECHNIQUES §13)
-            from .textures import TILE_M, height_blend
+            from .textures import TILE_M, detile_sample, height_blend
             tv = tri[i]
             wx = l1 * P[tv[0], 0] + l2 * P[tv[1], 0] + l3 * P[tv[2], 0]
             wy = l1 * P[tv[0], 1] + l2 * P[tv[1], 1] + l3 * P[tv[2], 1]
             a = (l1[..., None] * WS[tv[0]] + l2[..., None] * WS[tv[1]] + l3[..., None] * WS[tv[2]])[win]
-            s_ = np.stack([tx.sample(wx[win] / TILE_M["ground"], wy[win] / TILE_M["ground"])[..., 0]
+            s_ = np.stack([detile_sample(tx, wx[win] / TILE_M["ground"], wy[win] / TILE_M["ground"])[..., 0]
                            for tx in texs[t]], -1)
             g_ = (height_blend(a, s_) * s_).sum(-1)
             # Gouraud: interpolate vertex colours inside the triangle (keeps the per-triangle light C[i])

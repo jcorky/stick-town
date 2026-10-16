@@ -97,6 +97,9 @@ Open `map.png` and `scene.json` and check:
 - When thinning triangles for a quick preview, never thin terrain/buildings; holes make the ground look missing.
 - Dusk lighting in review renders hides form; review in neutral light, view in the scene's real light.
 - Low leaf budgets make broadleaf crowns look like wire; scale leaf cards up to keep cover constant.
+- Tests never compile the viewer's GLSL. After any `viewer/index.html` change run `scripts/viewer_shot.py` and look
+  (it also catches CSS bugs: the drop overlay covered every scene for two sessions). Each `out/<scene>/index.html`
+  is a copy made at generation time, so it goes stale; `viewer_shot` refreshes it via `write_viewer`.
 
 ### Data / licences
 - 6 of 23 licences in the first catalog draft were wrong when probed: terra (grass) is CC BY-NC; proctree, SimpleHydrology and SimpleErosion have no licence file (all rights reserved); Blender add-ons and blosm have no root licence file. Always probe.

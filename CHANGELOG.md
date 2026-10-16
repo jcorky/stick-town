@@ -3,6 +3,13 @@
 ## Unreleased
 
 **Added**
+- Lattice detiling of the ground textures (TECHNIQUES §20, after Terrain3D): hashed rotation and offset per lattice node, four corners blended by `(b+s)^8 b`; in the viewer shader and the preview renderer. Leaf flutter in the viewer (after ez-tree): card tips move along their normal, weighted by `1 − v`.
+- `scripts/viewer_shot.py`: headless-Chromium screenshot of the three.js viewer for a scene, printing console errors so shader failures show up in review.
+
+**Fixed**
+- The viewer's drop-a-GLB overlay never hid after a scene loaded (`display:grid` overrode `[hidden]`), covering the scene. The viewer's opening camera now frames the whole tile instead of starting inside a corner tree's crown.
+
+**Added**
 - House siting along the road by a suitability score (flat, dry, a metre above the road, near the creek; after FMG) and invented Southern place names for road, creek, church and homesteads, keyed per scene, in `scene.json` and on `map.png` (TECHNIQUES §19).
 - Rounded crown normals and twig-attached leaf cards (TECHNIQUES §18, after ez-tree): canopies shade as one volume; cards no longer float off the wood. `Mesh.nrm` carries authored normals through transforms, the library and the GLB. tree-0.3.1.
 - Curved grass blades (two segments, quadratic bend, tapering) that are shorter and bent along the path where trampled (TECHNIQUES §17). Scenes 9.7 / 11.1 / 11.4 MB.

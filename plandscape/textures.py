@@ -69,6 +69,30 @@ def height_blend(a, h, k=SPLAT_SHARPNESS):
     return w / np.maximum(w.sum(-1, keepdims=True), 1e-9)
 
 
+def detile_sample(tex, p_u, p_v, lattice=1.5, k=8.0):
+    """Lattice detiling (TECHNIQUES §20), the viewer's GLSL `detile` in numpy: each lattice node c has a
+    hashed rotation θ_c = 2π h_c and offset (h_c, frac(7.13 h_c)); the four nodes around a texel are blended
+    with W = (b + s)^k · b (b = bilinear weight, s = the sample's own luminance). Returns (..., 4) in 0..1."""
+    qx, qy = p_u / lattice, p_v / lattice
+    c0x, c0y = np.floor(qx), np.floor(qy)
+    fx, fy = qx - c0x, qy - c0y
+    acc = 0.0
+    ws = 0.0
+    for ox, oy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        cx, cy = c0x + ox, c0y + oy
+        h = np.mod(np.sin(cx * 127.1 + cy * 311.7) * 43758.5453, 1.0)
+        a = h * 2 * np.pi
+        ca, sa = np.cos(a), np.sin(a)
+        u = ca * p_u - sa * p_v + h
+        v = sa * p_u + ca * p_v + np.mod(h * 7.13, 1.0)
+        s = tex.sample(u, v)
+        b = (fx if ox else 1 - fx) * (fy if oy else 1 - fy)
+        w = np.power(b + s[..., 0], k) * b
+        acc = acc + s * w[..., None]
+        ws = ws + w
+    return acc / np.maximum(ws, 1e-9)[..., None]
+
+
 def leaf_key(species):
     return f"leaf/{LEAF_SET.get(species, DEFAULT_LEAF)}"
 
