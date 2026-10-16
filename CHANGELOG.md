@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- Smooth turning (TECHNIQUES §30). Exported headings are turn-rate limited per species, and standing animals hold their body heading instead of spinning in place. Paths are exported from the full 0.25 s log, keyframes reduced by Ramer–Douglas–Peucker (2 cm, 2°). Gallery adds `motion.jpg`.
 - Lying down and the deer's flag (TECHNIQUES §29). Resting animals lower the trunk (0.62 h for quadrupeds, 0.4 h for turkeys) and fold their legs by IK with the feet kept on the ground. Deer raise the white tail when they flee and half-raise it when alert. Gallery `poses.jpg` adds rest and flee.
 - Trunk bob and head pose by behaviour (TECHNIQUES §28). The trunk rises and falls b = A h cos 2φ, and the IK keeps the feet planted. Deer, coyotes and turkeys lower their heads to eat or drink and raise them when alert, easing over 0.4 s at each state change. Gallery adds `poses.jpg`.
 - `--llm`: an optional Claude pass fills the scene plan from free-form prompts (TECHNIQUES §27). A validator keeps only values the generators can honour; seed, size and detail always stay the keyword planner's, and every rejection is noted in the plan. The client is stdlib-only (`urllib`), with `ANTHROPIC_API_KEY` and an optional `PLANDSCAPE_MODEL`. Offline, or on any failure, the keyword plan is used.

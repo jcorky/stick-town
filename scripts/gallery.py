@@ -189,6 +189,50 @@ def pose_sheet(path):
     return path
 
 
+def motion_sheet(path):
+    """A stored deer behaviour clip: logged vs exported heading, and its path with the kept keys (§30)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from plandscape.assets.store import AssetStore
+    from plandscape.fauna import motion
+    st = AssetStore()
+    clips = [e for e in st.find("behavior", species="white_tailed_deer")]
+    best = None
+    for e in clips:  # the clip that both travels and stops the most
+        a, _ = st.get("behavior", e.params)
+        L = a["track"]
+        dist = np.hypot(*np.diff(L[:, 1:3], axis=0).T)
+        score = dist.sum() * (dist < 0.01).mean()
+        if best is None or score > best[0]:
+            best = (score, L)
+    L = best[1]
+    log = [(r[0], r[1], r[2], r[3], r[4], "") for r in L]
+    t = L[:, 0]
+    raw = L[:, 4]
+    tk, Pk, Hk = motion.export_track(log, "white_tailed_deer")
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
+    deg = lambda a: np.degrees(motion.wrap(a))  # noqa: E731
+    ax[0].plot(t, deg(raw), lw=0.8, color="0.6", label="logged heading (snaps, jitters at rest)")
+    ax[0].plot(t[::4], deg(raw[::4]), "x", ms=4, color="#c0392b", label="old export: every 1 s")
+    ax[0].plot(tk, deg(Hk), "o", ms=2.5, color="#1f6f8b",
+               label=f"turn-limited, {len(tk)} keys (ω ≤ {motion.OMEGA_MAX['white_tailed_deer']:.0f} rad/s)")
+    ax[0].set_xlabel("time (s)")
+    ax[0].set_ylabel("heading (deg)")
+    ax[0].legend(fontsize=8)
+    ax[1].plot(L[:, 1], L[:, 2], lw=0.8, color="0.6", label="logged path (0.25 s)")
+    ax[1].plot(Pk[:, 0], Pk[:, 1], "o", ms=3, color="#1f6f8b", label=f"kept keys ({len(tk)} of {len(t)})")
+    ax[1].quiver(Pk[:, 0], Pk[:, 1], np.cos(Hk), np.sin(Hk), scale=25, width=0.003, color="#1f6f8b")
+    ax[1].set_aspect("equal")
+    ax[1].legend(fontsize=8)
+    ax[1].set_title("path, relative to start (m)")
+    fig.tight_layout()
+    fig.savefig(path, dpi=80)
+    plt.close(fig)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -209,6 +253,7 @@ def main(argv=None):
     _jpeg(creek_sheet(os.path.join(ROOT, "out", "creeks.png")), os.path.join(OUT, "creeks.jpg"), 1500)
     _jpeg(gait_sheet(os.path.join(ROOT, "out", "gaits.png")), os.path.join(OUT, "gaits.jpg"), 1600)
     _jpeg(pose_sheet(os.path.join(ROOT, "out", "poses.png")), os.path.join(OUT, "poses.jpg"), 1100)
+    _jpeg(motion_sheet(os.path.join(ROOT, "out", "motion.png")), os.path.join(OUT, "motion.jpg"), 1200)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

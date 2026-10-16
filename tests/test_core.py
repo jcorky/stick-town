@@ -139,6 +139,26 @@ class LyingAndFlag(unittest.TestCase):
         self.assertAlmostEqual(float(np.interp(10, fk, fv)), 0.0)
 
 
+class Motion(unittest.TestCase):
+    def test_turns_are_rate_limited_and_rest_holds(self):
+        from plandscape.fauna import motion
+        t = np.arange(0, 20, 0.25)
+        x = np.where(t < 10, t, 10.0)  # walks east for 10 s, then stands
+        rng_ = np.random.default_rng(0)  # test data: a jittery "look around" heading while standing
+        h = np.where(t < 5, 0.0, np.pi * 0.9)  # snaps by 162° at 5 s
+        h = np.where(t >= 10, h + rng_.normal(0, 0.8, len(t)), h)
+        log = [(ti, xi, 0.0, 0.0, hi, "") for ti, xi, hi in zip(t, x, h)]
+        tk, P, H = motion.export_track(log, "armadillo")
+        rate = np.abs(np.diff(H)) / np.diff(tk)
+        self.assertLessEqual(rate.max(), motion.OMEGA_MAX["armadillo"] + 1e-6)  # no snap
+        rest = tk > 10.5
+        self.assertLess(np.ptp(H[rest]), np.radians(60))  # one turn at most, no spinning in place
+        self.assertLess(len(tk), len(t) * 0.6)  # keys reduced
+        # every logged position is within 2 cm of the interpolated export
+        Pi = np.stack([np.interp(t, tk, P[:, k]) for k in range(3)], 1)
+        self.assertLess(np.abs(Pi[:, 0] - x).max(), 0.02 + 1e-6)
+
+
 class Refine(unittest.TestCase):
     def test_validate_keeps_only_what_generators_honour(self):
         from plandscape.scene.planner import refine

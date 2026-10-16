@@ -20,7 +20,7 @@ from .. import textures
 from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
 from ..export.gltf import GLB, _to_gltf, pitch_quat
 from ..fauna.agents import FAUNA, World, run, spawn
-from ..fauna import gait
+from ..fauna import gait, motion
 from ..fauna.bodies import rig
 from ..flora import impostor
 from ..flora.species import SPECIES
@@ -430,9 +430,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs)
         node = g.node(f"{a.spec.key}_{a.id}", children=[trunk])
         akids.append(node)
-        L = a.log[::4]
-        if len(L) > 1:
-            tracks.append((node, [l[0] for l in L], [(l[1], l[2], l[3]) for l in L], [l[4] for l in L]))
+        if len(a.log) > 1:  # full-rate path, turn-rate-limited heading, keys reduced (TECHNIQUES §30)
+            tracks.append((node, *motion.export_track(a.log, a.spec.key)))
         if len(a.log) > 1:  # legs swing by gait, by stride phase (keys only while moving)
             t_ = np.array([l[0] for l in a.log])
             xy = np.array([(l[1], l[2]) for l in a.log])
