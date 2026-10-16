@@ -149,6 +149,36 @@ def gait_sheet(path, key="white_tailed_deer"):
     return path
 
 
+def pose_sheet(path):
+    """Head pose by behaviour state (TECHNIQUES §28) for deer, coyote and turkey, from the GLB's rig."""
+    import numpy as np
+    from plandscape.fauna import gait
+    from plandscape.fauna.bodies import _pitch, posed_legs, rig
+    from plandscape.mesh import Mesh, box
+    from plandscape.render import render
+    states = ("eat", "rest", "travel", "pause", "alert")
+    rows = []
+    for key, rgb in (("white_tailed_deer", (0.55, 0.42, 0.30)), ("coyote", (0.55, 0.5, 0.42)),
+                     ("wild_turkey", (0.25, 0.2, 0.15))):
+        rg = rig(key, rgb)
+        n = rg["neck"]
+        ground = box((0.1, 0, -0.01), (2.6, 0.6, 0.02), (0.45, 0.45, 0.42))
+        frames = []
+        for st in states:
+            d = gait.HEAD[st] * n["graze"]
+            head = Mesh(_pitch(n["mesh"].positions, -d) + np.asarray(n["pivot"], np.float32), n["mesh"].colors,
+                        n["mesh"].indices)
+            img = render([ground, rg["torso"], head] + posed_legs(rg), None, size=(220, 160), azimuth=0, elevation=4,
+                         fit=((-1.2, -0.5, -0.05), (1.4, 0.5, 1.75)) if key != "wild_turkey" else
+                         ((-0.6, -0.3, -0.03), (0.6, 0.3, 1.1)), keep_first=99)
+            im = Image.fromarray(img)
+            ImageDraw.Draw(im).text((6, 4), f"{key.replace('_', ' ')}: {st}", fill=(0, 0, 0))
+            frames.append(np.asarray(im))
+        rows.append(np.concatenate(frames, 1))
+    Image.fromarray(np.concatenate(rows, 0)).save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -168,6 +198,7 @@ def main(argv=None):
     _jpeg(terrain_sheet(os.path.join(ROOT, "out", "terrain.png")), os.path.join(OUT, "terrain-erosion.jpg"), 1500)
     _jpeg(creek_sheet(os.path.join(ROOT, "out", "creeks.png")), os.path.join(OUT, "creeks.jpg"), 1500)
     _jpeg(gait_sheet(os.path.join(ROOT, "out", "gaits.png")), os.path.join(OUT, "gaits.jpg"), 1600)
+    _jpeg(pose_sheet(os.path.join(ROOT, "out", "poses.png")), os.path.join(OUT, "poses.jpg"), 1100)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

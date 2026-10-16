@@ -410,10 +410,12 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             rg = rig(a.spec.key, rgb, scale=sc)
             nm = f"{a.spec.key}_{len(rigs)}"
             rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
+                          g.mesh(rg["neck"]["mesh"], nm + "_head", m_fauna) if rg["neck"] else None,
                           [(g.mesh(lg["thigh"], f"{nm}_thigh{i}", m_fauna), g.mesh(lg["shank"], f"{nm}_shank{i}", m_fauna))
                            for i, lg in enumerate(rg["legs"])])
-        rg, torso_mesh, leg_meshes = rigs[look]
+        rg, torso_mesh, head_mesh, leg_meshes = rigs[look]
         torso = g.node("torso", torso_mesh)
+        neck = g.node("neck", head_mesh, translation=rg["neck"]["pivot"]) if head_mesh is not None else None
         legs, shanks = [], []
         for i, ((tm_, sm_), lg) in enumerate(zip(leg_meshes, rg["legs"])):
             r1, r2 = gait.rest_pose(rg["hip"], lg["l1"], lg["l2"], lg["knee"])
@@ -423,7 +425,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             g.nodes[th]["rotation"] = pitch_quat(r1).tolist()
             legs.append(th)
             shanks.append(sh)
-        node = g.node(f"{a.spec.key}_{a.id}", children=[torso] + legs)
+        trunk = g.node("body", children=[torso] + ([neck] if neck is not None else []) + legs)
+        node = g.node(f"{a.spec.key}_{a.id}", children=[trunk])
         akids.append(node)
         L = a.log[::4]
         if len(L) > 1:
@@ -431,13 +434,19 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         if len(a.log) > 1:  # legs swing by gait, by stride phase (keys only while moving)
             t_ = np.array([l[0] for l in a.log])
             xy = np.array([(l[1], l[2]) for l in a.log])
-            if legs:  # hip and knee by two-bone IK on planted-foot paths (TECHNIQUES §26)
+            if legs:  # hip and knee by two-bone IK on planted-foot paths (§26), trunk bob (§28)
                 lg0 = rg["legs"][0]
+                bob = []
                 tk, ang, _ = gait.leg_ik(t_, xy, rg["hip"], [lg["knee"] for lg in rg["legs"]],
-                                         "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]))
+                                         "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]), bob=bob)
                 for i, (ln, sn) in enumerate(zip(legs, shanks)):
                     extra.append((ln, "rotation", tk, pitch_quat(ang[:, i, 0])))
                     extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
+                bz = np.asarray(bob)
+                extra.append((trunk, "translation", tk, _to_gltf(np.c_[0 * bz, 0 * bz, bz])))
+            if neck is not None:  # head down to graze, up when alert (§28)
+                hk, hv = gait.head_track(t_, [l[5] for l in a.log], rg["neck"]["graze"])
+                extra.append((neck, "rotation", hk, pitch_quat(-hv)))
             elif rg["kind"] == "hop":
                 tk, zz = gait.hop_heights(t_, xy, rg["hip"], 0.6 * rg["hip"])
                 extra.append((torso, "translation", tk, _to_gltf(np.c_[0 * zz, 0 * zz, zz])))

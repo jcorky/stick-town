@@ -55,7 +55,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals.** Gaits by speed are done (§25). Next:
    - knees and planted feet are done (§26); feet still slide where the stance is out of reach (gallop);
-   - torso bob and head motion for alert and feeding states;
+   - torso bob and head pose by state are done (§28); next: lying down for rest, tail flick (deer flag when fleeing);
    - multi-hour runs;
    - more species: heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds.
 5. **Species data is verified** (§24, `catalog/species_sources.json`). New species need the same: URL plus quote for height, d.b.h., leaf length and habit before `verified=True`. Silvics PDFs: research.fs.usda.gov/download/treesearch/1547.pdf (conifers) and 1548.pdf (hardwoods); the old srs.fs.usda.gov host fails TLS.

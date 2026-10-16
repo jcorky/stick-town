@@ -585,3 +585,26 @@ $$P_f = \begin{cases} D_f & D_f \in \mathcal V_f \\ P_{0,f} & \text{otherwise (n
 - It takes the first balanced `{…}` in the reply.
 
 Any failure keeps the keyword plan with a note saying why: no key, network down, no JSON. `python3 -m plandscape "<prompt>" --llm` uses it.
+
+## 28. Trunk bob and head pose by behaviour
+`plandscape/fauna/gait.py: BOB, HEAD, leg_ik(bob=), head_track`; `bodies.py: rig (neck)`; `scene/compose.py`
+
+**Bob.** In walking the trunk vaults over the stance leg like an inverted pendulum, highest at mid-stance, so it rises
+and falls twice per stride:
+
+$$b(\varphi) = A\,h\cos 2\varphi, \qquad A = 0.015 \text{ (walk)},\ 0.03 \text{ (trot)},\ 0.05 \text{ (gallop)}.$$
+
+The trunk node (torso, neck, legs) carries $b$. The IK aims each foot at $z = -(h + b)$, so stance feet stay on the
+ground while the body moves.
+
+**Head.** Deer, coyotes and turkeys have a neck-and-head part with its own pivot at the shoulder or neck base. Its pitch
+follows the agent's logged behaviour state, as a fraction of the species' grazing angle $\delta_g$ (110° for deer and coyote,
+120° for the turkey):
+
+| state | eat, drink | dig | scratch | groom | rest | travel | idle | flee | pause | freeze | alert |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| pitch $/\delta_g$ (+ = down) | 1.0 | 0.9 | 0.8 | 0.4 | 0.3 | 0.15 | 0.1 | 0.1 | 0 | −0.2 | −0.25 |
+
+Each change eases over 0.4 s: keys at the change, with the old pose, and 0.4 s later, with the new one. Overlapping eases
+collapse to the later change. A grazing deer now drops its head, and an alarmed one lifts it, in step with the event log in
+the viewer.
