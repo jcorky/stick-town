@@ -493,3 +493,11 @@ linearly, keeping their order:
 $$r' = r_\text{tip} + (r - r_\text{min})\,\frac{r_0 - r_\text{tip}}{r_0 - r_\text{min}}, \qquad r_\text{tip} = 1.2\ \text{cm}.$$
 
 The trunk keeps d.b.h./2, and the branchlets the foliage hangs on are the same size on every species.
+
+**Soft tiers (layered crowns).** Dogwood's envelope used to keep attraction points only within three thin tiers. Space
+colonisation then bridged each empty gap with a straight vertical stem, so bare trees showed boxy right angles.
+Points are now accepted with probability
+
+$$p(v) = 0.3 + 0.7\,\cos^2\!\big(\pi\,(\operatorname{frac}(3v) - \tfrac12)\big),$$
+
+where $v$ is relative height in the crown. Branches arrive at each layer obliquely, and the crown still reads as tiered. tree-0.3.3.

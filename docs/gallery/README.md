@@ -15,6 +15,12 @@ equations in [`../TECHNIQUES.md`](../TECHNIQUES.md).
 Space colonisation skeletons (§2) with pipe-model radii (§3), folded leaf-sprig cards (§6) whose
 grey detail textures take each species' season colour through COLOR_0 = c / μ (§5).
 
+Dogwood's layered crown, hard tiers (top) and soft tiers (bottom), winter and summer. Hard tiers left empty gaps
+that space colonisation bridged with vertical stems, giving boxy right angles. Soft tiers keep points in the gaps at
+30 % density: $p(v) = 0.3 + 0.7\cos^2(\pi(\mathrm{frac}(3v) - \tfrac12))$.
+
+![dogwood tiers](dogwood-tiers.jpg)
+
 ## Terrain: droplet erosion (§14)
 
 ![terrain erosion](terrain-erosion.jpg)

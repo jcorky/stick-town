@@ -1,16 +1,16 @@
 {
  "monte-sano": {
-  "glb_mb": 9.91,
+  "glb_mb": 9.97,
   "trees": 100,
-  "tree_tris": 85394,
+  "tree_tris": 86652,
   "ground_props": 400,
   "agents": 10,
   "signs": 3
  },
  "longleaf": {
-  "glb_mb": 8.47,
+  "glb_mb": 8.49,
   "trees": 25,
-  "tree_tris": 57636,
+  "tree_tris": 57858,
   "ground_props": 139,
   "agents": 3,
   "signs": 0
