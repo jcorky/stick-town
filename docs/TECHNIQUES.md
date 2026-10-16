@@ -41,11 +41,11 @@ excurrent leaders too thick.
 
 The skeleton is split into **chains**: from each node follow the thickest child; every other child starts a new chain
 at its parent (with a 1.08× collar). One ring per kept node, shared by the segments either side. Rings are resampled
-along each chain: node $k$ keeps a ring when the run since the last ring reaches $\Delta s = 	ext{clip}(8r_k,\,0.3,\,1.5)$ m
-or the chain bends ($\hat{\mathbf s}_k\cdot\hat{\mathbf s}_	ext{last} < 0.978$, about 12°). Frames are carried by
+along each chain: node $k$ keeps a ring when the run since the last ring reaches $\Delta s = \text{clip}(8r_k,\,0.3,\,1.5)$ m
+or the chain bends ($\hat{\mathbf s}_k\cdot\hat{\mathbf s}_\text{last} < 0.978$, about 12°). Frames are carried by
 **parallel transport** so the seam never twists at a node:
 
-$$\mathbf t_k = \widehat{\mathbf p_{k+1}-\mathbf p_{k-1}},\qquad \mathbf u_k = \widehat{\mathbf u_{k-1} - (\mathbf u_{k-1}\cdot\mathbf t_k)\,\mathbf t_k},\qquad \mathbf w_k = \mathbf t_k	imes\mathbf u_k$$
+$$\mathbf t_k = \widehat{\mathbf p_{k+1}-\mathbf p_{k-1}},\qquad \mathbf u_k = \widehat{\mathbf u_{k-1} - (\mathbf u_{k-1}\cdot\mathbf t_k)\,\mathbf t_k},\qquad \mathbf w_k = \mathbf t_k\times\mathbf u_k$$
 
 Sides per chain from its base radius: 10 / 8 / 5 / 3 for $r_0 >$ 0.12 / 0.05 / 0.02 m / else; terminal tips taper to
 $0.5\,r$; chains thinner than `TWIG_CULL` (0.03 / 0.015 / 0.006 / 0 m for low / med / high / cm) are dropped.

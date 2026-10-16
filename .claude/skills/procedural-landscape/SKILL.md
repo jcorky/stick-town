@@ -99,6 +99,9 @@ Open `map.png` and `scene.json` and check:
 ### Data / licences
 - 6 of 23 licences in the first catalog draft were wrong when probed: terra (grass) is CC BY-NC; proctree, SimpleHydrology and SimpleErosion have no licence file (all rights reserved); Blender add-ons and blosm have no root licence file. Always probe.
 
+### Docs
+- Writing LaTeX into docs from Python strings: `\t` in `\text`/`\times` becomes a TAB and `\f`, `\b`, `\r` vanish too. Use raw strings (`r"..."`) or the Write tool, then `grep -P '\t' docs/TECHNIQUES.md` must find nothing.
+
 ### Tests
 - Spanish moss is evergreen, so a "deciduous trees are bare in winter" test must use a dry site (`moisture=0.1`) or it counts moss as leaves.
 
