@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**Fixed**
+- Agent ids came from a process-wide counter, so a scene's animals (and their behaviour-clip keys and body looks) changed with how many agents earlier scenes in the same process had made — e.g. in `scripts/gallery.py`. Ids are now the index within the scene.
+- Squirrels froze on every routine climb (28 % of their time); they now feed, groom or rest in the canopy and freeze only when they bolted up (TECHNIQUES §16).
+
+**Changed**
+- Agents act in a keyed, reshuffled order every step (after Mesa's `shuffle_do`). behavior-0.2.0.
+
 **Added**
 - County road with a real surface (TECHNIQUES §15, after Fantasy-Map-Generator routing): Dijkstra on a slope/water cost that halves on existing paths, angle relaxation + Chaikin smoothing, cut-and-fill with crown and ditches, gravel ribbon mesh. Buildings, mailboxes and the fence follow the road's curve; the fence leaves a gate at each walk. New `homestead.png` review render.
 - Droplet hydraulic erosion, batched in numpy (TECHNIQUES §14, after Lague): gullies on slopes, filled hollows, creeks follow carved valleys; 0.2 s per tile. terrain-0.2.0. Gallery gains a before/after hillshade sheet.

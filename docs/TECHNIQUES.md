@@ -226,3 +226,19 @@ z_c\,(1 - \beta) + z_\text{terrain}\,\beta,\ \ \beta = \text{smoothstep}\big((d 
 vertices across, UV $(u, v) = (\text{across}\cdot W_r/4,\ s/4)$ with $s$ the distance along the road. Buildings sit
 $W_r/2 + 6$ m off the road on its north side, yawed to face it; mailboxes at $W_r/2 + 0.8$ m; the fence runs
 $W_r/2 + 3.2$ m out and leaves a 3 m gate at each mailbox.
+
+## 16. Agent scheduling and canopy behaviour (scheduling after Mesa, Apache-2.0)
+`plandscape/fauna/agents.py: run, Agent.arrive, spawn`
+
+**Random activation.** Each step $k$ the acting order is a fresh permutation from a keyed stream,
+$\pi_k = \text{perm}\big(\text{rng}(\text{"act\_order"}, \text{seed}, k)\big)$, so no species always acts before another
+(a coyote no longer always moves before the deer it hunts), and the same seed still replays exactly.
+Agent ids are their index in the scene, $\text{id} = |\text{agents so far}|$, never a process-wide counter.
+
+**Canopy activity.** A squirrel that reaches its tree freezes only if it bolted there ($\text{fear} > 0.35$, for
+$\mathcal U(4, 12)$ s). Otherwise it picks an activity with weights
+
+$$w = \big(0.5 + 0.8\,\text{hunger},\ 0.25,\ 0.25 + 0.6\,\text{fatigue}\big)\ \text{for}\ (\text{eat}, \text{groom}, \text{rest}),$$
+
+lasting $\mathcal U(6,25)$, $\mathcal U(3,10)$ and $\mathcal U(10,40)$ s. Audit over four seeds: freeze 28 % → under 1 %,
+canopy eating 24 %, rest 12 %.

@@ -145,12 +145,11 @@ def astar(cost_grid: np.ndarray, start, goal, max_expand=40000):
 
 
 class Agent:
-    _ids = 0
-
-    def __init__(self, spec: FaunaSpec, pos, seed, world: World, group_id=None):
+    def __init__(self, spec: FaunaSpec, pos, seed, world: World, group_id=None, agent_id=0):
         self.spec = spec
-        self.id = Agent._ids
-        Agent._ids += 1
+        # the id is the agent's index in its scene, never a process-wide counter: a counter made a scene's
+        # animals depend on how many agents earlier scenes in the same process had created
+        self.id = agent_id
         self.r = make_rng("agent", spec.key, seed, self.id)
         self.p = np.array(pos, float)
         self.heading = self.r.uniform(0, 2 * np.pi)
@@ -438,7 +437,15 @@ class Agent:
         elif k == "climb" and self.tree_idx is not None:
             tx, ty, th, trad = world.trees[self.tree_idx]
             self.climb = r.uniform(0.3, 0.8) * th
-            self.state, self.timer = "freeze", r.uniform(5, 25)
+            if self.needs["fear"] > 0.35:  # bolted up the trunk: flatten against the bark and wait
+                self.state, self.timer = "freeze", r.uniform(4, 12)
+            else:  # a routine climb: feed, groom or loaf in the canopy
+                opt = ["eat", "groom", "rest"]
+                w = np.array([0.5 + 0.8 * self.needs["hunger"], 0.25, 0.25 + 0.6 * self.needs["fatigue"]])
+                k2 = opt[int(r.choice(3, p=w / w.sum()))]
+                self.state = k2
+                self.timer = {"eat": r.uniform(6, 25), "groom": r.uniform(3, 10), "rest": r.uniform(10, 40)}[k2]
+                self.events.append((round(t, 1), f"canopy:{k2}"))
             self.p = np.array([tx + trad + 0.05, ty])
         elif k == "cache":
             self.carry = None
@@ -493,19 +500,23 @@ def spawn(world: World, counts: dict, seed=0):
             gid = f"{key}-{g}" if spec.group[1] > 1 else None
             c = r.uniform([b[0] + 5, b[1] + 5], [b[2] - 5, b[3] - 5])
             for _ in range(min(gs, n - placed)):
-                agents.append(Agent(spec, c + r.normal(0, 3, 2), (seed, placed), world, gid))
+                agents.append(Agent(spec, c + r.normal(0, 3, 2), (seed, placed), world, gid, agent_id=len(agents)))
                 placed += 1
             g += 1
     return agents
 
 
-def run(world: World, agents, seconds=180.0, dt=0.25, start_hour=7.0):
+def run(world: World, agents, seconds=180.0, dt=0.25, start_hour=7.0, seed=0):
+    """Advance everyone. The acting order is reshuffled every step from a keyed stream (after Mesa's
+    AgentSet.shuffle_do), so no species always acts first — a coyote no longer always moves before the deer."""
     t = 0.0
+    k = 0
     while t < seconds:
         world.hour = (start_hour + t / 3600.0) % 24
-        for a in agents:
-            a.step(world, agents, t, dt)
+        for i in make_rng("act_order", seed, k).permutation(len(agents)):
+            agents[i].step(world, agents, t, dt)
         t += dt
+        k += 1
     # forgotten caches become oak seedlings: animals planting the future forest
     for s in world.signs:
         if s["type"] == "acorn_cache" and s.get("forgotten"):

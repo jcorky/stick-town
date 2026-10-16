@@ -214,6 +214,39 @@ class Road(unittest.TestCase):
         self.assertTrue(np.isfinite(m.positions).all())
 
 
+class Fauna(unittest.TestCase):
+    def _world(self):
+        from plandscape.fauna.agents import World
+        from plandscape.paths.desire import obstacle_cost, simulate
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(64, 1.0, "piedmont", 5)
+        f, _ = simulate(hf, [(5, 5, 1), (58, 58, 1)], n_trips=24, seed=1)
+        z = np.zeros_like(hf.z)
+        trees = np.array([[20.0, 20.0, 15.0, 0.3], [40.0, 40.0, 15.0, 0.3], [20.0, 44.0, 12.0, 0.25]])
+        return World(hf, f, obstacle_cost(hf), z + 0.4, z + 0.5, z + 0.5, trees)
+
+    def test_squirrels_do_not_spend_their_day_frozen(self):
+        from plandscape.fauna.agents import run, spawn
+        w = self._world()
+        ags = spawn(w, {"gray_squirrel": 4}, seed=3)
+        run(w, ags, seconds=240, dt=0.25, seed=3)
+        states = [l[5] for a in ags for l in a.log]
+        self.assertLess(states.count("freeze") / len(states), 0.10)  # was 0.28 before canopy activities
+
+    def test_act_order_is_shuffled_and_keyed(self):
+        from plandscape.fauna.agents import run, spawn
+        runs = []
+        for _ in range(2):
+            w = self._world()
+            ags = spawn(w, {"white_tailed_deer": 2, "coyote": 1}, seed=4)
+            run(w, ags, seconds=30, dt=0.25, seed=9)
+            runs.append([a.log[-1][1:3] for a in ags])
+        np.testing.assert_allclose(runs[0], runs[1])  # same seed, same outcome
+        from plandscape.rng import rng
+        orders = {tuple(rng("act_order", 9, k).permutation(3)) for k in range(20)}
+        self.assertGreater(len(orders), 1)  # nobody always acts first
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights

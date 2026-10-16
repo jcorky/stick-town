@@ -88,6 +88,8 @@ Open `map.png` and `scene.json` and check:
 - Scalar `map_coordinates` per walker step is ~15× slower than advancing a batch of walkers in lockstep.
 - Depositing only at step points on a 1 m grid gives dotted trails; also deposit at the step midpoint.
 - Animals with perception ≈ tile size panic forever. Use flight-initiation distance (< perception, scaled by boldness), require the threat to be approaching, add a cooldown and habituation.
+- A process-wide id counter (`Agent._ids`) silently broke determinism: the same scene differed depending on what ran
+  before it in the process. Keys must come from the scene, never from global state. Test by building twice in one process.
 - "a turkey flock" must parse as a group; "shotgun house" must not also add a farmhouse.
 
 ### Rendering / review
@@ -122,4 +124,6 @@ Open `map.png` and `scene.json` and check:
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
 - Continuous params (moisture 0.4137…, body scale 1.0734…) mean zero cache hits. Bucket them.
 - Bump `GENERATOR_VERSIONS` when output changes, or the library serves stale models; then `assets prune`.
+- Never `git restore` library files after `prune`: it brings back the pruned files without their index lines (orphans).
+  Behaviour churn is fixed at the source, so restoring is no longer needed at all.
 - Re-running a scene used to rewrite its behaviour clips with a new `created` timestamp (git churn); `store_behavior` now skips clips it already has. Any new writer into the library should do the same.

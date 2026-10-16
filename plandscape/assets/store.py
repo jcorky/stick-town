@@ -32,7 +32,7 @@ GENERATOR_VERSIONS = {
     "building": "building-0.1.1",
     "terrain": "terrain-0.2.0",
     "body": "body-0.1.0",
-    "behavior": "behavior-0.1.1",
+    "behavior": "behavior-0.2.0",
     "grass_patch": "grass-0.1.0",
     "texture": "texture-0.1.3",
     "model": "model-0.1.3",

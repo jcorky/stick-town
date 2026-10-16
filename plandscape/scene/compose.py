@@ -266,7 +266,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     world = World(hf, field, cost, np.clip(canopy * 1.2, 0, 1), forage, mast, trees_arr, hour=plan.hour)
     world.attractors = [(a[0], a[1]) for a in att]
     agents = spawn(world, plan.fauna, seed=plan.seed) if plan.fauna else []
-    run(world, agents, seconds=sim_seconds, dt=0.25, start_hour=plan.hour)
+    run(world, agents, seconds=sim_seconds, dt=0.25, start_hour=plan.hour, seed=plan.seed)
     scene_key = AssetStore.key("terrain", dict(prompt=plan.prompt, seed=plan.seed))[:12]
     for a in agents:
         store_behavior(store, a, scene_key)
