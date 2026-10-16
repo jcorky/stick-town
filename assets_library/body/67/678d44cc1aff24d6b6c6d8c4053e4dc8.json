@@ -1,0 +1,14 @@
+{
+ "key": "678d44cc1aff24d6b6c6d8c4053e4dc8",
+ "kind": "body",
+ "version": "body-0.2.0",
+ "params": {
+  "scale": 1.0,
+  "species": "box_turtle"
+ },
+ "meta": {
+  "created": "2026-10-16T21:03:40",
+  "tris": 3020
+ },
+ "path": "body/67/678d44cc1aff24d6b6c6d8c4053e4dc8.npz"
+}

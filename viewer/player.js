@@ -339,7 +339,8 @@
     m.v += clamp(want - m.v, -8 * dt, 5 * dt);
     const nx = m.x + Math.cos(m.h) * m.v * dt, ny = m.y + Math.sin(m.h) * m.v * dt;
     if (World.inside(nx, ny, 1)) { m.x = nx; m.y = ny; }
-    if (m.v > 0.05 && m.alt === 0) m.phase += TAU * m.v / Life.stride(m.v, h) * dt;
+    const vl = m.v / (rig.scale || 1);   // the rig is unit-size inside its scaled node
+    if (vl > 0.05 && m.alt === 0) m.phase += TAU * vl / Life.stride(vl, h) * dt;
     m.look += (clamp(look, -1.22, 1.22) - m.look) * Math.min(1, dt / 0.3);
     pose(m, head, flag, h);
   }
@@ -347,18 +348,18 @@
   function pose(m, head, flag, h) {
     const rig = m.rig, z = World.z(m.x, m.y) + m.alt + m.hop;
     m.node.position.copy(G2(m.x, m.y, z)); yawQ(m.h, m.node.quaternion);
-    const air = m.alt > 0.3 && rig.flies;
-    const fr = Life.froude(m.v, h), gname = Life.gaitName(fr), tab = Play.sceneInfo.gait[rig.kind === 'quad' ? 'QUAD' : 'BIPED'][gname];
-    const S = Life.stride(Math.max(m.v, 0.05), h) * tab[1], lift = Play.sceneInfo.gait.LIFT[gname];
+    const air = m.alt > 0.3 && rig.flies, v = m.v / (rig.scale || 1);
+    const fr = Life.froude(v, h), gname = Life.gaitName(fr), tab = Play.sceneInfo.gait[rig.kind === 'quad' ? 'QUAD' : 'BIPED'][gname];
+    const S = Life.stride(Math.max(v, 0.05), h) * tab[1], lift = Play.sceneInfo.gait.LIFT[gname];
     m.legs.forEach((lg, i) => {
       if (!lg.th || !lg.sh) return;
       const r = rig.legs[i]; let a1, a2;
       if (air) { a1 = -1.4; a2 = 0; }
-      else if (m.v > 0.05) { const [fx, fz] = Life.footPath(m.phase / TAU - tab[0][i % tab[0].length], tab[1], S, h, lift); [a1, a2] = Life.twoBone(fx, fz, r.l1, r.l2, r.knee); }
+      else if (v > 0.05) { const [fx, fz] = Life.footPath(m.phase / TAU - tab[0][i % tab[0].length], tab[1], S, h, lift); [a1, a2] = Life.twoBone(fx, fz, r.l1, r.l2, r.knee); }
       else [a1, a2] = Life.twoBone(0, -h, r.l1, r.l2, r.knee);
       pitchQ(a1, lg.th.quaternion); pitchQ(a2, lg.sh.quaternion);
     });
-    if (m.body) m.body.position.set(0, m.v > 0.05 && !air ? Play.sceneInfo.gait.BOB[gname] * h * Math.cos(2 * m.phase) : 0, 0);
+    if (m.body) m.body.position.set(0, v > 0.05 && !air ? Play.sceneInfo.gait.BOB[gname] * h * Math.cos(2 * m.phase) : 0, 0);
     if (m.neck) { const q1 = yawQ(m.look, new THREE.Quaternion()), q2 = pitchQ(-head * (rig.graze || 0), new THREE.Quaternion()); m.neck.quaternion.copy(q1.multiply(q2));
       m.neck.scale.setScalar(1 - 0.9 * (m.shut || 0)); }
     if (m.tail) pitchQ(-flag * (rig.flag || 0), m.tail.quaternion);
@@ -413,7 +414,8 @@
       m.dist = (m.dist || 0) + Math.hypot(nx - m.x, ny - m.y); m.x = nx; m.y = ny;
       while (m.dist > 0.35) { m.dist -= 0.35; World.deposit(m.x, m.y, 0.06 * 0.6); }   // people wear paths too
     }
-    if (m.v > 0.05) m.phase += TAU * m.v / Life.stride(m.v, m.rig.hip || 0.9) * dt;
+    const vl = m.v / (m.rig.scale || 1);
+    if (vl > 0.05) m.phase += TAU * vl / Life.stride(vl, m.rig.hip || 0.9) * dt;
     m.look += (clamp(look, -1.22, 1.22) - m.look) * Math.min(1, dt / 0.3);
     m.alt = 0; m.hop = 0;
     pose(m, head, 0, m.rig.hip || 0.9);

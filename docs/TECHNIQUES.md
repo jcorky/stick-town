@@ -900,3 +900,61 @@ V is the trail field blurred by σ = 2.5 m. Both people and the player deposit G
 - sight curves;
 - flight distance against speed, directness and feeding;
 - the alarm of a deer walked at from 150 m. Upwind, scent alerts it at once and it bolts at its 45 m flight distance; downwind the player gets to 23 m.
+
+## 36. Sculpted animals: blended forms, surface nets, painted markings
+`plandscape/fauna/sculpt.py: Sculpt`; `fauna/anatomy.py` (every species); `fauna/bodies.py: rig`
+
+The animals used to be ellipsoids and boxes. Now each rig part is a small sculpture: ellipsoids and round cones
+(tapered capsules), each a signed distance function, blended so muscle runs into muscle.
+
+**Blending.** The polynomial smooth minimum (Quílez) joins the forms, and the same weight blends their colours, so
+colour seams vanish too:
+
+$$\operatorname{smin}(a, b; k) = \min(a, b) - \frac{h^2 k}{4},\quad h = \frac{\max(k - |a-b|, 0)}{k},\qquad
+c = c_b + (c_a - c_b)\,\operatorname{clip}\!\big(\tfrac12 + \tfrac{b-a}{2k}\big)$$
+
+**Primitives.** The ellipsoid uses Quílez's bound approximation, $d = k_0(k_0-1)/k_1$ with $k_0 = |p/r|$ and
+$k_1 = |p/r^2|$, in its own rotated frame. The round cone uses his exact `sdRoundCone`. Smooth subtraction carves
+hollows. A displacement added after blending carries relief finer than the grid: an armadillo's band lips, a box
+turtle's keel and seams.
+
+**Meshing.** Naive surface nets on a grid of spacing h:
+- **Vertices.** Every cell whose corners change sign gets one vertex, the mean of its edge crossings.
+- **Faces.** Every grid edge that changes sign makes a quad of the four cells around it, split along its shorter diagonal.
+- **Surface fit.** Vertices are projected onto the true surface by Newton steps,
+  $\mathbf p \leftarrow \mathbf p - d(\mathbf p)\,\nabla d/|\nabla d|^2$.
+- **Normals.** The normalised gradient of the field, so lighting is smooth with no faceting, and relief below the grid still shades, like a bump map.
+- **Budget.** The spacing comes from a triangle budget. A coarse pass measures the area $A$, then $h = \sqrt{2A/T}$, since surface nets make two triangles per $h^2$.
+
+Every part comes out closed: no boundary edges, which a test checks. Where the surface passes twice through one cell, surface nets pinch both sheets into that cell's vertex, so a rare edge has four faces. Thin or small details (ears,
+eyes, hooves, claws, toes) are their own sculptures on their own finer grids and are merged into the part.
+
+**Anatomy.** One parametrised quadruped (`Quad`: hip height, back, shoulder and hip x, width, chest depth, leg
+radii, neck, skull, muzzle, ears, eyes, tail) covers deer, coyote, raccoon and armadillo; the squirrel, turkey,
+heron, box turtle and hiker have their own builders.
+- **Torso.** Barrel, chest, withers, croup, haunches, shoulders and belly, plus a neck root. The head part overlaps the neck root, so the join is buried rather than showing as a collar.
+- **Legs.** Fore legs have an elbow and carpus; hind legs have a gaskin and hock. Shanks end in fetlock, pastern and a cloven hoof with dewclaws, or in a padded paw with four toes and claws.
+- **Leg proportions.** The two leg segments may differ. A deer's hind leg is 62 % below the hock, from Texas Tech's 0.45 m hind foot.
+
+**Markings** are painted from position and normal, with a few incommensurate sines for coat texture:
+- **Deer:** white belly, under-tail, throat patch, eye ring, muzzle band, ear insides and chin, per Animal Diversity Web's list. Its tail is white underneath, so the flag shows when raised.
+- **Coyote:** a grizzled coat with a black dorsal stripe and shoulder cross, pale throat, yellowish muzzle, reddish ear backs, and a black-tipped brush carried down.
+- **Raccoon:** a white-edged black mask and white-rimmed ears. The tail carries 5 black rings (Tennessee: 4–7) and a black tip.
+- **Armadillo:** scapular and pelvic shields with 9 raised bands between them (ADW: 9, varying 8–11), a pink snout, and a tail ringed every 2 cm.
+- **Gray squirrel:** an agouti back with a rusty flank wash, white belly, and a frosted plume tail.
+- **Wild turkey:** bronze scalloped contour feathers, barred wings, and a chestnut-tipped fan. The head is bare and blue with a red wattle and snood, plus a ~23 cm beard and spurs.
+- **Great blue heron:** a slate body, rusty thighs, white face with a black stripe running into the plume, a yellow 14 cm dagger bill, and a streaked foreneck.
+- **Box turtle:** a high-domed, keeled carapace. Each scute has yellow rays from its growth centre and dark seams. Red eyes.
+- **Hiker:** shirt, jeans and boots, a face with nose and ears, and hair.
+
+**Checks.** Sizes are checked against `catalog/fauna_sources.json`. The withers are measured on the sculpted torso:
+deer 0.96 m (sourced 0.80–1.05 m), coyote ≤ 0.61 m, raccoon 0.29 m (0.23–0.30 m). The box turtle's shell height
+is within 7 cm and the heron stands 1.20 m (1.15–1.38 m).
+
+**Budget.** Bodies cost 2.9k–9.7k triangles at `sculpt.DETAIL` = 0.5; a deer is about 6k. The rig is built once
+per species and coat, and the three body sizes are the agent node's scale. Leg IK runs in the rig's own units on
+the path divided by that scale, so feet stay planted. Left and right legs share one mesh. The grass is exported in
+chunks under 65,536 vertices, so its indices fit in 16 bits. Together these keep the walk scene at 14.7 MB.
+
+**Colour.** Vertex colours are converted to linear (c^2.2) at export, because glTF COLOR_0 is linear and the
+viewer encodes to sRGB. Without the conversion the deer read pale tan.

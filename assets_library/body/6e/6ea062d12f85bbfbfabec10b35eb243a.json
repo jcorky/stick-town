@@ -1,0 +1,14 @@
+{
+ "key": "6ea062d12f85bbfbfabec10b35eb243a",
+ "kind": "body",
+ "version": "body-0.2.0",
+ "params": {
+  "scale": 1.0,
+  "species": "white_tailed_deer"
+ },
+ "meta": {
+  "created": "2026-10-16T21:03:39",
+  "tris": 5948
+ },
+ "path": "body/6e/6ea062d12f85bbfbfabec10b35eb243a.npz"
+}

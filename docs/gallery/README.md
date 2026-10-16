@@ -53,12 +53,15 @@ feeding, a deer's alarm as the player walks at it up- and downwind, and the dist
 `scripts/play_check.py` on the `walk` scene: the player stands downwind, then upwind of the deer (they smell it and
 slip away), walks at them, claps at the squirrels, scatters corn and steps back, then meets the hikers.
 
-## Animals to scale (§32)
+## Animals (§32, sculpted §36)
 
 ![fauna](fauna.jpg)
 
-Every species' rig in its rest pose, ticks every metre: deer, squirrel, turkey, armadillo, coyote, a person, and the
-sourced newcomers raccoon, eastern box turtle and great blue heron.
+Every species sculpted from blended anatomical forms and meshed as one smooth skin: portraits in three-quarter view
+with their triangle counts and heights, then all of them to scale on a 1 m-ticked ground. Markings follow the
+sources: the deer's white throat, eye ring, muzzle band and flag; the coyote's black-tipped brush and dorsal stripe;
+the raccoon's mask and ringed tail; the armadillo's nine bands; the turkey's bare blue head, snood and beard; the
+heron's dagger bill and black plume; the box turtle's rayed scutes.
 
 ## Heron flight (§33)
 

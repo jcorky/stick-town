@@ -24,6 +24,9 @@ def main(argv=None):
     ap.add_argument("--wait", type=float, default=25.0)
     ap.add_argument("--size", default="1280x800")
     ap.add_argument("--query", default="", help="URL query, e.g. lod=0 to turn tree impostors off")
+    ap.add_argument("--focus", default="", help="frame one node (e.g. white_tailed_deer_0) at clip time --at")
+    ap.add_argument("--at", type=float, default=20.0)
+    ap.add_argument("--dist", type=float, default=3.0, help="camera distance in body lengths for --focus")
     a = ap.parse_args(argv)
     from playwright.sync_api import sync_playwright
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -44,6 +47,18 @@ def main(argv=None):
         page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
         page.goto(f"http://127.0.0.1:{srv.server_port}/index.html" + (f"?{a.query}" if a.query else ""))
         page.wait_for_timeout(a.wait * 1000)
+        if a.focus:  # stop the clock at --at and put the camera beside the animal, a little above it
+            page.evaluate("""([name, at, dist]) => {
+                renderer.setAnimationLoop(null);
+                for (const id of ['hud', 'log', 'controls']) document.getElementById(id).style.display = 'none';
+                if (mixer) mixer.setTime(at);
+                const o = scene.getObjectByName(name); const box = new THREE.Box3().setFromObject(o);
+                const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+                const L = Math.max(s.x, s.y, s.z);
+                controls.target.copy(c); camera.near = 0.02; camera.updateProjectionMatrix();
+                camera.position.set(c.x + dist * L * 0.7, c.y + 0.35 * dist * L, c.z + dist * L * 0.7); controls.update();
+                renderer.render(scene, camera);
+            }""", [a.focus, a.at, a.dist])
         page.screenshot(path=a.out)
         b.close()
     srv.shutdown()

@@ -1,0 +1,14 @@
+{
+ "key": "07b70b9e24fdb92faa61b802dd497c2c",
+ "kind": "body",
+ "version": "body-0.2.0",
+ "params": {
+  "scale": 1.0,
+  "species": "raccoon"
+ },
+ "meta": {
+  "created": "2026-10-16T21:03:40",
+  "tris": 6128
+ },
+ "path": "body/07/07b70b9e24fdb92faa61b802dd497c2c.npz"
+}
