@@ -1,0 +1,20 @@
+{
+ "key": "f89cd5f5a986319e9268ada917053597",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "summer",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "sabal_palmetto",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:24:05"
+ },
+ "path": "impostor/f8/f89cd5f5a986319e9268ada917053597.npz"
+}

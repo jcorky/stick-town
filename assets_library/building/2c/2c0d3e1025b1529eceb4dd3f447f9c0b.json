@@ -1,0 +1,28 @@
+{
+ "key": "2c0d3e1025b1529eceb4dd3f447f9c0b",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "barn",
+  "seed": [
+   0,
+   2
+  ]
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:25",
+  "door": [
+   2.0,
+   0.0
+  ],
+  "footprint": [
+   -16.0824,
+   -5.3392,
+   0,
+   5.3392
+  ],
+  "kind": "barn",
+  "tris": 30
+ },
+ "path": "building/2c/2c0d3e1025b1529eceb4dd3f447f9c0b.npz"
+}

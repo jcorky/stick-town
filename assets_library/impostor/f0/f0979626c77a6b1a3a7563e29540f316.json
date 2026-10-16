@@ -1,0 +1,20 @@
+{
+ "key": "f0979626c77a6b1a3a7563e29540f316",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "fall",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "sweetgum",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:18:11"
+ },
+ "path": "impostor/f0/f0979626c77a6b1a3a7563e29540f316.npz"
+}

@@ -1,0 +1,26 @@
+{
+ "key": "68f1a3fc8b294889259c12663a2d054b",
+ "kind": "terrain",
+ "version": "terrain-0.3.1",
+ "params": {
+  "creek": true,
+  "province": "cumberland_plateau",
+  "res": 1.0,
+  "seed": 415621,
+  "size": 128.0
+ },
+ "meta": {
+  "created": "2026-10-16T20:25:00",
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "province": "cumberland_plateau",
+  "res": 1.0,
+  "shape": [
+   129,
+   129
+  ]
+ },
+ "path": "terrain/68/68f1a3fc8b294889259c12663a2d054b.npz"
+}

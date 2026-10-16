@@ -21,7 +21,7 @@ REGIONS = [
     (("smoky", "appalachian", "blue ridge", "ridge and valley", "chattanooga", "birmingham", "mountain"), "ridge_and_valley"),
     (("piedmont", "atlanta", "charlotte", "greenville", "red clay", "athens"), "piedmont"),
     (("mobile", "gulf", "coast", "low country", "lowcountry", "savannah", "charleston", "panhandle",
-      "pensacola", "tallahassee", "coastal", "beach", "marsh"), "coastal_plain"),
+      "pensacola", "tallahassee", "coastal", "beach", "marsh", "black belt", "prairie"), "coastal_plain"),
 ]
 
 BIOMES = {
@@ -33,6 +33,9 @@ BIOMES = {
     "lawn": ("yard", "lawn", "neighborhood", "neighbourhood", "town", "porch", "suburb", "park"),
     "pine_plantation": ("loblolly", "pine plantation", "pine stand", "timber"),
 }
+
+# where a biome lives when the prompt names no region (longleaf savanna is Coastal Plain; cypress swamp, floodplain)
+BIOME_PROVINCE = {"pine_savanna": "coastal_plain", "swamp": "floodplain"}
 
 BIOME_TREES = {
     "pine_savanna": {"longleaf_pine": 0.75, "live_oak": 0.05, "sabal_palmetto": 0.05, "flowering_dogwood": 0.05, "water_oak": 0.1},
@@ -112,16 +115,19 @@ def plan(prompt: str, seed: int | None = None, size_m: float = 128.0, detail: st
             p.province = prov
             p.notes.append(f"region→{prov}")
             break
-    biome = None
+    biome, best = None, 0  # the longest matching phrase wins: "old field" over "field", "pine plantation" over "pine"
     for b, words in BIOMES.items():
-        if _has(t, words):
-            biome = b
-            break
+        for w_ in words:
+            if len(w_) > best and _has(t, (w_,)):
+                biome, best = b, len(w_)
     if biome is None:
         biome = {"floodplain": "swamp", "coastal_plain": "pine_savanna", "piedmont": "hardwood",
                  "cumberland_plateau": "hardwood", "ridge_and_valley": "hardwood"}[p.province]
         p.notes.append(f"biome defaulted from province→{biome}")
     p.biome = biome
+    if not any(n.startswith("region→") for n in p.notes) and biome in BIOME_PROVINCE:  # savannas are coastal
+        p.province = BIOME_PROVINCE[biome]
+        p.notes.append(f"province from biome→{p.province}")
     p.trees = dict(BIOME_TREES[biome])
     # explicitly named species get boosted
     from ..flora.species import SPECIES

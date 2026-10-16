@@ -1,0 +1,28 @@
+{
+ "key": "d9b7c8e7446404321dee7f82c0f6b5d6",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "farmhouse",
+  "seed": [
+   0,
+   3
+  ]
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:25",
+  "door": [
+   3.0,
+   0.0
+  ],
+  "footprint": [
+   -11.5766,
+   -4.16,
+   2.6,
+   4.16
+  ],
+  "kind": "farmhouse",
+  "tris": 474
+ },
+ "path": "building/d9/d9b7c8e7446404321dee7f82c0f6b5d6.npz"
+}

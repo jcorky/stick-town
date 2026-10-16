@@ -345,6 +345,18 @@ class Planner(unittest.TestCase):
         self.assertGreaterEqual(p.fauna["wild_turkey"], 3)
         self.assertEqual(plan("a shotgun house in the delta").buildings, ["shotgun"])
 
+    def test_longest_biome_phrase_wins(self):
+        self.assertEqual(plan("Piedmont old field with loblolly pines").biome, "old_field")
+        self.assertEqual(plan("a pine plantation near a hay field").biome, "pine_plantation")
+        self.assertEqual(plan("longleaf pine savanna near Mobile").biome, "pine_savanna")
+        self.assertEqual(plan("Monte Sano hardwood cove").biome, "hardwood")
+
+    def test_province_from_biome_or_region(self):
+        self.assertEqual(plan("longleaf savanna with a church").province, "coastal_plain")
+        self.assertEqual(plan("a cypress swamp at dawn").province, "floodplain")
+        self.assertEqual(plan("Black Belt prairie pasture").province, "coastal_plain")
+        self.assertEqual(plan("Piedmont longleaf savanna").province, "piedmont")   # a named region wins
+
 
 class Assets(unittest.TestCase):
     def test_store_roundtrip_and_hit(self):

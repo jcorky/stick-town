@@ -1,0 +1,26 @@
+{
+ "key": "529c1062802663de035c4bd786aec347",
+ "kind": "terrain",
+ "version": "terrain-0.3.1",
+ "params": {
+  "creek": true,
+  "province": "coastal_plain",
+  "res": 1.0,
+  "seed": 331278,
+  "size": 128.0
+ },
+ "meta": {
+  "created": "2026-10-16T20:27:29",
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "province": "coastal_plain",
+  "res": 1.0,
+  "shape": [
+   129,
+   129
+  ]
+ },
+ "path": "terrain/52/529c1062802663de035c4bd786aec347.npz"
+}

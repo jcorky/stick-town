@@ -1,0 +1,23 @@
+{
+ "key": "e4d9d61eb46ab5420c10234db072520b",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "winter",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "eastern_redbud"
+ },
+ "meta": {
+  "created": "2026-10-16T20:23:57",
+  "height": 5.981,
+  "species": "eastern_redbud",
+  "tris": 5750,
+  "trunk_radius": 0.0724
+ },
+ "path": "tree/e4/e4d9d61eb46ab5420c10234db072520b.npz"
+}

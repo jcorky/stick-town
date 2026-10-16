@@ -1,0 +1,53 @@
+{
+ "key": "7c24578d941d0324659773111da555d4",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 1,
+  "scene": "e4eeb39f64ce",
+  "species": "white_tailed_deer",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:25:10",
+  "distance": 48.36,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:explore"
+   ],
+   [
+    9.2,
+    "plan:explore"
+   ],
+   [
+    39.5,
+    "plan:eat"
+   ],
+   [
+    57.8,
+    "arrive:eat"
+   ],
+   [
+    85.5,
+    "plan:explore"
+   ]
+  ],
+  "species": "white_tailed_deer",
+  "state_mix": {
+   "eat": 110,
+   "idle": 3,
+   "pause": 29,
+   "travel": 338
+  },
+  "traits": {
+   "boldness": 0.395,
+   "curiosity": 0.551,
+   "laziness": 0.141,
+   "patience": 0.456,
+   "wanderlust": 0.491
+  }
+ },
+ "path": "behavior/7c/7c24578d941d0324659773111da555d4.npz"
+}

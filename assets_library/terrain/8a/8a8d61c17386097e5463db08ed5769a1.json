@@ -1,0 +1,26 @@
+{
+ "key": "8a8d61c17386097e5463db08ed5769a1",
+ "kind": "terrain",
+ "version": "terrain-0.3.1",
+ "params": {
+  "creek": true,
+  "province": "ridge_and_valley",
+  "res": 1.0,
+  "seed": 713497,
+  "size": 128.0
+ },
+ "meta": {
+  "created": "2026-10-16T20:25:47",
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "province": "ridge_and_valley",
+  "res": 1.0,
+  "shape": [
+   129,
+   129
+  ]
+ },
+ "path": "terrain/8a/8a8d61c17386097e5463db08ed5769a1.npz"
+}

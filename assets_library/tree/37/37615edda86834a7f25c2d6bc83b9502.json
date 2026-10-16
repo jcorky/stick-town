@@ -1,0 +1,23 @@
+{
+ "key": "37615edda86834a7f25c2d6bc83b9502",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "fall",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "water_oak"
+ },
+ "meta": {
+  "created": "2026-10-16T20:21:33",
+  "height": 17.3636,
+  "species": "water_oak",
+  "tris": 20114,
+  "trunk_radius": 0.4262
+ },
+ "path": "tree/37/37615edda86834a7f25c2d6bc83b9502.npz"
+}

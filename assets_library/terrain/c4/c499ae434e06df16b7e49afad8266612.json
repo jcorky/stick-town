@@ -1,0 +1,26 @@
+{
+ "key": "c499ae434e06df16b7e49afad8266612",
+ "kind": "terrain",
+ "version": "terrain-0.3.1",
+ "params": {
+  "creek": true,
+  "province": "floodplain",
+  "res": 1.0,
+  "seed": 840994,
+  "size": 128.0
+ },
+ "meta": {
+  "created": "2026-10-16T20:28:07",
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "province": "floodplain",
+  "res": 1.0,
+  "shape": [
+   129,
+   129
+  ]
+ },
+ "path": "terrain/c4/c499ae434e06df16b7e49afad8266612.npz"
+}

@@ -1,0 +1,20 @@
+{
+ "key": "d7f52ad676895d9dac0a49ec9e7c8fd8",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "winter",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "white_oak",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:20:33"
+ },
+ "path": "impostor/d7/d7f52ad676895d9dac0a49ec9e7c8fd8.npz"
+}

@@ -1,0 +1,83 @@
+{
+ "key": "90c6b2b5b40219a191a3bfe24c87974e",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 3,
+  "scene": "5a30e328c660",
+  "species": "gray_squirrel",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:28:47",
+  "distance": 55.6579,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:eat"
+   ],
+   [
+    0.2,
+    "snack"
+   ],
+   [
+    8.8,
+    "plan:eat"
+   ],
+   [
+    9.2,
+    "arrive:eat"
+   ],
+   [
+    41.0,
+    "plan:cache"
+   ],
+   [
+    60.5,
+    "plan:cache"
+   ],
+   [
+    74.0,
+    "plan:cache"
+   ],
+   [
+    81.2,
+    "arrive:cache"
+   ],
+   [
+    86.0,
+    "plan:explore"
+   ],
+   [
+    100.0,
+    "plan:climb"
+   ],
+   [
+    100.2,
+    "arrive:climb"
+   ],
+   [
+    100.2,
+    "canopy:rest"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "dig": 18,
+   "eat": 159,
+   "idle": 6,
+   "pause": 40,
+   "rest": 79,
+   "travel": 178
+  },
+  "traits": {
+   "boldness": 0.695,
+   "curiosity": 0.167,
+   "laziness": 0.293,
+   "patience": 0.546,
+   "wanderlust": 0.544
+  }
+ },
+ "path": "behavior/90/90c6b2b5b40219a191a3bfe24c87974e.npz"
+}

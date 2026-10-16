@@ -1,0 +1,14 @@
+{
+ "key": "5ea257170b179fa9b6ff11426d95502c",
+ "kind": "body",
+ "version": "body-0.1.1",
+ "params": {
+  "scale": 1.0,
+  "species": "great_blue_heron"
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:25",
+  "tris": 1008
+ },
+ "path": "body/5e/5ea257170b179fa9b6ff11426d95502c.npz"
+}

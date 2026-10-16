@@ -3,6 +3,13 @@
 ## Unreleased
 
 **Added**
+- The asset library lives in GitHub (Git LFS in this repo), as the owner decided. It now holds every species × 4 seasons × 4 variants × 2 moistures at `low` and `med` (768 trees), each with its far-LOD impostor (`assets bake` now bakes them together). It also has 20 buildings and behaviour clips and terrains from 20 new scenes (`scripts/bake_scenes.py`, every province, biome, season, hour and wind; every GLB 7–14 MB). Total 213 MB, 1751 entries.
+
+**Fixed**
+- Biomes are matched by the longest phrase: "old field" no longer plans as pasture.
+- A prompt naming no region takes its province from the biome: longleaf savannas are Coastal Plain, swamps floodplain. "Black Belt" and "prairie" are Coastal Plain.
+
+**Added**
 - Walking in (TECHNIQUES §35). The viewer's **Walk in** button makes the player a person the animals sense:
   - **Sight:** acuity, field of view, motion, posture, light and cover.
   - **Hearing:** footsteps by ground and gait, and claps, with 6 dB per distance doubling and foliage loss, masked by wind noise from the §34 field.

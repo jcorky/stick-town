@@ -1,0 +1,23 @@
+{
+ "key": "2c4cd2231e4968b15d179ce7480c9da0",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "winter",
+  "seed": [
+   0,
+   3
+  ],
+  "species": "live_oak"
+ },
+ "meta": {
+  "created": "2026-10-16T20:13:03",
+  "height": 17.3052,
+  "species": "live_oak",
+  "tris": 39168,
+  "trunk_radius": 0.5234
+ },
+ "path": "tree/2c/2c4cd2231e4968b15d179ce7480c9da0.npz"
+}

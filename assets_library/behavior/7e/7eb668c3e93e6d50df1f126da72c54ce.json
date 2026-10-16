@@ -1,0 +1,134 @@
+{
+ "key": "7eb668c3e93e6d50df1f126da72c54ce",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 1,
+  "scene": "a5e52f4a0f79",
+  "species": "gray_squirrel",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:26:31",
+  "distance": 2.4141,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:climb"
+   ],
+   [
+    1.2,
+    "arrive:climb"
+   ],
+   [
+    1.2,
+    "canopy:eat"
+   ],
+   [
+    8.8,
+    "plan:eat"
+   ],
+   [
+    13.2,
+    "plan:explore"
+   ],
+   [
+    15.2,
+    "snack"
+   ],
+   [
+    16.8,
+    "plan:eat"
+   ],
+   [
+    18.2,
+    "snack"
+   ],
+   [
+    19.5,
+    "plan:explore"
+   ],
+   [
+    20.2,
+    "snack"
+   ],
+   [
+    21.8,
+    "plan:climb"
+   ],
+   [
+    22.0,
+    "arrive:climb"
+   ],
+   [
+    22.0,
+    "canopy:rest"
+   ],
+   [
+    35.8,
+    "plan:climb"
+   ],
+   [
+    36.0,
+    "arrive:climb"
+   ],
+   [
+    36.0,
+    "canopy:rest"
+   ],
+   [
+    58.8,
+    "plan:climb"
+   ],
+   [
+    59.0,
+    "arrive:climb"
+   ],
+   [
+    59.0,
+    "canopy:eat"
+   ],
+   [
+    72.2,
+    "plan:climb"
+   ],
+   [
+    72.5,
+    "arrive:climb"
+   ],
+   [
+    72.5,
+    "canopy:rest"
+   ],
+   [
+    90.5,
+    "plan:eat"
+   ],
+   [
+    90.8,
+    "arrive:eat"
+   ],
+   [
+    108.5,
+    "plan:cache"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "eat": 165,
+   "idle": 10,
+   "pause": 16,
+   "rest": 215,
+   "travel": 74
+  },
+  "traits": {
+   "boldness": 0.455,
+   "curiosity": 0.745,
+   "laziness": 0.285,
+   "patience": 0.1,
+   "wanderlust": 0.218
+  }
+ },
+ "path": "behavior/7e/7eb668c3e93e6d50df1f126da72c54ce.npz"
+}

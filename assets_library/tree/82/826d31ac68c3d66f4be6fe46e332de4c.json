@@ -1,0 +1,23 @@
+{
+ "key": "826d31ac68c3d66f4be6fe46e332de4c",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "summer",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "white_oak"
+ },
+ "meta": {
+  "created": "2026-10-16T20:19:52",
+  "height": 24.8724,
+  "species": "white_oak",
+  "tris": 20292,
+  "trunk_radius": 0.4702
+ },
+ "path": "tree/82/826d31ac68c3d66f4be6fe46e332de4c.npz"
+}
