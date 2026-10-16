@@ -111,36 +111,34 @@ def creek_sheet(path, seed=135121):
 
 
 def gait_sheet(path, key="white_tailed_deer"):
-    """One stride in 8 frames at walk, trot and gallop speeds (TECHNIQUES §25), from the same rig the GLB uses."""
+    """One stride in 8 frames at walk, trot and gallop speeds (TECHNIQUES §25–26), from the same rig, foot paths
+    and two-bone IK the GLB uses; the grey line is the ground."""
     import numpy as np
     from plandscape.fauna import gait
-    from plandscape.fauna.bodies import rig
-    from plandscape.mesh import Mesh
+    from plandscape.fauna.bodies import posed_legs, rig
+    from plandscape.mesh import box
     from plandscape.render import render
     rg = rig(key, (0.55, 0.42, 0.30))
     h = rg["hip"]
+    ground = box((0.1, 0, -0.01), (2.6, 0.6, 0.02), (0.45, 0.45, 0.42))
     rows = []
     for v in (1.0, 3.0, 8.0):
         fr = float(gait.froude(v, h))
         name = gait.gait_name(fr)
         offs, beta = gait.QUAD[name]
-        lam = float(gait.stride(v, h))
-        amp = np.arcsin(min(lam * beta / (2 * h), 0.7))
+        S = float(gait.stride(v, h)) * beta
         frames = []
         for k in range(8):
-            phi = 2 * np.pi * k / 8
-            parts = [rg["torso"]]
-            for (m, hip), o in zip(rg["legs"], offs):
-                th = amp * np.sin(phi - 2 * np.pi * o)
-                c, s_ = np.cos(th), np.sin(th)  # forward swing: foot toward +x
-                P = m.positions @ np.array([[c, 0, -s_], [0, 1, 0], [s_, 0, c]]).T
-                parts.append(Mesh(P + np.asarray(hip, np.float32), m.colors, m.indices))
-            img = render(parts, None, size=(200, 150), azimuth=0, elevation=4,
-                         fit=((-1.2, -0.5, -0.05), (1.4, 0.5, 1.75)))
+            ang = []
+            for lg, o in zip(rg["legs"], offs):
+                x, z = gait.foot_path(k / 8 - o, beta, S, h, gait.LIFT[name])
+                ang.append(gait.two_bone(x, z, lg["l1"], lg["l2"], lg["knee"]))
+            img = render([ground, rg["torso"]] + posed_legs(rg, ang), None, size=(200, 150), azimuth=0, elevation=4,
+                         fit=((-1.2, -0.5, -0.05), (1.4, 0.5, 1.75)), keep_first=99)
             frames.append(img)
         strip = Image.fromarray(np.concatenate(frames, 1))
-        ImageDraw.Draw(strip).text((6, 4), f"v = {v} m/s   Fr = {fr:.2f}   {name}   stride = {lam:.2f} m   "
-                                           f"swing = {np.degrees(amp):.0f} deg", fill=(0, 0, 0))
+        ImageDraw.Draw(strip).text((6, 4), f"v = {v} m/s   Fr = {fr:.2f}   {name}   stride = {S / beta:.2f} m   "
+                                           f"stance = {S:.2f} m   lift = {gait.LIFT[name] * h:.2f} m", fill=(0, 0, 0))
         rows.append(strip)
     sheet = Image.new("RGB", (rows[0].width, sum(r.height for r in rows)), "white")
     y = 0

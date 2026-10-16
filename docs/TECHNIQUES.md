@@ -541,3 +541,25 @@ galloping at 8 m/s gives Fr 6.9, stride 3.89 m, swing 44°.
 The leg rotations ride in the scene's single animation clip as extra channels (local to each animal's node), so the
 viewer's mixer plays them with no viewer change. Rigs are shared per look (species, scale, colour). About 0.3 MB per
 scene.
+
+## 26. Knees and planted feet: foot paths and two-bone IK
+`plandscape/fauna/gait.py: foot_path, two_bone, leg_ik`; `bodies.py: rig, posed_legs`; `scene/compose.py`
+
+Rigid legs swung by §25 lifted their feet mid-stance. Each leg is now a thigh ($l_1$) and a shank ($l_2$), with
+$l_1 + l_2 = h/0.95$, so the rest pose is slightly flexed and there is reach to spare. Each foot follows a path in the
+hip frame. Leg phase is $\psi = \operatorname{frac}(\varphi/2\pi - o)$ and $S = \lambda\beta$ is the ground the body covers while the foot is down:
+
+$$\text{stance } (\psi < \beta):\quad x = S\Big(\tfrac12 - \frac{\psi}{\beta}\Big),\quad z = -h,$$
+$$\text{swing } (\psi \ge \beta):\quad u = \frac{\psi - \beta}{1 - \beta},\quad x = S\big(-\tfrac12 + \operatorname{smoothstep}(u)\big),\quad z = -h + H\,\sin(\pi u),$$
+
+with lift $H$ = 0.12 / 0.2 / 0.3 $h$ for walk, trot and gallop. Two-bone IK by the law of cosines, with $d$ the hip–foot distance:
+
+$$\gamma = \arccos\frac{l_1^2 + d^2 - l_2^2}{2 l_1 d}, \qquad K = \arccos\frac{l_1^2 + l_2^2 - d^2}{2 l_1 l_2}, \qquad \alpha = \operatorname{atan2}(x, -z),$$
+$$\theta_\text{hip} = \alpha + \kappa\,\gamma, \qquad \theta_\text{knee} = -\kappa\,(\pi - K).$$
+
+Here $\kappa = +1$ where the joint bends forward (a deer's stifle, a person's knee) and $-1$ where it bends backward (a deer's
+carpus, a turkey's intertarsal joint). Targets out of reach clamp to a straight leg; at a gallop that happens
+at the ends of the stance, and the sheet shows the flight phases a gallop has.
+
+In the GLB each leg is a thigh node at the hip with a shank child at the knee. Both carry pitch keys in the same
+phase-keyed clip as §25, and their rest pose is the node's default rotation. About +0.3 MB per scene.
