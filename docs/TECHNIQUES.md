@@ -641,3 +641,18 @@ pivoted through half a turn between keys or spun in place while grazing. Export 
    kept neighbours reproduces its position within 2 cm and its heading within 2°.
 
 The example clip in the gallery keeps 287 of its 720 samples: turns stay curves, and stops cost two keys.
+
+## 31. Gaze: head yaw from what the body ignores
+`plandscape/fauna/motion.py: body_headings, gaze`; `export/gltf.py: qmul`; `scene/compose.py`
+
+§30 holds the body still while the simulation's heading looks around. That looking now goes to the head. The gaze is the
+part of the logged heading $h$ the displayed body heading $\hat h$ does not follow, clipped to the neck's reach and
+low-passed:
+
+$$\psi_i = \psi_{i-1} + \big(1 - e^{-\Delta t/\tau}\big)\Big(\operatorname{clip}\big(\operatorname{wrap}(h_i - \hat h_i),\ \pm 70°\big) - \psi_{i-1}\Big), \qquad \tau = 0.3\ \text{s}.$$
+
+At rest the head scans; in motion it leads into turns, because the turn-limited body lags.
+
+The neck node's rotation composes yaw after the state pitch (§28): $q = q_\text{yaw}(\psi)\,q_\text{pitch}(-\theta)$, a Hamilton product, so a
+grazing deer can still look sideways. Keys come from the union of the log and the pitch keys, reduced by the two-channel
+Ramer–Douglas–Peucker of §30 (2° on both angles).

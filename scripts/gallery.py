@@ -212,7 +212,7 @@ def motion_sheet(path):
     t = L[:, 0]
     raw = L[:, 4]
     tk, Pk, Hk = motion.export_track(log, "white_tailed_deer")
-    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
+    fig, ax = plt.subplots(1, 3, figsize=(20, 5))
     deg = lambda a: np.degrees(motion.wrap(a))  # noqa: E731
     ax[0].plot(t, deg(raw), lw=0.8, color="0.6", label="logged heading (snaps, jitters at rest)")
     ax[0].plot(t[::4], deg(raw[::4]), "x", ms=4, color="#c0392b", label="old export: every 1 s")
@@ -227,6 +227,14 @@ def motion_sheet(path):
     ax[1].set_aspect("equal")
     ax[1].legend(fontsize=8)
     ax[1].set_title("path, relative to start (m)")
+    _, _, body = motion.body_headings(log, "white_tailed_deer")
+    psi = motion.gaze(log, body)
+    ax[2].plot(t, np.degrees(psi), lw=1.0, color="#7d5ba6", label="head yaw ψ (gaze), §31")
+    ax[2].axhline(np.degrees(motion.GAZE_MAX), ls=":", color="0.5")
+    ax[2].axhline(-np.degrees(motion.GAZE_MAX), ls=":", color="0.5")
+    ax[2].set_xlabel("time (s)")
+    ax[2].set_ylabel("deg from body heading")
+    ax[2].legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(path, dpi=80)
     plt.close(fig)

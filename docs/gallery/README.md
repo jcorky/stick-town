@@ -42,7 +42,8 @@ with legs folded by the same IK, and a fleeing deer raises its white flag. The s
 
 A stored deer clip: the logged heading (grey) snaps and jitters while the deer stands; the old export (red) sampled it
 once a second. The exported heading (blue) turns at no more than 4 rad/s, holds still at rest, and keeps 287 of 720
-keys (right: the path with its kept keys and headings).
+keys (middle: the path with its kept keys and headings). Right: the head's gaze, the heading the body no longer
+follows, up to ±70° (§31).
 
 ## Terrain: droplet erosion (§14)
 
