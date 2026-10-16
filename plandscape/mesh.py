@@ -21,6 +21,7 @@ class Mesh:
     weights: np.ndarray | None = None  # (N,4) splat weights for height-blended ground (sum to 1)
     splat: tuple | None = None         # 4 texture keys the weights refer to
     nrm: np.ndarray | None = None      # (N,3) authored normals (e.g. rounded crown normals); else geometric
+    attrs: dict | None = None          # extra per-vertex glTF attributes {"_NAME": (N,4) uint8|int8}, e.g. wind
 
     @staticmethod
     def empty() -> "Mesh":

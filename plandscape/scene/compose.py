@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import os
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 import numpy as np
 from scipy import ndimage
@@ -24,7 +24,7 @@ from ..fauna import gait, motion
 from ..fauna.bodies import rig
 from ..flora import impostor
 from ..flora.species import SPECIES
-from ..flora.tree import generate_tree
+from ..flora.tree import TreeModel, generate_tree
 from ..ground.surface import BIOME_GRASS, grass_density, grass_mesh, ground_weights, terrain_mesh
 from ..mesh import Mesh, MeshBuilder
 from ..paths.desire import TrailField, obstacle_cost, simulate
@@ -32,6 +32,8 @@ from ..rng import rng as make_rng
 from ..terrain.channels import water_mesh as creek_surface
 from ..terrain import refine
 from ..terrain.heightfield import generate_tile
+from ..wind import Wind, constants as wind_constants
+from ..wind.attrs import grass_attributes, impostor_attributes, tree_attributes
 from .buildings import clothesline, fence, generate_building, mailbox
 from .groundcover import scatter
 from .names import scene_names, site_scores
@@ -256,6 +258,29 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     canopy = np.clip(canopy, 0, 1)
     trees_arr = np.array(trees_arr) if trees_arr else np.zeros((0, 4))
 
+    # ── wind (TECHNIQUES §34) ──────────────────────────────────────────
+    # the canopy height of the forest profile: crown-area-weighted mean height of the placed trees
+    if len(trees_arr):
+        wts = np.array([(variants[pl["model"]].species.crown_width * trees_arr[i, 2]) ** 2
+                        for i, pl in enumerate(placements)])
+        canopy_h = float((trees_arr[:, 2] * wts).sum() / wts.sum())
+    else:
+        canopy_h = 0.3
+    wind = Wind(force=plan.wind_force, from_deg=plan.wind_from, canopy_h=canopy_h, seed=plan.seed)
+    tree_wind = {key: tree_attributes(tm, plan.season) for key, tm in variants.items()}
+
+    def cover_at(x, y):
+        gx, gy = hf.to_grid(x, y)
+        return ndimage.map_coordinates(canopy, [np.atleast_1d(gy), np.atleast_1d(gx)], order=1, mode="nearest")
+    for pl in placements:  # each instance: its own frequency (f ∝ DBH/H² ∝ 1/scale) and the wind its crown feels
+        tw = tree_wind[pl["model"]][0]
+        Hs = tw.H * pl["scale"]
+        U = float(wind.mean_speed(0.85 * Hs, cover_at(pl["x"], pl["y"])[0]))
+        pl["wind"] = dict(f0=round(tw.f0 / pl["scale"], 4), zeta=tw.zeta, Q=round(tw.Q_ref, 5),
+                          shelter=round(U / wind.Uh, 4), H=round(tw.H, 3))
+    log(f"wind: Beaufort {plan.wind_force:g} from {plan.wind_from:.0f}°, U10 {wind.U10:.1f} m/s, "
+        f"canopy {canopy_h:.1f} m → U_h {wind.Uh:.1f} m/s ({time.time() - t0:.1f}s)")
+
     # ── desire paths ───────────────────────────────────────────────────
     cost = obstacle_cost(hf, trunks=[(x, y, rd) for x, y, _, rd in trees_arr], footprints=footprints)
     field = TrailField(np.zeros_like(hf.z), hf.res, hf.origin)
@@ -319,6 +344,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
     grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season, trail=field.G)
+    if grass.n_tris:
+        grass.attrs = grass_attributes(grass, wind, cover_at, plan.seed)
 
     def _grid(A):
         return lambda x, y: float(A[min(max(int(round((y - hf.origin[1]) / hf.res)), 0), A.shape[0] - 1),
@@ -377,6 +404,11 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     for key, tm in variants.items():
         nm = f"{key[0]}_{key[1]}_{int(key[2] * 10)}"
         imp = impostors[key]
+        wa = tree_wind[key][1]  # per-vertex wind attributes ride on copies, never on the cached meshes
+        tm = TreeModel(tm.species, tm.seed, tm.height, tm.skeleton,
+                       replace(tm.bark, attrs=wa.get("bark")) if tm.bark is not None else None,
+                       replace(tm.foliage, attrs=wa.get("foliage")) if tm.foliage is not None else None)
+        imp = replace(imp, attrs=impostor_attributes(imp, tm.height))
         vmesh[key] = (g.mesh(tm.bark, nm + "_bark", mat(tm.bark, "bark", rough=0.95)),
                       g.mesh(tm.foliage, nm + "_foliage", mat(tm.foliage, "foliage", double=True, rough=0.7)),
                       g.mesh(imp, nm + "_impostor", mat(imp, "impostor", double=True, rough=0.9)))
@@ -386,7 +418,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         sub = [g.node(f"bark", b)] + ([g.node("foliage", f)] if f is not None else [])
         # far LOD (TECHNIQUES §23): referenced, not instanced, so viewers without LOD support draw only the tree
         kids.append(g.node(f"{pl['species']}_{n}", translation=(pl["x"], pl["y"], pl["z"]),
-                           rotation_z=pl["yaw"], scale=pl["scale"], children=sub, extras={"lod_far": im}))
+                           rotation_z=pl["yaw"], scale=pl["scale"], children=sub,
+                           extras={"lod_far": im, "wind": pl["wind"]}))
     g.node("trees", children=kids)
     pmesh, pkids = {}, []
     for n, gp in enumerate(gprops):
@@ -495,7 +528,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     for i_, h_ in zip(info, names["homesteads"]):
         h_ = f"{names['church']}" if i_["kind"] == "church" else h_
         i_["name"] = h_
-    scene = dict(plan=asdict(plan), stats=stats, lighting=light, buildings=info, names=names,
+    scene = dict(plan=asdict(plan), stats=stats, lighting=light,
+                 wind=dict(wind.to_json(), constants=wind_constants()), buildings=info, names=names,
                  trees=[{k: v for k, v in pl.items() if k != "model"} for pl in placements], signs=world.signs,
                  ground_props=[dict(gp, model=f"{gp['model'][0]}/{gp['model'][1]}") for gp in gprops],
                  credits=sorted({(p_.meta["source"]["url"], p_.meta["source"]["licence"],

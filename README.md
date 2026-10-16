@@ -6,7 +6,7 @@ Type a sentence, get a living place:
 python3 -m plandscape "Monte Sano hardwood cove with a dogtrot cabin, a creek, two deer, three squirrels and a turkey flock at golden hour in fall" --out out/monte-sano
 ```
 
-You get `scene.glb` (textured terrain, trees, grass, photoscanned ground props, buildings, water, animated animals), `scene.json` (the plan, stats, every tree, prop and animal, asset credits), `map.png` (trails, canopy, tracks, signs of life), `preview.png`, `closeup.png` (ground level, where the props are), `homestead.png`, `creek.png`, and `index.html` — a three.js viewer with wind, a timeline and follow-cam.
+You get `scene.glb` (textured terrain, trees, grass, photoscanned ground props, buildings, water, animated animals), `scene.json` (the plan, stats, every tree, prop and animal, asset credits), `map.png` (trails, canopy, tracks, signs of life), `preview.png`, `closeup.png` (ground level, where the props are), `homestead.png`, `creek.png`, and `index.html` — a three.js viewer with a timeline, follow-cam and physically based wind (a Beaufort slider and direction; `?force=6&from=225` in the URL). Prompts can set the wind: "breezy", "windy", "gale", "a north wind", "from the southwest".
 
 ![Monte Sano cove, fall](docs/gallery/monte-sano-preview.jpg)
 
@@ -47,6 +47,7 @@ Python 3.10+ with numpy, scipy, Pillow and matplotlib. Nothing else — it runs 
 | `python3 -m plandscape "<prompt>" --llm` | let Claude fill the scene plan (needs `ANTHROPIC_API_KEY`; validated, falls back to the keyword planner) |
 | `python3 scripts/gallery.py` | regenerate `docs/gallery` (reference scenes + species sheets) |
 | `python3 scripts/viewer_shot.py out/x out/x/viewer.png` | screenshot the three.js viewer headless; prints shader/console errors |
+| `python3 scripts/wind_frames.py out/x out/wind.gif --force 6` | viewer frames on a fixed wind clock (GIF + per-frame motion check) |
 
 Open `DIR/index.html` through any static server (`python3 -m http.server -d DIR`) to explore the scene.
 

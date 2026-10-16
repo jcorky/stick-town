@@ -3,6 +3,21 @@
 ## Unreleased
 
 **Added**
+- Wind (TECHNIQUES §34). One deterministic gust field drives every tree, limb, branch, leaf and grass blade, evaluated per vertex in the viewer with no state and mirrored exactly in Python.
+  - **Field.** Kaimal spectra scaled to measured intensities (σ_u = 1.7 u* over canopies, σ_v = 0.8 σ_u). Frozen turbulence travels downwind at U_h, with Davenport lateral coherence from Cauchy-tilted waves. The mean profile is log-law above the canopy (d = ⅔h, z₀ = 0.123h) and exponential inside it; Beaufort force comes from the NOAA table.
+  - **Drag.** Vogel streamlining in a smooth law, F ∝ U²(1 + U/U0)^b with b = −1, giving C_d = 0.185 at 20 m/s.
+  - **Trunk.** Rayleigh f0 on each tree's own skeleton, using green-wood E and density from the USDA Wood Handbook and McMahon elastic similarity. Damping is 8.6 % in leaf and 3.9 % bare; leaf mass is calibrated so bare trees sway 1.2× faster.
+  - **Limbs and branches.** Beams with their own Rayleigh frequencies (1.4–3× the trunk) and 6 % damping.
+  - **Leaves and grass.** Leaves reconfigure downwind and flutter at 6 Hz. Grass bends by local shelter, so waves cross it.
+  - **Planner.** Reads wind words ("breezy", "windy", "gale", "north wind", "from the southwest"); the default direction is by season.
+  - **Viewer.** A Beaufort slider with NOAA's land descriptions and a direction selector.
+  - **Sources and tooling.** Every constant is in `catalog/wind_sources.json`. Gallery adds `wind.jpg` and `wind-oak.gif`; `scripts/wind_frames.py` captures viewer frames on a fixed wind clock.
+
+**Fixed**
+- Grass sway in the viewer scaled with absolute elevation (about 1 m of motion on the Monte Sano plateau).
+- The viewer's animal list missed raccoons, box turtles and herons; it now follows `scene.json`.
+
+**Added**
 - Herons fly when flushed (TECHNIQUES §33). They take off at the sourced 10.7 m/s cruise, climb to 8 m and land again. Wings fold on the ground and flap in the air (±40° at 2.5 Hz, design values), and legs trail back. Gallery adds `flight.jpg`. behavior-0.2.1.
 - Raccoon, eastern box turtle and great blue heron (TECHNIQUES §32), with sourced sizes, speeds and activity in `catalog/fauna_sources.json` (unsourced walking speeds are marked as design values). A shore food layer is added along the creek edge for raccoons and herons, and box turtles withdraw into the shell instead of fleeing. The bayou reference scene now has a heron, a raccoon and a box turtle. Gallery adds `fauna.jpg`, all species to scale.
 

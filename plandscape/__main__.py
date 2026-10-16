@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 
 from .scene.compose import compose
 from .scene.planner import claude_llm, plan, refine
@@ -12,10 +13,14 @@ from .scene.preview import closeup, creek, homestead, map_view, perspective
 
 def write_viewer(out):
     """Copy viewer/index.html into a scene directory (with the doctype and viewport it needs standalone)."""
-    viewer = os.path.join(os.path.dirname(__file__), "..", "viewer", "index.html")
+    vdir = os.path.join(os.path.dirname(__file__), "..", "viewer")
+    viewer = os.path.join(vdir, "index.html")
     if os.path.exists(viewer):
         with open(viewer) as f, open(os.path.join(out, "index.html"), "w") as g:
             g.write("<!doctype html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n" + f.read())
+        for js in sorted(os.listdir(vdir)):  # the viewer's own modules (wind.js, …)
+            if js.endswith(".js"):
+                shutil.copy(os.path.join(vdir, js), os.path.join(out, js))
 
 
 def main(argv=None):
