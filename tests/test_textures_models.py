@@ -247,6 +247,28 @@ class Fauna(unittest.TestCase):
         self.assertGreater(len(orders), 1)  # nobody always acts first
 
 
+class Grass(unittest.TestCase):
+    def test_blades_curve_and_trampled_ones_lie_down(self):
+        from plandscape.ground.surface import grass_mesh
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(32, 1.0, "piedmont", 2, creek=False)
+        dens = np.ones_like(hf.z)
+        G = np.zeros_like(hf.z)
+        G[:, 14:19] = 0.45  # a trail running north-south
+        m = grass_mesh(hf, dens, (2, 2, 30, 30), budget=3000, seed=1, trail=G)
+        P = m.positions.reshape(-1, 5, 3).astype(float)
+        base = (P[:, 0] + P[:, 1]) / 2
+        mid = (P[:, 2] + P[:, 3]) / 2
+        tip = P[:, 4]
+        # curved: the mid point is off the straight base->tip line
+        dev = np.linalg.norm(np.cross(tip - base, mid - base), axis=1) / np.maximum(np.linalg.norm(tip - base, axis=1), 1e-9)
+        self.assertGreater(np.median(dev), 1e-3)
+        height = tip[:, 2] - base[:, 2]
+        on = (base[:, 0] > 14.5) & (base[:, 0] < 18.5)
+        off = (base[:, 0] < 10) | (base[:, 0] > 23)
+        self.assertLess(np.median(height[on]), 0.7 * np.median(height[off]))  # trampled blades lie lower
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights

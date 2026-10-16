@@ -39,6 +39,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 **Known weaknesses** (look at them, then fix):
 - Bark limbs look faceted in the flat-shaded preview (smooth in the viewer). Rounded card normals and twig-attached leaf cards are still queued (`catalog/notes/ez-tree.md` #3).
 - Leaf sets are other species chosen by outline; no Southern-specific leaf scans yet (e.g. sweetgum stars are maple-like).
+- Grass blades are curved and trampled now (§17) but only in the central 56 m at ~6 per m² at `low`; a real lawn needs `detail="cm"` near the camera.
 - Stump scans are squat hardwood stumps; there's no tall pine stump or longleaf "lighter stump".
 - Desire paths are straight-ish and only in high-traffic corridors. The county road is real now (§15) but always crosses west→east; driveways and multiple roads are next.
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
@@ -48,7 +49,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 ## 3. Next priorities, in order
 
 0. **Read `catalog/notes/`** — eight permissive repos were studied in session 2; each note lists what is queued from it.
-1. **Fidelity near the camera, continued.** Lattice detiling for the ground splat (terrain3d note); curved multi-segment grass blades with trampling; LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
+1. **Fidelity near the camera, continued.** Lattice detiling for the ground splat (terrain3d note); LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals that walk.** Skeletal gaits matched to speed, head/tail motion for alert and feeding states, multi-hour runs, more species (heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds).

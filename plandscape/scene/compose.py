@@ -285,7 +285,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     ter.splat = textures.splat_keys(plan.biome)
     c = S / 2
     focus = (c - 28, c - 28, c + 28, c + 28)
-    grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season)
+    grass = grass_mesh(hf, dens, focus, GRASS_BUDGET[plan.detail], mix, plan.seed, plan.season, trail=field.G)
 
     def _grid(A):
         return lambda x, y: float(A[min(max(int(round((y - hf.origin[1]) / hf.res)), 0), A.shape[0] - 1),

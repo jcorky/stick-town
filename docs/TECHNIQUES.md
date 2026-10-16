@@ -242,3 +242,19 @@ $$w = \big(0.5 + 0.8\,\text{hunger},\ 0.25,\ 0.25 + 0.6\,\text{fatigue}\big)\ \t
 
 lasting $\mathcal U(6,25)$, $\mathcal U(3,10)$ and $\mathcal U(10,40)$ s. Audit over four seeds: freeze 28 % → under 1 %,
 canopy eating 24 %, rest 12 %.
+
+## 17. Curved, trampled grass blades
+`plandscape/ground/surface.py: grass_mesh`
+
+Each blade (height $h$, width $w$, heading $\psi$, bend $b \sim \mathcal U(0.15, 0.6)$) is two segments, five vertices,
+three triangles, along a quadratic curve with tapering width:
+
+$$\mathbf c(t) = \mathbf p_0 + \hat{\mathbf z}\,h\,t\,\big(1 - \tfrac12 b^2 t\big) + \hat{\mathbf d}_\psi\,h\,b\,t^2,\qquad w(t) = w\,(1 - t),\qquad t \in \{0, \tfrac12, 1\}$$
+
+**Trampling.** With trail strength $g = \text{clip}(1.4\,G)$ under the blade and the travel direction taken
+perpendicular to the smoothed trail gradient, $\hat{\mathbf d}_\text{travel} \perp \nabla(G * \mathcal N_1)$ (either sense):
+
+$$\psi \leftarrow (1-g)\,\psi + g\,\psi_\text{travel},\qquad h \leftarrow h\,(1 - 0.65\,g),\qquad b \leftarrow b + (0.95 - b)\,g$$
+
+so blades at path edges are shorter and lie over along the path. Vertex shade rises from 0.7 at the base to 1.08 at the
+tip. Three segments cost +2.7 MB per scene for little visible gain at `low`; two segments cost +1.4 MB.
