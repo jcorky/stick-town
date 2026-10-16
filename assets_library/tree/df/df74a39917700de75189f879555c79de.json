@@ -1,0 +1,23 @@
+{
+ "key": "df74a39917700de75189f879555c79de",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "spring",
+  "seed": [
+   0,
+   2
+  ],
+  "species": "eastern_redbud"
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:04",
+  "height": 8.0005,
+  "species": "eastern_redbud",
+  "tris": 6186,
+  "trunk_radius": 0.0978
+ },
+ "path": "tree/df/df74a39917700de75189f879555c79de.npz"
+}

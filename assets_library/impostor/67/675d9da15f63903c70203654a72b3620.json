@@ -1,0 +1,20 @@
+{
+ "key": "675d9da15f63903c70203654a72b3620",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "winter",
+  "seed": [
+   0,
+   2
+  ],
+  "species": "eastern_redbud",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:18"
+ },
+ "path": "impostor/67/675d9da15f63903c70203654a72b3620.npz"
+}

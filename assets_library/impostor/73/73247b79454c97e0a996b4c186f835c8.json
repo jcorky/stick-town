@@ -1,0 +1,20 @@
+{
+ "key": "73247b79454c97e0a996b4c186f835c8",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "low",
+  "moisture": 0.5,
+  "season": "fall",
+  "seed": [
+   0,
+   3
+  ],
+  "species": "water_oak",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:09:23"
+ },
+ "path": "impostor/73/73247b79454c97e0a996b4c186f835c8.npz"
+}

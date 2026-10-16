@@ -1,0 +1,20 @@
+{
+ "key": "d7b31be6cf58e708ff9a8a1d1dc392fb",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "winter",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "southern_magnolia",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:07:37"
+ },
+ "path": "impostor/d7/d7b31be6cf58e708ff9a8a1d1dc392fb.npz"
+}

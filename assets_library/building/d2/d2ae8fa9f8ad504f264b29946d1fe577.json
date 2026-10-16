@@ -1,0 +1,28 @@
+{
+ "key": "d2ae8fa9f8ad504f264b29946d1fe577",
+ "kind": "building",
+ "version": "building-0.1.1",
+ "params": {
+  "kind": "church",
+  "seed": [
+   0,
+   2
+  ]
+ },
+ "meta": {
+  "created": "2026-10-16T20:10:25",
+  "door": [
+   3.0,
+   0.0
+  ],
+  "footprint": [
+   -17.9681,
+   -4.3383,
+   2.0,
+   4.3383
+  ],
+  "kind": "church",
+  "tris": 600
+ },
+ "path": "building/d2/d2ae8fa9f8ad504f264b29946d1fe577.npz"
+}
