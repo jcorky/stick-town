@@ -144,8 +144,11 @@ class GLB:
         self.meshes.append({"name": name, "primitives": [{"attributes": attrs, "indices": idx, "material": material}]})
         return len(self.meshes) - 1
 
-    def node(self, name, mesh=None, translation=None, rotation_z=0.0, scale=1.0, children=None, world=True):
+    def node(self, name, mesh=None, translation=None, rotation_z=0.0, scale=1.0, children=None, world=True,
+             extras=None):
         n = {"name": name}
+        if extras:
+            n["extras"] = extras
         if mesh is not None:
             n["mesh"] = mesh
         if translation is not None:

@@ -413,3 +413,40 @@ colours and splat weights bilinearly interpolated from the coarse vertices, and 
 The result is still one terrain mesh, one splat material. `Heightfield.sample` reads heights from the fine patch inside a window,
 so grass, ground props and tree trunks placed afterwards sit on the refined ground. At `low` the terrain grows
 from 33k to 67k triangles (+0.7 MB per scene).
+
+## 23. Far LOD: cross-billboard impostors with a viewer-faithful bake (billboard LOD as in SpeedTree; three.js `LOD`)
+`plandscape/flora/impostor.py: bake, mesh`; `render(alpha, shading, viewer_colour)`; `scene/compose.py`; `viewer/index.html: addLODs`
+
+A tree at 110 m covers a few dozen pixels, but it still costs 5–30k triangles. ez-tree's LOD only thins rings and
+segments (`catalog/notes/ez-tree.md`). The far tier here replaces the tree with two crossed, alpha-tested cards
+carrying the tree baked from two sides.
+
+**Bake.** The tree (bark + foliage) is rendered orthographically at elevation 0 from azimuth 0° (looking +y) and
+90° (looking +x) into the two halves of one RGBA atlas, 2 × 96 × 160 px. With $R$ the crown's horizontal radius and
+$H$ the height, the renderer maps a point to pixels by
+
+$$\text{span} = \max\!\Big(\frac{2R}{0.95\,w},\ \frac{H}{0.95\,h}\Big), \qquad u_\text{px} = \frac{w}{2} + \frac{s}{\text{span}}, \qquad v_\text{px} = \frac{h}{2} - \frac{z - H/2}{\text{span}},$$
+
+where $s$ is the coordinate along the card. The quad corners $(\pm R, 0)$ and $(\pm R, H)$ get exactly those UVs, so the baked tree stands
+where the mesh tree stands. Transparent texels take the colour of the nearest opaque one (edge padding by
+distance-transform indices), so mipmaps don't fringe the cards with sky.
+
+**Viewer-faithful colour.** The first bake was darker and more saturated than the mesh trees beside it. That was not the bake's
+light but its colour arithmetic. The preview renderer draws $c\,T/\mu$; the viewer draws COLOR_0 $= \operatorname{clip}(c/\mu, 0, 1)$
+(linear) times the sRGB-decoded texture. So the bake now runs unlit and reproduces the viewer:
+
+$$A = \operatorname{encode}\!\big(\operatorname{clip}(c/\mu, 0, 1)\cdot \operatorname{decode}(T)\big), \qquad \operatorname{decode}(x) = x^{2.2},\quad \operatorname{encode}(y) = y^{1/2.2}.$$
+
+Untextured triangles become $\operatorname{encode}(c)$. The cards' vertex colour is the atlas mean, so their COLOR_0 is 1.
+
+**Light.** The atlas holds albedo only. The viewer lights the cards through rounded normals, as for crowns (§18):
+
+$$n = \operatorname{normalize}\big(0.6\,\sigma\,\hat a + (0, 0, \zeta)\big), \qquad \zeta = 0.5 \text{ (top corners)},\ 0.1 \text{ (bottom)},$$
+
+where $\sigma = \pm 1$ is the side and $\hat a$ the card axis.
+
+**Wiring.** Atlases are cached per tree model (`impostor` kind in the library). Each tree node in the GLB names its
+impostor mesh in `extras.lod_far` but does not instance it, so viewers without LOD support draw only the real tree.
+The viewer swaps each such node for a `THREE.LOD`: the full tree from 0 m, the cards beyond `LOD_FAR` = 110 m
+(`?lod=0` turns impostors off). The cards cast alpha-tested shadows. Cost: about 25 KB per tree model (+0.4 MB per scene); 4 triangles
+replace a tree.

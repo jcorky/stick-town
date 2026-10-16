@@ -42,6 +42,10 @@ detiled splat ground (§20), wind with leaf flutter, the event log of what the a
 
 ![monte sano viewer](monte-sano-viewer.jpg)
 
+Far LOD (§23): the same view with tree impostors beyond 110 m (left) and full meshes everywhere (right).
+
+![monte sano lod](monte-sano-lod.jpg)
+
 Homestead: the county road routed by Dijkstra on a slope cost, smoothed, cut and filled with a crown and
 ditches (§15); the fence leaves a gate where the trodden walk from the porch meets the mailbox.
 ![monte sano map](monte-sano-map.jpg)

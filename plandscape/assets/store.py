@@ -36,6 +36,7 @@ GENERATOR_VERSIONS = {
     "grass_patch": "grass-0.1.0",
     "texture": "texture-0.1.3",
     "model": "model-0.1.3",
+    "impostor": "impostor-0.1.2",
 }
 
 DEFAULT_ROOT = os.environ.get(
@@ -253,7 +254,8 @@ def store_behavior(store: AssetStore, agent, scene_key: str):
     st = np.array([STATES.index(l[5]) if l[5] in STATES else 0 for l in agent.log], np.uint8)
     x0 = L[0, 1:3].copy()
     L[:, 1:3] -= x0  # store relative to start so clips can be re-placed anywhere
-    params = dict(species=agent.spec.key, scene=scene_key, agent=agent.id)
+    # the terrain version is part of the clip's identity: a clip lived on old ground is stale once terrain changes
+    params = dict(species=agent.spec.key, scene=scene_key, agent=agent.id, terrain=GENERATOR_VERSIONS["terrain"])
     if store.has("behavior", params):  # deterministic: same scene, same clip; don't rewrite it (git churn)
         return store.entries[store.key("behavior", params)]
     states, n = np.unique(st, return_counts=True)

@@ -169,6 +169,29 @@ function addSplat(m, parser) {
   });
 }
 
+// Far LOD (TECHNIQUES §23): each tree node references a cross-billboard impostor in extras.lod_far; swap the
+// node for a THREE.LOD that shows the full tree near and the impostor beyond LOD_FAR metres (?lod=0 disables).
+const LOD_FAR = Number(new URLSearchParams(location.search).get('lod') ?? 110);
+function addLODs(root, parser) {
+  if (!LOD_FAR) return Promise.resolve(0);
+  const nodes = [];
+  root.traverse((o) => { if (o.userData && o.userData.lod_far !== undefined) nodes.push(o); });
+  return Promise.all(nodes.map((o) => parser.getDependency('mesh', o.userData.lod_far).then((far) => {
+    const lod = new THREE.LOD();
+    lod.name = o.name;
+    lod.position.copy(o.position); lod.quaternion.copy(o.quaternion); lod.scale.copy(o.scale);
+    const near = new THREE.Group();
+    while (o.children.length) near.add(o.children[0]);
+    const f = far.clone();
+    f.traverse((k) => { if (k.isMesh) { k.castShadow = true; k.receiveShadow = true;
+      if (m0(k) && m0(k).alphaTest > 0) k.customDepthMaterial = alphaDepth(m0(k)); } });
+    lod.addLevel(near, 0);
+    lod.addLevel(f, LOD_FAR);
+    o.parent.add(lod);
+    o.parent.remove(o);
+  }))).then(() => nodes.length);
+}
+
 function onGLTF(g) {
     const root = g.scene;
     root.traverse((o) => {
@@ -182,6 +205,7 @@ function onGLTF(g) {
       if (m && m.name === 'water') { m.transparent = true; m.opacity = 0.85; m.roughness = 0.08; }
     });
     scene.add(root);
+    addLODs(root, g.parser).then((n) => { if (n) console.log(`lod: ${n} trees, impostors beyond ${LOD_FAR} m`); });
     const box = new THREE.Box3().setFromObject(root);
     const c = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());

@@ -13,5 +13,5 @@ numbers refer to the commit in the harvest report.
 | [worldengine](worldengine.md) | MIT | monotone creek beds adopted (§21); Holdridge lookup queued for real-place mode |
 | [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing (§15), siting and naming patterns (§19), creek sizing idea (§21) adopted |
 | [wfc](wfc.md) | MIT | low priority |
-| [ez-tree](ez-tree.md) | MIT | chain tubes (§4), rounded normals + twig-attached cards (§18), uv.y leaf flutter (§20) adopted |
+| [ez-tree](ez-tree.md) | MIT | chain tubes (§4), rounded normals + twig-attached cards (§18), uv.y leaf flutter (§20) adopted; our far LOD (§23) differs from its ring thinning |
 | [mesa](mesa.md) | Apache-2.0 | shuffled activation adopted (TECHNIQUES §16); vectorised neighbours not needed at ~10 agents |

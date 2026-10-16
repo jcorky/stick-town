@@ -21,6 +21,7 @@ from ..assets.store import AssetStore, mesh_codec, store_behavior, terrain_codec
 from ..export.gltf import GLB
 from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna.bodies import body
+from ..flora import impostor
 from ..flora.species import SPECIES
 from ..flora.tree import generate_tree
 from ..ground.surface import BIOME_GRASS, grass_density, grass_mesh, ground_weights, terrain_mesh
@@ -217,7 +218,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         placements.append(dict(species=k, x=float(p[0]), y=float(p[1]), moisture=m_,
                                variant=int(r.integers(0, VARIANTS[plan.detail])),
                                yaw=float(r.uniform(0, 2 * np.pi)), scale=float(r.uniform(0.85, 1.12))))
-    variants = {}
+    variants, vparams = {}, {}
     tenc, tdec = tree_codec()
     for pl in placements:
         pl["moisture_bucket"] = 0.8 if pl["moisture"] > 0.65 else 0.5  # moss/knee thresholds → max reuse
@@ -227,10 +228,17 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             seed = [0, pl["variant"]] if library_pool else [plan.seed, pl["variant"]]
             params = dict(species=pl["species"], seed=seed, season=plan.season, detail=plan.detail,
                           moisture=pl["moisture_bucket"])
+            vparams[key] = params
             variants[key] = store.get_or_build(
                 "tree", params, lambda: generate_tree(params["species"], seed=tuple(seed), season=plan.season,
                                                       detail=plan.detail, moisture=params["moisture"]), tenc, tdec)
-    log(f"trees {len(placements)} placed, {len(variants)} unique models ({time.time() - t0:.1f}s)")
+    impostors = {}
+    for key, tm in variants.items():  # far-LOD cross billboards, baked once per tree model (TECHNIQUES §23)
+        rgba = store.get_or_build("impostor", vparams[key], lambda: impostor.bake(tm),
+                                  lambda a: ({"rgba": a}, {}, None), lambda a, meta: a["rgba"])
+        tex = textures.register(textures.Texture.from_rgba(f"impostor/{AssetStore.key('impostor', vparams[key])}", rgba))
+        impostors[key] = impostor.mesh(tm, tex.key, tex.mean)
+    log(f"trees {len(placements)} placed, {len(variants)} unique models + impostors ({time.time() - t0:.1f}s)")
 
     canopy = np.zeros_like(hf.z)
     trees_arr = []
@@ -366,14 +374,17 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     vmesh = {}
     for key, tm in variants.items():
         nm = f"{key[0]}_{key[1]}_{int(key[2] * 10)}"
+        imp = impostors[key]
         vmesh[key] = (g.mesh(tm.bark, nm + "_bark", mat(tm.bark, "bark", rough=0.95)),
-                      g.mesh(tm.foliage, nm + "_foliage", mat(tm.foliage, "foliage", double=True, rough=0.7)))
+                      g.mesh(tm.foliage, nm + "_foliage", mat(tm.foliage, "foliage", double=True, rough=0.7)),
+                      g.mesh(imp, nm + "_impostor", mat(imp, "impostor", double=True, rough=0.9)))
     kids = []
     for n, pl in enumerate(placements):
-        b, f = vmesh[pl["model"]]
+        b, f, im = vmesh[pl["model"]]
         sub = [g.node(f"bark", b)] + ([g.node("foliage", f)] if f is not None else [])
+        # far LOD (TECHNIQUES §23): referenced, not instanced, so viewers without LOD support draw only the tree
         kids.append(g.node(f"{pl['species']}_{n}", translation=(pl["x"], pl["y"], pl["z"]),
-                           rotation_z=pl["yaw"], scale=pl["scale"], children=sub))
+                           rotation_z=pl["yaw"], scale=pl["scale"], children=sub, extras={"lod_far": im}))
     g.node("trees", children=kids)
     pmesh, pkids = {}, []
     for n, gp in enumerate(gprops):
