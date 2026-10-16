@@ -122,11 +122,20 @@ Open `map.png` and `scene.json` and check:
 - Variants of one set share one atlas: key textures by asset and material, not variant, or the GLB embeds it six times.
 - The preview renderer has no near clip: close-ups must crop the terrain first or it covers the view.
 
+### Creeks and flow routing
+- Plain D8 on anisotropic terrain drains in dead-straight grid lines; jitter the slopes (keyed) or the creek looks ruled.
+- Without pit filling, creeks stop at every erosion hollow; route over `channels.routing_surface`, carve the real z.
+- Erosion fans make parallel flow threads that all pass a flow threshold; prune near-parallel lines, one valley, one creek.
+- A bank cut that reaches far from the channel flattens steep valley walls into discs; fade it out within w + 2 m.
+- Review creeks with `creek.png` and the gallery creek sheet; the map's water raster is 1 m and always looks blocky.
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
 - Continuous params (moisture 0.4137…, body scale 1.0734…) mean zero cache hits. Bucket them.
 - Bump `GENERATOR_VERSIONS` when output changes, or the library serves stale models; then `assets prune`.
+- While iterating on a generator, entries built under the new (uncommitted) version are served from cache on the next
+  run, so fixes seem to do nothing. Drop that version's entries (index line + file) before re-rendering, or bump again.
 - Never `git restore` library files after `prune`: it brings back the pruned files without their index lines (orphans).
   Behaviour churn is fixed at the source, so restoring is no longer needed at all.
 - Re-running a scene used to rewrite its behaviour clips with a new `created` timestamp (git churn); `store_behavior` now skips clips it already has. Any new writer into the library should do the same.

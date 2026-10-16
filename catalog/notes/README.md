@@ -7,11 +7,11 @@ numbers refer to the commit in the harvest report.
 
 | Repo | Licence | Status |
 |---|---|---|
-| [terrain3d](terrain3d.md) | MIT | height blend adopted (TECHNIQUES §13) |
+| [terrain3d](terrain3d.md) | MIT | height blend (TECHNIQUES §13) and lattice detiling (§20) adopted |
 | [ocean](ocean.md) | MIT | water ideas queued |
 | [seblague-erosion](seblague-erosion.md) | MIT | droplet erosion adopted (TECHNIQUES §14) |
-| [worldengine](worldengine.md) | MIT | Holdridge lookup queued for real-place mode |
-| [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing (§15), siting and naming patterns (§19) adopted; creek width by flux queued |
+| [worldengine](worldengine.md) | MIT | monotone creek beds adopted (§21); Holdridge lookup queued for real-place mode |
+| [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing (§15), siting and naming patterns (§19), creek sizing idea (§21) adopted |
 | [wfc](wfc.md) | MIT | low priority |
-| [ez-tree](ez-tree.md) | MIT | chain tubes (§4) and rounded normals + twig-attached cards (§18) adopted; wind by uv.y queued |
+| [ez-tree](ez-tree.md) | MIT | chain tubes (§4), rounded normals + twig-attached cards (§18), uv.y leaf flutter (§20) adopted |
 | [mesa](mesa.md) | Apache-2.0 | shuffled activation adopted (TECHNIQUES §16); vectorised neighbours not needed at ~10 agents |

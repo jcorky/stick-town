@@ -1,7 +1,7 @@
 {
- "key": "3e1b8bb3c5d4b6cad6184a814f625094",
+ "key": "008af9991f837710b1742e3f9c315a85",
  "kind": "terrain",
- "version": "terrain-0.2.0",
+ "version": "terrain-0.3.0",
  "params": {
   "creek": true,
   "province": "cumberland_plateau",
@@ -10,7 +10,7 @@
   "size": 128.0
  },
  "meta": {
-  "created": "2026-10-16T04:37:47",
+  "created": "2026-10-16T06:46:21",
   "origin": [
    0.0,
    0.0
@@ -22,5 +22,5 @@
    129
   ]
  },
- "path": "terrain/3e/3e1b8bb3c5d4b6cad6184a814f625094.npz"
+ "path": "terrain/00/008af9991f837710b1742e3f9c315a85.npz"
 }

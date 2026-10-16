@@ -17,6 +17,8 @@ from scipy import ndimage
 
 from .. import noise
 from ..rng import derive_seed
+from ..rng import rng as make_rng
+from . import channels
 from .erosion import droplet_erosion
 
 # Relief and character per province. Numbers are design targets meant to *feel*
@@ -41,7 +43,8 @@ class Heightfield:
     res: float               # metres per cell
     origin: tuple = (0.0, 0.0)
     province: str = "piedmont"
-    layers: dict = field(default_factory=dict)  # slope, moisture, flow, water, ...
+    layers: dict = field(default_factory=dict)  # slope, moisture, flow, water, stage, ...
+    channels: np.ndarray = None  # (N, 6) creek centrelines: x, y, stage, wetted width, reach id, s (channels.py)
 
     @property
     def shape(self):
@@ -88,32 +91,9 @@ def _thermal_erosion(z, res, iters=30, talus_deg=34.0, rate=0.35):
     return z
 
 
-def flow_accumulation(z):
-    """D8 flow accumulation (cells draining through each cell)."""
-    ny, nx = z.shape
-    order = np.argsort(z, axis=None)[::-1]
-    acc = np.ones(z.size)
-    zf = z.ravel()
-    offs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-    dist = np.array([np.hypot(a, b) for a, b in offs])
-    pad = np.pad(z, 1, mode="edge")
-    stack = np.stack([pad[1 + a:1 + a + ny, 1 + b:1 + b + nx] for a, b in offs])
-    drop = (z[None] - stack) / dist[:, None, None]
-    best = np.argmax(drop, axis=0)
-    has = np.max(drop, axis=0) > 0
-    tgt = np.full(z.shape, -1, dtype=np.int64)
-    ii, jj = np.indices(z.shape)
-    ti = ii + np.array([o[0] for o in offs])[best]
-    tj = jj + np.array([o[1] for o in offs])[best]
-    ok = has & (ti >= 0) & (ti < ny) & (tj >= 0) & (tj < nx)
-    tgt[ok] = (ti * nx + tj)[ok]
-    tgtf = tgt.ravel()
-    for idx in order:  # high → low
-        t = tgtf[idx]
-        if t >= 0:
-            acc[t] += acc[idx]
-    _ = zf
-    return acc.reshape(z.shape)
+def flow_accumulation(z, seed=None):
+    """D8 flow accumulation (cells draining through each cell); see channels.accumulate."""
+    return channels.accumulate(z, seed)
 
 
 def generate_tile(size_m=192.0, res_m=1.0, province="piedmont", seed=0,
@@ -142,31 +122,27 @@ def generate_tile(size_m=192.0, res_m=1.0, province="piedmont", seed=0,
     # rain: gullies on slopes, filled hollows (flat country barely gullies)
     z = droplet_erosion(z, seed=s, strength=EROSION_STRENGTH.get(province, 1.0))
 
-    if creek and province in ("floodplain", "coastal_plain"):
-        # flat country: a meandering bayou/branch, since flow routing alone finds no channel
-        r = np.random.default_rng(s)
-        t = np.linspace(0, 1, 400)
-        amp = r.uniform(0.08, 0.18) * size_m
-        cy = origin[1] + size_m * r.uniform(0.35, 0.75) + amp * np.sin(2 * np.pi * t * r.uniform(1.2, 2.2) + r.uniform(0, 6)) \
-            + 0.05 * size_m * noise.fbm(t * 4, 0.5, s + 5, octaves=3)
-        cx = origin[0] + t * size_m
-        mask = np.zeros_like(z)
-        gi = np.clip(((cy - origin[1]) / res_m).astype(int), 0, n - 1)
-        gj = np.clip(((cx - origin[0]) / res_m).astype(int), 0, n - 1)
-        mask[gi, gj] = 1.0
-        width = r.uniform(2.5, 5.0) / res_m
-        mask = ndimage.gaussian_filter(ndimage.binary_dilation(mask, iterations=int(width)).astype(float), 1.0)
-        z = z - mask * 1.6
-    acc = flow_accumulation(z)
-    water = np.zeros_like(z)
+    flat = province in ("floodplain", "coastal_plain")
+    filled = channels.routing_surface(z)  # pits filled, flats tilted, so channels connect (TECHNIQUES §21)
+    acc = channels.accumulate(filled, seed=s)
+    water, stage, reaches = np.zeros_like(z), np.zeros_like(z), []
     if creek:
-        thresh = np.percentile(acc, 99.0)
-        channel = ndimage.gaussian_filter((acc > thresh).astype(float), 1.2)
-        carve = np.clip(channel * 2.5, 0, 1)
-        z = z - carve * min(2.5, 0.05 * p["relief"] + 0.6)
-        water = (carve > 0.55).astype(float)
-        if province in ("floodplain", "coastal_plain"):
-            water = np.maximum(water, (z < np.percentile(z, 4) + 0.3).astype(float) * (mask > 0.5))
+        # channels traced, sized by drainage area, meandered and cut in (TECHNIQUES §21). Flat country gets
+        # one bayou or branch laid across the tile instead, since flow routing finds no channel there.
+        a_c = max(float(np.percentile(acc, 98.8)), 150.0)
+        extra = []
+        if flat:
+            r = make_rng("bayou", s)
+            t = np.linspace(0, 1, 200)
+            cy = origin[1] + size_m * r.uniform(0.35, 0.65) \
+                + 0.07 * size_m * np.sin(2 * np.pi * t * r.uniform(0.5, 1.0) + r.uniform(0, 6)) \
+                + 0.04 * size_m * noise.fbm(t * 3, 0.5, s + 5, octaves=3)
+            q = r.uniform(16, 36)  # (w / w_0)² for a 4.8–7.2 m bayou
+            extra = [(np.c_[origin[0] + t * size_m, cy], np.full(len(t), q * a_c))]
+        tmp = Heightfield(z=z, res=res_m, origin=origin, province=province)
+        reaches = channels.build(tmp, acc, a_c, seed=s, extra=extra, network=not flat, routed=filled)
+        z, water, stage = channels.carve(tmp, reaches)
+        acc = channels.accumulate(channels.routing_surface(z), seed=s)
 
     gy, gx = np.gradient(z, res_m)
     slope = np.degrees(np.arctan(np.hypot(gx, gy)))
@@ -174,8 +150,8 @@ def generate_tile(size_m=192.0, res_m=1.0, province="piedmont", seed=0,
     wet = np.log1p(acc) / np.log1p(acc.max())
     moisture = np.clip(0.55 * wet - 0.04 * rel + 0.3 * ndimage.gaussian_filter(water, 6)
                        + 0.25 - 0.006 * slope, 0, 1)
-    hf = Heightfield(z=z, res=res_m, origin=origin, province=province)
-    hf.layers.update(slope=slope, moisture=moisture, flow=acc, water=water)
+    hf = Heightfield(z=z, res=res_m, origin=origin, province=province, channels=channels.to_array(reaches))
+    hf.layers.update(slope=slope, moisture=moisture, flow=acc, water=water, stage=stage)
     return hf
 
 

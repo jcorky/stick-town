@@ -22,11 +22,20 @@ grey detail textures take each species' season colour through COLOR_0 = c / μ (
 Same tiles without (top) and with (bottom) batched droplet erosion: gullies on the escarpment and ridge
 slopes, the plateau's sandstone cap left intact, sediment filling the hollows.
 
+## Creeks (§21)
+
+![creeks](creeks.jpg)
+
+Priority-Flood routing, jittered D8, traced and pruned networks, hydraulic-geometry widths (blue: wetted
+channel) and Kinoshita meanders (red: centrelines) that loop on flat ground and only wander on steep ground. One
+bayou is laid across flat country.
+
 ## Monte Sano hardwood cove, fall, golden hour (Cumberland Plateau)
 
 ![monte sano preview](monte-sano-preview.jpg)
 ![monte sano closeup](monte-sano-closeup.jpg)
 ![monte sano homestead](monte-sano-homestead.jpg)
+![monte sano creek](monte-sano-creek.jpg)
 
 The same scene in the three.js viewer (`scripts/viewer_shot.py`, headless Chromium, software WebGL):
 detiled splat ground (§20), wind with leaf flutter, the event log of what the animals did.
@@ -45,6 +54,7 @@ in orange, animal tracks driven by softmax choice (§8) and Ornstein–Uhlenbeck
 
 ![longleaf preview](longleaf-preview.jpg)
 ![longleaf closeup](longleaf-closeup.jpg)
+![longleaf creek](longleaf-creek.jpg)
 ![longleaf map](longleaf-map.jpg)
 
 ## Cypress bayou floodplain, summer noon (Delta)
@@ -52,4 +62,5 @@ in orange, animal tracks driven by softmax choice (§8) and Ornstein–Uhlenbeck
 ![bayou preview](bayou-preview.jpg)
 ![bayou closeup](bayou-closeup.jpg)
 ![bayou homestead](bayou-homestead.jpg)
+![bayou creek](bayou-creek.jpg)
 ![bayou map](bayou-map.jpg)

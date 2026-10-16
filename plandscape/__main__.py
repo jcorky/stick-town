@@ -7,7 +7,7 @@ import os
 
 from .scene.compose import compose
 from .scene.planner import plan
-from .scene.preview import closeup, homestead, map_view, perspective
+from .scene.preview import closeup, creek, homestead, map_view, perspective
 
 
 def write_viewer(out):
@@ -37,6 +37,7 @@ def main(argv=None):
         perspective(res, os.path.join(a.out, "preview.png"))
         closeup(res, os.path.join(a.out, "closeup.png"))
         homestead(res, os.path.join(a.out, "homestead.png"))
+        creek(res, os.path.join(a.out, "creek.png"))
     print(res["stats"])
 
 
