@@ -13,6 +13,16 @@ pattern, with amplitude set by how far the foot travels while on the ground (dut
 
 Keyframes go at fixed phase steps (8 per stride), not fixed times: a resting animal costs no keys and a gallop
 is sampled as finely as a walk. See docs/TECHNIQUES.md §25.
+
+Knees (§26): legs are two segments (thigh l1, shank l2, l1 + l2 = h / 0.95, so the rest pose is slightly flexed).
+Each foot follows a path in the hip frame, leg phase ψ = frac(φ/2π − o):
+    stance ψ < β:  x = S (½ − ψ/β),                         z = −h            (on the ground, sliding back)
+    swing  ψ ≥ β:  x = S (−½ + smoothstep(u)), u = (ψ−β)/(1−β),  z = −h + H_lift sin(πu)
+with S = λβ the distance the body covers while the foot is down. Two-bone IK (law of cosines) gives
+    γ = acos((l1² + d² − l2²) / 2 l1 d),   K = acos((l1² + l2² − d²) / 2 l1 l2),   α = atan2(x, −z)
+    θ_hip = α + κ γ,   θ_knee = −κ (π − K)
+with κ = +1 for knees that bend forward (stifle, human knee) and −1 for joints that bend backward (a deer's
+carpus, a bird's intertarsal joint). Out-of-reach targets are clamped to a straight leg.
 """
 
 from __future__ import annotations
@@ -70,6 +80,59 @@ def key_times(times, v, phi):
     edge = np.nonzero(moving[1:] != moving[:-1])[0]
     extra = np.r_[t[0], t[-1], t[edge], t[np.minimum(edge + 1, len(t) - 1)]]
     return np.unique(np.r_[tk, extra])
+
+
+LIFT = {"walk": 0.12, "trot": 0.2, "gallop": 0.3}  # swing-foot lift, fraction of hip height
+REACH = 1 / 0.95  # leg length / hip height
+
+
+def foot_path(psi, beta, S, h, lift):
+    """Foot (x forward, z up) relative to the hip for leg phase ψ ∈ [0, 1)."""
+    psi = np.mod(psi, 1.0)
+    st = psi < beta
+    u = np.clip((psi - beta) / max(1 - beta, 1e-6), 0, 1)
+    ss = u * u * (3 - 2 * u)
+    x = np.where(st, S * (0.5 - psi / max(beta, 1e-6)), S * (-0.5 + ss))
+    z = np.where(st, -h, -h + lift * h * np.sin(np.pi * u))
+    return x, z
+
+
+def two_bone(x, z, l1, l2, knee=1.0):
+    """Hip and knee pitch (forward-positive) putting the foot at (x, z) relative to the hip."""
+    d = np.clip(np.hypot(x, z), abs(l1 - l2) + 1e-6, l1 + l2 - 1e-6)
+    gam = np.arccos(np.clip((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1))
+    K = np.arccos(np.clip((l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2), -1, 1))
+    a = np.arctan2(x, -z)
+    return a + knee * gam, -knee * (np.pi - K)
+
+
+def rest_pose(h, l1, l2, knee):
+    return two_bone(0.0, -h, l1, l2, knee)
+
+
+def leg_ik(times, xy, h, knees, legs="quad", seg=None):
+    """(key times (K,), angles (K, n_legs, 2) hip/knee radians, gait names) with feet planted in stance."""
+    v, phi = phase_track(times, xy, h)
+    tk = key_times(times, v, phi)
+    vk = _interval_speed(times, v, tk)
+    pk = np.interp(tk, times, phi)
+    table = QUAD if legs == "quad" else BIPED
+    L = h * REACH
+    l1, l2 = seg if seg is not None else (L / 2, L / 2)
+    names = [gait_name(x) for x in froude(vk, h)]
+    n = len(table["walk"][0])
+    out = np.zeros((len(tk), n, 2))
+    for j in range(n):
+        out[:, j] = rest_pose(h, l1, l2, knees[j])
+    for i, (nm, p, vv) in enumerate(zip(names, pk, vk)):
+        if vv <= 0:
+            continue
+        offs, beta = table[nm]
+        S = float(stride(vv, h)) * beta
+        for j, o in enumerate(offs):
+            x, z = foot_path(p / (2 * np.pi) - o, beta, S, h, LIFT[nm])
+            out[i, j] = two_bone(x, z, l1, l2, knees[j])
+    return tk, out, names
 
 
 def leg_angles(times, xy, h, legs="quad"):

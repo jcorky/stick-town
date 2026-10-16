@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- Knees and planted feet (TECHNIQUES §26). Legs are thigh plus shank. Feet follow stance and swing paths (S = λβ on the ground, a smoothstep arc lifted 0.12–0.3 h in swing), and hips and knees come from two-bone IK. Knees bend their anatomical way: fore carpus and bird intertarsal joints backward, stifle and human knee forward. The gallery's `gaits.jpg` now shows planted feet.
 - Animals walk (TECHNIQUES §25). Bodies are rigs with legs pivoting at the hips. Stride is λ = 2.3 h Fr^0.3 (Alexander 1976), and the gait (walk, trot or gallop) is chosen by Froude number (Alexander & Jayes 1983), with footfall offsets and duty factors per gait. Leg swing θ = θmax sin(φ − 2π o) is keyed by stride phase, 8 keys per stride. Squirrels bound. Gallery adds `gaits.jpg`. body-0.1.1.
 
 **Fixed**

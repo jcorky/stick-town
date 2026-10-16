@@ -26,7 +26,8 @@ that space colonisation bridged with vertical stems, giving boxy right angles. S
 ![gaits](gaits.jpg)
 
 The deer rig through one stride at 1, 3 and 8 m/s. The Froude number picks walk, trot or gallop, and stride follows
-λ = 2.3 h Fr^0.3. The same leg angles are keyed into the GLB by stride phase.
+λ = 2.3 h Fr^0.3. Feet follow stance and swing paths, and hips and knees come from two-bone IK (§26), the same
+angles keyed into the GLB by stride phase. The grey line is the ground.
 
 ## Terrain: droplet erosion (§14)
 

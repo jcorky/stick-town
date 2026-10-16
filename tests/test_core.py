@@ -58,15 +58,34 @@ class Gaits(unittest.TestCase):
         self.assertLess(np.corrcoef(moving[:, 0], moving[:, 2])[0, 1], 0.5)
 
     def test_rig_matches_body(self):
+        from plandscape.fauna import gait
         from plandscape.fauna.bodies import body, rig
         for k in ("white_tailed_deer", "wild_turkey", "human", "gray_squirrel"):
             r = rig(k, (0.5, 0.4, 0.3))
             b = body(k, (0.5, 0.4, 0.3))
-            self.assertEqual(b.n_tris, r["torso"].n_tris + sum(m.n_tris for m, _ in r["legs"]))
-            self.assertAlmostEqual(float(b.positions[:, 2].min()), 0.0 if r["legs"] else float(b.positions[:, 2].min()))
-            for m, hip in r["legs"]:  # hip at the leg's origin, foot on the ground
-                self.assertAlmostEqual(float(m.positions[:, 2].max()), 0.0, places=5)
-                self.assertAlmostEqual(float(m.positions[:, 2].min()) + hip[2], 0.0, places=5)
+            self.assertEqual(b.n_tris, r["torso"].n_tris + sum(lg["thigh"].n_tris + lg["shank"].n_tris for lg in r["legs"]))
+            for lg in r["legs"]:  # rest pose puts the foot on the ground, slightly flexed
+                th1, th2 = gait.rest_pose(r["hip"], lg["l1"], lg["l2"], lg["knee"])
+                foot_z = -lg["l1"] * np.cos(th1) - lg["l2"] * np.cos(th1 + th2)
+                self.assertAlmostEqual(foot_z, -r["hip"], places=4)
+                self.assertGreater(abs(th2), np.radians(10))
+
+    def test_ik_plants_feet_in_stance(self):
+        from plandscape.fauna import gait
+        h, l1, l2 = 0.95, 0.5, 0.5
+        for knee in (1.0, -1.0):
+            psi = np.linspace(0, 0.6, 13)  # stance (β = 0.65)
+            x, z = gait.foot_path(psi, 0.65, 0.6, h, 0.12)
+            np.testing.assert_allclose(z, -h)
+            th1, th2 = gait.two_bone(x, z, l1, l2, knee)
+            fx = l1 * np.sin(th1) + l2 * np.sin(th1 + th2)
+            fz = -l1 * np.cos(th1) - l2 * np.cos(th1 + th2)
+            np.testing.assert_allclose(fx, x, atol=1e-6)
+            np.testing.assert_allclose(fz, z, atol=1e-6)
+            kx = l1 * np.sin(th1)  # the knee sits on its anatomical side of the hip-foot line
+            self.assertTrue(np.all(np.sign(kx - x / 2) == knee))
+        x, z = gait.foot_path(np.linspace(0.7, 0.95, 6), 0.65, 0.6, h, 0.12)
+        self.assertTrue(np.all(z > -h))  # swing feet are lifted
 
 
 class Determinism(unittest.TestCase):

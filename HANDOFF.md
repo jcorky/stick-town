@@ -54,7 +54,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals.** Gaits by speed are done (§25). Next:
-   - knees and foot planting, since rigid legs lift their feet mid-swing;
+   - knees and planted feet are done (§26); feet still slide where the stance is out of reach (gallop);
    - torso bob and head motion for alert and feeding states;
    - multi-hour runs;
    - more species: heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds.

@@ -410,10 +410,19 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             rg = rig(a.spec.key, rgb, scale=sc)
             nm = f"{a.spec.key}_{len(rigs)}"
             rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
-                          [g.mesh(m, f"{nm}_leg{i}", m_fauna) for i, (m, _) in enumerate(rg["legs"])])
+                          [(g.mesh(lg["thigh"], f"{nm}_thigh{i}", m_fauna), g.mesh(lg["shank"], f"{nm}_shank{i}", m_fauna))
+                           for i, lg in enumerate(rg["legs"])])
         rg, torso_mesh, leg_meshes = rigs[look]
         torso = g.node("torso", torso_mesh)
-        legs = [g.node(f"leg{i}", lm, translation=hip) for i, (lm, (_, hip)) in enumerate(zip(leg_meshes, rg["legs"]))]
+        legs, shanks = [], []
+        for i, ((tm_, sm_), lg) in enumerate(zip(leg_meshes, rg["legs"])):
+            r1, r2 = gait.rest_pose(rg["hip"], lg["l1"], lg["l2"], lg["knee"])
+            sh = g.node(f"shank{i}", sm_, translation=(0.0, 0.0, -lg["l1"]))
+            g.nodes[sh]["rotation"] = pitch_quat(r2).tolist()
+            th = g.node(f"leg{i}", tm_, translation=lg["hip"], children=[sh])
+            g.nodes[th]["rotation"] = pitch_quat(r1).tolist()
+            legs.append(th)
+            shanks.append(sh)
         node = g.node(f"{a.spec.key}_{a.id}", children=[torso] + legs)
         akids.append(node)
         L = a.log[::4]
@@ -422,10 +431,13 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         if len(a.log) > 1:  # legs swing by gait, by stride phase (keys only while moving)
             t_ = np.array([l[0] for l in a.log])
             xy = np.array([(l[1], l[2]) for l in a.log])
-            if legs:
-                tk, ang, _ = gait.leg_angles(t_, xy, rg["hip"], "quad" if rg["kind"] == "quad" else "biped")
-                for i, ln in enumerate(legs):
-                    extra.append((ln, "rotation", tk, pitch_quat(ang[:, i])))
+            if legs:  # hip and knee by two-bone IK on planted-foot paths (TECHNIQUES §26)
+                lg0 = rg["legs"][0]
+                tk, ang, _ = gait.leg_ik(t_, xy, rg["hip"], [lg["knee"] for lg in rg["legs"]],
+                                         "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]))
+                for i, (ln, sn) in enumerate(zip(legs, shanks)):
+                    extra.append((ln, "rotation", tk, pitch_quat(ang[:, i, 0])))
+                    extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
             elif rg["kind"] == "hop":
                 tk, zz = gait.hop_heights(t_, xy, rg["hip"], 0.6 * rg["hip"])
                 extra.append((torso, "translation", tk, _to_gltf(np.c_[0 * zz, 0 * zz, zz])))
