@@ -538,16 +538,21 @@ def heron(rgb):
     legcol = np.array([0.32, 0.28, 0.22])
     thigh, shank, ls = _bird_leg(h, legcol, thigh_feather=np.array([0.55, 0.32, 0.2]), thigh_r=0.08, tarsus=0.19)
     wings = []
-    for side in (1.0, -1.0):   # broad wings, extended along ±y from the shoulder; dark primaries at the tip
+    for side in (1.0, -1.0):   # broad wings along ±y from the shoulder: arm, hand, fingered primaries
         w = Sculpt()
-        w.chain([(0, 0.02 * side, 0), (0.05, 0.3 * side, 0), (0.0, 0.62 * side, 0), (-0.1, 0.88 * side, 0)],
-                [0.03, 0.025, 0.018, 0.008], blue, k=0.04)
-        w.ellipsoid((-0.08, 0.45 * side, 0), (0.17, 0.42, 0.012), blue, k=0.04)
+        w.chain([(0.02, 0.02 * side, 0), (0.06, 0.32 * side, 0.01), (0.02, 0.62 * side, 0.0), (-0.06, 0.82 * side, -0.01)],
+                [0.035, 0.028, 0.02, 0.012], blue, k=0.04)                               # leading edge (arm and hand)
+        w.ellipsoid((-0.07, 0.28 * side, 0), (0.15, 0.28, 0.022), blue, k=0.05)            # secondaries, broad
+        w.ellipsoid((-0.07, 0.62 * side, 0), (0.13, 0.17, 0.018), blue * 0.9, k=0.05)      # inner primaries
+        for i, (dy, dx) in enumerate(((0.80, -0.02), (0.84, -0.07), (0.86, -0.12), (0.84, -0.17))):
+            w.ellipsoid((dx, dy * side, -0.004 * i), (0.032, 0.11, 0.008), DARK * 2.5, k=0.025,
+                        R=rot(yaw=-0.25 * side * i))                                        # finger tips
 
-        def wing_paint(P, N, C, side=side):
-            return mix(C, DARK * 2, smooth(0.6, 0.75, P[:, 1] * side) * smooth(-0.05, -0.15, P[:, 0]) +
-                       smooth(0.75, 0.85, P[:, 1] * side) * 0.8)
-        wings.append(dict(mesh=w.mesh(target=900, colour_fn=wing_paint), side=side,
+        def wing_paint(P, N, C, side=side):   # black primaries, a pale leading edge at the wrist
+            tip = smooth(0.62, 0.72, P[:, 1] * side)
+            wrist = smooth(0.03, 0.06, P[:, 0]) * smooth(0.25, 0.4, P[:, 1] * side) * smooth(0.6, 0.45, P[:, 1] * side)
+            return mix(mix(C, DARK * 2, tip * 0.85), np.array([0.6, 0.38, 0.25]), wrist * 0.5)
+        wings.append(dict(mesh=w.mesh(target=2400, colour_fn=wing_paint), side=side,
                           pivot=(0.02, 0.08 * side, h + 0.24)))
     return dict(torso=torso, head=head, neck_pivot=pv, thigh=thigh, shank=shank, ls=ls, hip=h, wings=wings,
                 graze=np.radians(105))
