@@ -16,6 +16,7 @@ import time
 
 from ..fauna.agents import FAUNA
 from ..fauna.bodies import body
+from ..flora import impostor
 from ..flora.species import SPECIES
 from ..flora.tree import generate_tree
 from .. import models, textures
@@ -66,9 +67,13 @@ def bake(store, variants, detail, seasons, moistures=(0.5, 0.8)):
             for v in range(variants):
                 for m in moistures:
                     params = dict(species=sp, seed=[0, v], season=season, detail=detail, moisture=m)
-                    store.get_or_build("tree", params,
-                                       lambda: generate_tree(sp, seed=(0, v), season=season, detail=detail, moisture=m),
-                                       enc, dec)
+                    tm = store.get_or_build("tree", params,
+                                            lambda: generate_tree(sp, seed=(0, v), season=season, detail=detail,
+                                                                  moisture=m), enc, dec)
+                    # its far-LOD impostor, keyed exactly as scene.compose asks for it (TECHNIQUES §23)
+                    store.get_or_build("impostor", dict(params, tree=GENERATOR_VERSIONS["tree"]),
+                                       lambda: impostor.bake(tm), lambda a: ({"rgba": a}, {}, None),
+                                       lambda a, meta: a["rgba"])
     benc, bdec = mesh_codec("building")
     for kind in ("shotgun", "dogtrot", "barn", "farmhouse", "church"):
         for v in range(variants):

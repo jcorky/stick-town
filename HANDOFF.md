@@ -9,7 +9,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 ## 1. Orient first
 
 1. `CLAUDE.md` is loaded automatically. Load the **procedural-landscape** skill (`.claude/skills/procedural-landscape/SKILL.md`) and follow it; section 6 lists every trap already hit.
-2. If `assets_library/**/*.npz` are small text pointer files, run `git lfs pull`. If that fails (LFS quota or network), run `python3 -m plandscape.assets bake --variants 2 --seasons fall summer` to regenerate them; generation is deterministic.
+2. If `assets_library/**/*.npz` are small text pointer files, run `git lfs pull` (the library is a few hundred MB now; `git lfs pull --include="assets_library/tree/**"` fetches part, see `docs/ASSETS.md`). If that fails (LFS quota or network), run `python3 -m plandscape.assets bake --variants 2 --seasons fall summer` to regenerate them; generation is deterministic.
 3. `python3 -m unittest discover -s tests` (36 tests, ~25 s) and `python3 -m plandscape.assets stats`.
 4. Make one scene and look at it before changing anything:
    `python3 -m plandscape "Monte Sano hardwood cove with a dogtrot cabin, a creek, two deer, three squirrels and a turkey flock at golden hour in fall" --out out/demo`
@@ -64,7 +64,7 @@ leaf-flutter amplitudes and U0 are design values; Kaimal is extrapolated above 0
 0. **Read `catalog/notes/`** — eight permissive repos were studied in session 2; each note lists what is queued from it.
 1. **Fidelity near the camera, continued.** Detiling, leaf flutter (§20), fine terrain windows (§22) and far-LOD impostors (§23) are done; next: a middle LOD tier (ring/segment thinning after ez-tree) (impostors far, meshes near, `detail="cm"` within ~5 m).
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
-3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
+3. **Grow the asset library.** The owner decided (2026-10-16) that assets are stored in GitHub (Git LFS in this repo), past ~100 MB. Session 4 baked all species × 4 seasons × 4 variants at `low` and `med` with impostors, buildings × 4, and behaviour clips from 20 scenes (`scripts/bake_scenes.py`). Next: `high` for the specimen species near the camera; seasons for the walk scene.
 4. **Animals.** Gaits by speed are done (§25). Next:
    - knees and planted feet are done (§26); feet still slide where the stance is out of reach (gallop);
    - torso bob, head pose (§28), lying down and the deer's flag (§29) are done; smooth turning (§30) and gaze (§31) are done; next: ear flicks, the viewer following a chosen animal's gaze;

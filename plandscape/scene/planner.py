@@ -112,11 +112,11 @@ def plan(prompt: str, seed: int | None = None, size_m: float = 128.0, detail: st
             p.province = prov
             p.notes.append(f"region→{prov}")
             break
-    biome = None
+    biome, best = None, 0  # the longest matching phrase wins: "old field" over "field", "pine plantation" over "pine"
     for b, words in BIOMES.items():
-        if _has(t, words):
-            biome = b
-            break
+        for w_ in words:
+            if len(w_) > best and _has(t, (w_,)):
+                biome, best = b, len(w_)
     if biome is None:
         biome = {"floodplain": "swamp", "coastal_plain": "pine_savanna", "piedmont": "hardwood",
                  "cumberland_plateau": "hardwood", "ridge_and_valley": "hardwood"}[p.province]
