@@ -258,3 +258,19 @@ $$\psi \leftarrow (1-g)\,\psi + g\,\psi_\text{travel},\qquad h \leftarrow h\,(1 
 
 so blades at path edges are shorter and lie over along the path. Vertex shade rises from 0.7 at the base to 1.08 at the
 tip. Three segments cost +2.7 MB per scene for little visible gain at `low`; two segments cost +1.4 MB.
+
+## 18. Rounded crown normals and twig-attached cards (after ez-tree, MIT)
+`plandscape/flora/tree.py: _foliage_mesh, _crown_normals`; `plandscape/render.py`; `plandscape/export/gltf.py`
+
+**Twig attachment.** A broadleaf card's anchor sits on its twig, a fraction $\tau \sim \mathcal U(0.35, 1)$ along the
+parent→node segment, with a small spread: $\mathbf a = \mathbf p_\text{parent} + \tau(\mathbf p_\text{node} - \mathbf p_\text{parent}) + \mathcal N(0, (0.12L)^2)$
+(was $\mathbf p_\text{node} + \mathcal N(0, (0.35L)^2)$, which let cards float off the wood).
+
+**Rounded normals.** Card vertices get the crown's volume normal instead of their flat face normal, so the canopy
+shades as one rounded mass, lit on top and darker underneath:
+
+$$\mathbf n = \widehat{k\,\hat{\mathbf r} + (1-k)\,s\,\mathbf n_\text{face}},\qquad \hat{\mathbf r} = \widehat{\mathbf v - \mathbf c_\text{crown}},\quad s = \operatorname{sign}(\mathbf n_\text{face}\cdot\hat{\mathbf r}),\quad k = 0.65$$
+
+Flowers and Spanish moss keep geometric normals. `Mesh.nrm` carries authored normals through transforms
+($\mathbf n' = \widehat{R\mathbf n}$), the library (int8) and the GLB; the preview renderer shades authored-normal triangles
+with their mean vertex normal, unflipped.

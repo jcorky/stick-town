@@ -1,0 +1,23 @@
+{
+ "key": "093f4f77e70357a1fef719d14a35cc9e",
+ "kind": "tree",
+ "version": "tree-0.3.1",
+ "params": {
+  "detail": "low",
+  "moisture": 0.8,
+  "season": "summer",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "sweetgum"
+ },
+ "meta": {
+  "created": "2026-10-16T05:30:51",
+  "height": 25.1559,
+  "species": "sweetgum",
+  "tris": 8616,
+  "trunk_radius": 0.2634
+ },
+ "path": "tree/09/093f4f77e70357a1fef719d14a35cc9e.npz"
+}

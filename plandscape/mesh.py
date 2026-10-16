@@ -20,6 +20,7 @@ class Mesh:
     texture: str | None = None     # key into plandscape.textures; colours stay the final look
     weights: np.ndarray | None = None  # (N,4) splat weights for height-blended ground (sum to 1)
     splat: tuple | None = None         # 4 texture keys the weights refer to
+    nrm: np.ndarray | None = None      # (N,3) authored normals (e.g. rounded crown normals); else geometric
 
     @staticmethod
     def empty() -> "Mesh":
@@ -31,6 +32,11 @@ class Mesh:
         return int(len(self.indices))
 
     def normals(self) -> np.ndarray:
+        if self.nrm is not None:
+            return np.asarray(self.nrm, np.float32)
+        return self.geometric_normals()
+
+    def geometric_normals(self) -> np.ndarray:
         p = self.positions.astype(np.float64)
         n = np.zeros_like(p)
         if len(self.indices):
@@ -44,7 +50,13 @@ class Mesh:
 
     def transformed(self, M: np.ndarray) -> "Mesh":
         p = np.c_[self.positions, np.ones(len(self.positions))] @ M.T
-        return Mesh(p[:, :3].astype(np.float32), self.colors, self.indices, self.uvs, self.texture)
+        nrm = None
+        if self.nrm is not None:
+            R = M[:3, :3]
+            nrm = self.nrm @ R.T
+            nrm = (nrm / np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-9)).astype(np.float32)
+        return Mesh(p[:, :3].astype(np.float32), self.colors, self.indices, self.uvs, self.texture,
+                    self.weights, self.splat, nrm)
 
     @staticmethod
     def merge(meshes) -> "Mesh":

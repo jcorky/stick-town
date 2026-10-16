@@ -37,7 +37,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 **Session 2 history note:** session 1's commits were imported from the owner's bundle. Its building/body/terrain/behaviour LFS objects were never pushed and are lost; they were regenerated, and the asset commit was rewritten (owner approved) so the history only references objects that exist.
 
 **Known weaknesses** (look at them, then fix):
-- Bark limbs look faceted in the flat-shaded preview (smooth in the viewer). Rounded card normals and twig-attached leaf cards are still queued (`catalog/notes/ez-tree.md` #3).
+- Bark limbs look faceted in the flat-shaded preview (smooth in the viewer).
 - Leaf sets are other species chosen by outline; no Southern-specific leaf scans yet (e.g. sweetgum stars are maple-like).
 - Grass blades are curved and trampled now (§17) but only in the central 56 m at ~6 per m² at `low`; a real lawn needs `detail="cm"` near the camera.
 - Stump scans are squat hardwood stumps; there's no tall pine stump or longleaf "lighter stump".
