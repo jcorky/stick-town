@@ -1,0 +1,20 @@
+{
+ "key": "66fa91215220ca886b801984cfb54f54",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "low",
+  "moisture": 0.5,
+  "season": "spring",
+  "seed": [
+   0,
+   3
+  ],
+  "species": "loblolly_pine",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:06:11"
+ },
+ "path": "impostor/66/66fa91215220ca886b801984cfb54f54.npz"
+}

@@ -1,0 +1,23 @@
+{
+ "key": "f474c387ff5ba3101a3b52e32d7ad136",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "low",
+  "moisture": 0.5,
+  "season": "spring",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "longleaf_pine"
+ },
+ "meta": {
+  "created": "2026-10-16T20:06:25",
+  "height": 36.5414,
+  "species": "longleaf_pine",
+  "tris": 5136,
+  "trunk_radius": 0.3574
+ },
+ "path": "tree/f4/f474c387ff5ba3101a3b52e32d7ad136.npz"
+}
