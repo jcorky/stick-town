@@ -33,6 +33,11 @@
          width:min(300px, calc(100vw - 32px)); max-height:42vh; overflow:auto; padding:10px 12px; font-size:12px; color:var(--muted); }
   #log h2 { font:600 13px var(--display); color:var(--ink); margin:0 0 6px; }
   #log .ev b { color:var(--accent); font-weight:600; }
+  #act { position:fixed; left:max(16px, env(safe-area-inset-left, 0px)); right:max(16px, env(safe-area-inset-right, 0px));
+         bottom:calc(76px + env(safe-area-inset-bottom, 0px)); display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:8px 10px; }
+  #act[hidden] { display:none; }
+  #act .hint { color:var(--muted); font-size:12px; flex:1 1 220px; }
+  button[aria-pressed="true"]#walkin { border-color:var(--accent); color:var(--accent); }
   #drop { position:fixed; inset:0; place-items:center; font-size:18px; background:rgba(0,0,0,.5); color:#fff; display:grid; }
   #drop[hidden] { display:none; }  /* display:grid would otherwise override the hidden attribute */
   #err { position:fixed; left:16px; right:16px; bottom:calc(84px + env(safe-area-inset-bottom, 0px)); color:var(--accent); }
@@ -57,6 +62,13 @@
     <option value="180">from S</option><option value="225">from SW</option><option value="270">from W</option><option value="315">from NW</option>
   </select>
   <span id="land"></span>
+  <button id="walkin" aria-pressed="false" title="Walk into the scene as a person the animals can see, hear and smell">Walk in</button>
+</div>
+<div id="act" class="panel" hidden>
+  <button data-a="run" title="Shift">Run</button><button data-a="crouch" title="C">Crouch</button>
+  <button data-a="clap" title="Space">Clap</button><button data-a="food" title="F">Scatter food</button>
+  <button data-a="wave" title="E">Wave</button><button data-a="scent" aria-pressed="true">Scent</button>
+  <span class="hint">WASD / arrows or tap the ground to walk · watch the meters over the animals</span>
 </div>
 <div id="drop" hidden>Drop a scene.glb</div>
 <div id="err"></div>
@@ -65,6 +77,8 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="wind.js"></script>
+<script src="life.js"></script>
+<script src="player.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -239,6 +253,7 @@ function onGLTF(g) {
     root.traverse((o) => { const m = /^(.+)_\d+$/.exec(o.name); if (m && kinds.has(m[1]) && o.parent && o.parent.name === 'fauna') agents.push(o); });
     const sel = $('follow');
     agents.forEach((a) => { const op = document.createElement('option'); op.value = a.name; op.textContent = a.name.replace(/_/g, ' '); sel.append(op); });
+    gltfRoot = root; maybePlay();
     if (g.animations.length) {
       mixer = new THREE.AnimationMixer(root);
       action = mixer.clipAction(g.animations[0]);
@@ -294,10 +309,52 @@ fetch('scene.json').then((r) => r.ok ? r.json() : null).then((s) => {
   lines.sort((a, b) => a[0] - b[0]);
   $('log').innerHTML = '<h2>What the animals did</h2>' + lines.slice(0, 400).map(([t, who, e]) =>
     `<div class="ev" data-t="${t}">${t.toFixed(0)}s · ${who} <b>${e.replace(':', ' → ')}</b></div>`).join('');
+  if (s.world) fetch(s.world.file).then((r) => r.ok ? r.arrayBuffer() : null).then((b) => { if (b) { PlayWorld.load(s.world, b); maybePlay(); } });
 }).catch(() => {}).finally(() => load('scene.glb'));  // wind needs scene.json before the shaders compile
+
+// the player (TECHNIQUES §35): ready once the world, the scene info and the glTF have all arrived
+let gltfRoot = null, playReady = false;
+function maybePlay() {
+  if (playReady || !gltfRoot || !PlayWorld.L || !sceneInfo || !sceneInfo.perception) return;
+  playReady = true;
+  Play.init({ scene, camera, controls, sceneInfo, agents, lighting: sceneInfo.lighting,
+    log: (ev) => { $('log').innerHTML = '<h2>What happened while you were here</h2>' + ev.map((l) => `<div class="ev">${l}</div>`).join(''); } });
+  $('walkin').disabled = false;
+  if (new URLSearchParams(location.search).get('walk') !== null) $('walkin').click();
+}
 
 $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸' : '▶'; };
 $('wind').onclick = () => { wind = !wind; $('wind').setAttribute('aria-pressed', wind); $('wind').style.opacity = wind ? 1 : 0.5; };
+$('walkin').disabled = true;
+const placeAct = () => { $('act').style.bottom = `calc(${$('controls').offsetHeight + 24}px + env(safe-area-inset-bottom, 0px))`; };
+addEventListener('resize', placeAct);
+$('walkin').onclick = () => { if (!playReady) return; const on = Play.toggle(); $('walkin').setAttribute('aria-pressed', on); $('act').hidden = !on;
+  $('walkin').textContent = on ? 'Leave' : 'Walk in'; placeAct(); };
+document.querySelectorAll('#act button').forEach((b) => { b.onclick = () => { Play.action(b.dataset.a);
+  if (b.dataset.a === 'scent') b.setAttribute('aria-pressed', Play.showScent);
+  if (b.dataset.a === 'run') b.setAttribute('aria-pressed', Play.p.mode === 'run');
+  if (b.dataset.a === 'crouch') b.setAttribute('aria-pressed', Play.p.posture === 'crouch'); }; });
+addEventListener('keydown', (e) => {
+  if (!Play.on || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  Play.keys[e.code] = true;
+  const a = { Space: 'clap', KeyF: 'food', KeyE: 'wave', KeyC: 'crouch' }[e.code];
+  if (a && !e.repeat) Play.action(a);
+  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && Play.p.mode !== 'run') Play.action('run');
+  if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+});
+addEventListener('keyup', (e) => { if (!Play.on) return; Play.keys[e.code] = false;
+  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && Play.p.mode === 'run') Play.action('run'); });
+// tap or click the ground to walk there (a press without a drag)
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!Play.on || !downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const ter = scene.getObjectByName('terrain');
+  const hit = ter && ray.intersectObject(ter, true)[0];
+  if (hit) Play.p.target = [hit.point.x, -hit.point.z];
+});
 $('force').oninput = (e) => { if (Wind.json) { Wind.setForce(Number(e.target.value)); windLabel(); } };
 $('windfrom').onchange = (e) => { if (Wind.json) Wind.setFrom(Number(e.target.value)); };
 $('scrub').oninput = (e) => { if (action) { mixer.setTime((e.target.value / 1000) * clipDur); } };
@@ -320,6 +377,7 @@ renderer.setAnimationLoop(() => {
     $('t').textContent = t.toFixed(0) + 's';
   }
   if (wind) Wind.uniforms.uTime.value += dt;
+  if (playReady) Play.update(dt);   // after the mixer: live animals overwrite their clip's pose
   const f = $('follow').value;
   if (f) {
     const a = agents.find((x) => x.name === f);

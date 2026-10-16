@@ -40,6 +40,19 @@ The same oak at Beaufort 6, rendered from the viewer's own equations (`plandscap
 The three.js viewer on the longleaf savanna at Beaufort 7 (`scripts/wind_frames.py out/longleaf … --force 7`), frames
 0.25 s apart on a fixed wind clock.
 
+## Walking in (§35)
+
+![perception](perception.jpg)
+
+How animals sense the player: where a deer smells you (the plume swings with the gusts), how far footsteps in leaf
+litter carry against the wind's noise, sight by species, flight-initiation distance by speed, directness and
+feeding, a deer's alarm as the player walks at it up- and downwind, and the distances people keep.
+
+![play](play.jpg)
+
+`scripts/play_check.py` on the `walk` scene: the player stands downwind, then upwind of the deer (they smell it and
+slip away), walks at them, claps at the squirrels, scatters corn and steps back, then meets the hikers.
+
 ## Animals to scale (§32)
 
 ![fauna](fauna.jpg)

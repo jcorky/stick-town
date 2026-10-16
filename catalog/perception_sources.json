@@ -1,0 +1,267 @@
+{
+ "about": "Animal perception and response to a player (TECHNIQUES §35). URL + verbatim quote (≤30 words) per value, or design=true. [EPMC]/[XREF]: abstract read through the Europe PMC / Crossref API. 'not found' items are design values with the direction of the effect sourced where possible.",
+ "fid": {
+  "gray_squirrel": {
+   "value_m": 9.2,
+   "url": "https://frontiersin.org/journals/ecology-and-evolution/articles/10.3389/fevo.2019.00066/full",
+   "quote": "mean FID = 9.2 ± 0.33 m",
+   "note": "Eason et al. 2019, campus and urban parks; pooled"
+  },
+  "white_tailed_deer": {
+   "value_m": 45,
+   "design": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4198184/",
+   "quote": "overall range = 0.0–368.1 m, median = 69.1 m",
+   "note": "that median is for vehicle approaches; no on-foot value found. Design 45 m on foot for a park-like scene (lower in high-visitation parks: Sutton & Heske 2017)"
+  },
+  "great_blue_heron": {
+   "value_m": 60,
+   "design": true,
+   "url": "https://urbanforestrysouth.org/resources/literature/buffer-zone-distances-to-protect-foraging-and-loafing-waterbirds-from-human-disturbance-in-florida-2162",
+   "quote": "A buffer of about 100 m should minimize disturbance to most species of waterbirds we studied in Florida.",
+   "note": "buffers exceed typical flush distances; design FID 60 m"
+  },
+  "coyote": {
+   "value_m": 50,
+   "design": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6376053/",
+   "quote": "weakly indicated that rural coyotes would initiate flight at greater distances than urban coyotes",
+   "note": "metre values only in a figure"
+  },
+  "wild_turkey": {
+   "value_m": 35,
+   "design": true,
+   "note": "not found"
+  },
+  "raccoon": {
+   "value_m": 8,
+   "design": true,
+   "url": "https://www.wildlife.ca.gov/HWC/Raccoons",
+   "quote": "They are mostly nocturnal and typically avoid people, though they may be seen during the day while searching for food."
+  },
+  "armadillo": {
+   "value_m": 3,
+   "design": true,
+   "url": "https://extension.missouri.edu/media/wysiwyg/Extensiondata/Pub/pdf/agguides/wildlife/g09456.pdf",
+   "quote": "armadillos seem oblivious to anything else and may come in close contact to humans before becoming alarmed."
+  },
+  "box_turtle": {
+   "value_m": 2,
+   "design": true,
+   "note": "withdraws rather than flees"
+  },
+  "human": {
+   "value_m": 0,
+   "design": true,
+   "note": "NPCs use proxemics instead"
+  }
+ },
+ "approach": {
+  "speed_directness": {
+   "url": "https://ideas.repec.org/a/oup/beheco/v17y2006i2p246-254.html",
+   "quote": "Deer fled at greater distances when approached more quickly and directly"
+  },
+  "starting_distance": {
+   "url": "https://blumsteinlab.eeb.ucla.edu/wp-content/uploads/sites/104/2017/05/Blumstein_2010_BE.pdf",
+   "quote": "there is a statistical relationship between the distance the human starts walking toward the animal and both the alert distance and the flight initiation distance"
+  },
+  "start_ratio": {
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4198184/",
+   "quote": "Median FID was 40% of start distance, irrespective of start distance or approach speed.",
+   "note": "vehicle approaches; a check on the model's FID/start-distance ratio, not a law in it"
+  },
+  "running": {
+   "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=doi:10.3390/ani15070935",
+   "quote": "The AD and FID were shorter when an individual was walking toward than when he was running toward the focal marmots.",
+   "note": "[EPMC] Himalayan marmots 2025"
+  },
+  "on_foot": {
+   "url": "https://api.crossref.org/works/10.1016/j.biocon.2008.06.026",
+   "quote": "Humans on foot were more evocative than other stimuli (vehicles, noises).",
+   "note": "[EPMC/XREF] Stankowich 2008 meta-analysis"
+  },
+  "crouch": {
+   "design": true,
+   "note": "no quantified crouching or stopping effect found; a crouched, still player is half as salient"
+  }
+ },
+ "alarm": {
+  "deer_stomp_snort": {
+   "url": "https://mdc.mo.gov/node/246698",
+   "quote": "may stomp its foot, sway its head, and snort."
+  },
+  "deer_flag": {
+   "url": "https://ecosystems.psu.edu/outreach/youth/sftrc/deer/white-tailed-ppt/@@download/file/Deer-Biology-Adaptations-OverviewPPT.pdf",
+   "quote": "When startled by danger and fleeing an area whitetails 'flag' their tails as a warning signal."
+  },
+  "turkey_putt": {
+   "url": "https://live.nwtf.org/content-hub/the-sounds-of-the-wild-turkey",
+   "quote": "The putt is generally associated as an alarm and usually means the bird has seen or heard something and is signaling danger."
+  },
+  "squirrel_kuk": {
+   "url": "https://northernwoodlands.org/outside_story/article/squirrel-talk",
+   "quote": "rapid kuks and quaas are most often given when a terrestrial predator is around"
+  },
+  "squirrel_flag": {
+   "url": "https://northernwoodlands.org/outside_story/article/squirrel-talk",
+   "quote": "tail flags are elicited by terrestrial threats such as a cat or a human."
+  },
+  "armadillo_jump": {
+   "url": "https://www.nps.gov/guis/learn/nature/armadillos.htm",
+   "quote": "jump straight into the air, sometimes as high as three or four feet!"
+  },
+  "turtle_emerge": {
+   "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12716703/fullTextXML",
+   "quote": "bold if head emergence latency time was less than or equal to ten seconds",
+   "note": "and 'trials in which individuals did not emerge from their plastron after 600 seconds were terminated.'"
+  }
+ },
+ "senses": {
+  "deer_fov": {
+   "url": "https://www.deer.psu.edu/the-eyes-have-it/",
+   "quote": "distinguish distant objects across a 310 degree field of view"
+  },
+  "deer_motion": {
+   "url": "https://www.deer.psu.edu/the-eyes-have-it/",
+   "quote": "Rods are also better motion sensors than cones."
+  },
+  "deer_twilight": {
+   "url": "https://www.outdoorlife.com/blogs/big-buck-zone/2014/07/video-new-study-sheds-light-what-deer-see",
+   "quote": "deer eyes can detect the best, and are most sensitive, during twilight periods."
+  },
+  "turkey_fov": {
+   "url": "https://live.nwtf.org/content-hub/turkey-vision",
+   "quote": "Their field of vision is about 270 degrees"
+  },
+  "turkey_acuity": {
+   "url": "https://live.nwtf.org/content-hub/turkey-vision",
+   "quote": "three to four times more acute than ours."
+  },
+  "armadillo_sight": {
+   "url": "https://www.nps.gov/guis/learn/nature/armadillos.htm",
+   "quote": "they often do not notice humans, or other animals, until they are very close."
+  },
+  "deer_hearing": {
+   "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=doi:10.1121/1.3284546",
+   "quote": "At a level of 60 dB sound pressure level, their hearing range extends from 115 Hz to 54 kHz with a best sensitivity of -3 dB at 8 kHz",
+   "note": "[EPMC] Heffner & Heffner 2010"
+  },
+  "deer_scent_wind": {
+   "url": "https://tpwd.texas.gov/education/hunter-education/online-course/hunting-skills-1/strategies",
+   "quote": "Keep the wind in your face so that game ahead of you is not spooked by your scent."
+  },
+  "wind_cover": {
+   "url": "https://tpwd.texas.gov/education/hunter-education/online-course/hunting-skills-1/strategies",
+   "quote": "When the wind blows you can move, when it stops, so must you."
+  },
+  "circle_downwind": {
+   "url": "https://tpwd.texas.gov/education/hunter-education/online-course/hunting-skills-1/strategies",
+   "quote": "many times game will circle downwind if they are suspicious."
+  },
+  "scent_distance": {
+   "design": true,
+   "note": "no peer-reviewed or agency detection distance found"
+  }
+ },
+ "sound": {
+  "spreading": {
+   "url": "https://www.sfu.ca/sonic-studio-webdav/cmns/Handbook/Inverse-Square_Law.html",
+   "quote": "a sound level drops 6 dB for every doubling of the distance from the source"
+  },
+  "foliage": {
+   "url": "https://doku.datakustik.com/CadnaA/en/BebaungBewuchs.html",
+   "quote": "D_D=0.05 dB/m*s_D",
+   "note": "VDI 2714, A-weighted foliage attenuation"
+  },
+  "clap": {
+   "url": "https://physicsworld.com/a/the-physics-of-hand-clapping-heres-how-to-do-it-best/",
+   "quote": "The loudest configuration, generating an average sound pressure of 85.2 dB",
+   "note": "distance not stated; taken at 1 m (design)"
+  },
+  "wind_noise": {
+   "design": true,
+   "url": "https://puc.sd.gov/commission/dockets/electric/2018/EL18-053/prefiledexhibits/intervenors/kilby/K28.pdf",
+   "note": "after Bolin 2006 (KTH thesis, Fig. 15 log fits 23–35 log U across sites, Table 1 55.2 dBA at 5.1 m/s; read from the PDF, not quotable as one line). Used as L_wind = 55.2 + 23 log10(U/5.1), floored at 25 dBA"
+  },
+  "footsteps": {
+   "design": true,
+   "note": "footstep levels by ground type not found"
+  }
+ },
+ "plume": {
+  "briggs_D": {
+   "url": "https://cyclone.unbc.ca/presentations/ccwwf/aq/node6.html",
+   "quote": "0.08 x (1 + 0.0001 x ) - .5",
+   "note": "σy for class D (neutral); σz = '.06 x (1 + 0.0015 x ) - .5'. Briggs 1973 open country, stated for 100 m < x < 10 km; used below 100 m as an extrapolation"
+  },
+  "class_D": {
+   "url": "https://cyclone.unbc.ca/presentations/ccwwf/aq/node6.html",
+   "quote": "D, neutral (heavy overcast day or night)"
+  }
+ },
+ "habituation": {
+  "tolerance": {
+   "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=doi:10.1038/ncomms9877",
+   "quote": "disturbed populations of the three major taxa are more tolerant of human disturbance than less disturbed populations.",
+   "note": "[EPMC] Samia et al. 2015"
+  },
+  "deer_vigilance": {
+   "url": "https://api.crossref.org/works/10.1111/jzo.12416",
+   "quote": "Deer vigilance was lower in areas with high levels of human recreation, suggesting that deer become habituated"
+  },
+  "squirrel_exposure": {
+   "url": "https://dc.ewu.edu/theses/760",
+   "quote": "FID increased with starting distance, and it decreased with an increase in human exposure."
+  },
+  "hunting": {
+   "url": "https://api.crossref.org/works/10.1016/j.biocon.2008.06.026",
+   "quote": "Hunted populations showed significantly greater flight responses than non-hunted populations."
+  },
+  "rates": {
+   "design": true,
+   "note": "per-encounter habituation and sensitisation rates not found"
+  }
+ },
+ "food": {
+  "deer_bait": {
+   "url": "https://www.dnr.sc.gov/wildlife/deer/baitlaw/biological.html",
+   "quote": "deer concentrate their foraging activities around the baited area."
+  },
+  "deer_night": {
+   "url": "https://www.dnr.sc.gov/wildlife/deer/baitlaw/biological.html",
+   "quote": "visitation rates of 25:1 night versus day"
+  },
+  "deer_wariness": {
+   "url": "https://wildlife.utah.gov/deer/feeding",
+   "quote": "This loss of wariness can lead to increased encounters between people and deer"
+  },
+  "turkey_tame": {
+   "url": "https://dnr.state.mn.us/livingwith_wildlife/turkeys/index.html",
+   "quote": "Feeding, whether direct or indirect, can cause turkeys to act tame"
+  },
+  "squirrel_peanuts": {
+   "url": "https://dc.ewu.edu/theses/760",
+   "quote": "Squirrels were more likely to take peanuts at locations with more humans and a lower tree density."
+  },
+  "raccoon_conditioned": {
+   "url": "https://www.wildlife.ca.gov/HWC/Raccoons",
+   "quote": "may easily become food conditioned or lose their fear of humans if provided access to food."
+  }
+ },
+ "people": {
+  "walk_speed": {
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7806575/",
+   "quote": "0.82 (0.77–0.86) … 1.31 (1.27–1.35), 1.47 (1.44–1.49), 1.72 (1.64–1.81), and 1.62 (1.45–1.79) m/s",
+   "note": "slow, usual, medium, fast, maximal outdoor paces"
+  },
+  "proxemics": {
+   "url": "https://en.wikipedia.org/wiki/Proxemics",
+   "quote": "7 to 12 feet (2.1 to 3.7 m)",
+   "note": "Hall's far social phase; near social '4 to 7 feet (1.2 to 2.1 m)', personal '2.5 to 4 feet (0.76 to 1.22 m)', public '12 to 25 feet (3.7 to 7.6 m)'"
+  },
+  "greeting": {
+   "design": true,
+   "note": "Kendon's greeting phases (distance salutation → approach → close salutation); distances not found"
+  }
+ }
+}

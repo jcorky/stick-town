@@ -158,6 +158,19 @@ Open `map.png` and `scene.json` and check:
 - `scripts/wind_frames.py` steps the wind clock by hand for even frames; in dense forest the camera lands inside a
   crown, so judge single trees with the Python specimen GIF (`gallery.wind_specimen`).
 
+### Player and perception (§35)
+- An integrating alarm (da/dt = kS − a/τ) has equilibrium kτS: with k = 1.5, τ = 20 any faint cue (a deer seeing you
+  at 100 m, S = 0.02) eventually alerts. Let the alarm *follow* S (rise τ_r, fall τ_d) so thresholds mean salience.
+- Plume salience must not scale with 1/U, or a calm evening lets squirrels smell you at 100 m; compare plume shapes.
+- A cue consumed in the same tick it is made (a wave timer decremented before the NPCs read it) never reaches anyone:
+  stamp actions with a time and let readers check "since".
+- Teleporting the player (tests) can put it outside the walkable bounds; clamp moves to the tile instead of
+  rejecting them, or the player freezes forever.
+- Test play mode with `scripts/play_check.py`: it stops the animation loop and ticks a fixed 0.1 s clock inside the
+  page; real-time swiftshader runs at a few fps and makes behaviour depend on frame rate.
+- Scratch scenes for testing go through `PLANDSCAPE_ASSETS=<copy of the library>` so their behaviour clips stay out
+  of the real library.
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
