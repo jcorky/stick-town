@@ -174,6 +174,40 @@ class Gaze(unittest.TestCase):
         self.assertLessEqual(np.abs(psi).max(), motion.GAZE_MAX + 1e-9)
 
 
+class NewSpecies(unittest.TestCase):
+    def test_traits_match_sources_and_shore_behaviour(self):
+        import json
+        from plandscape.fauna.agents import FAUNA, World
+        from plandscape.fauna.bodies import body, rig
+        src = json.load(open(os.path.join(os.path.dirname(__file__), "..", "catalog", "fauna_sources.json"),
+                             encoding="utf-8"))["species"]
+        for k, s in src.items():
+            sp = FAUNA[k]
+            for f, v in s.items():
+                self.assertTrue(v.get("design") or (v["url"].startswith("https://") and v["quote"]), (k, f))
+            for f in ("walk", "run"):
+                if f in s:
+                    self.assertAlmostEqual(getattr(sp, f), s[f]["value"], places=6)
+        lo, hi = src["raccoon"]["shoulder"]["value"]
+        self.assertTrue(lo <= rig("raccoon", (0.5, 0.5, 0.5))["hip"] <= hi)
+        heron = body("great_blue_heron", (0.5, 0.5, 0.5))
+        self.assertLess(abs(float(heron.positions[:, 2].max()) - src["great_blue_heron"]["height"]["value"]), 0.12)
+        turtle = body("box_turtle", (0.5, 0.5, 0.5))
+        lo, hi = src["box_turtle"]["length"]["value"]
+        self.assertTrue(lo <= 2 * 0.077 <= hi)
+        self.assertLess(float(turtle.positions[:, 2].max()), 0.07)
+        # the shore band hugs the water's edge
+        hf = generate_tile(64, 1.0, "floodplain", 3)
+        w = World(hf, None, np.zeros_like(hf.z), np.zeros_like(hf.z), np.zeros_like(hf.z), np.zeros_like(hf.z),
+                  np.zeros((0, 4)))
+        band = w.shore > 0.5
+        self.assertTrue(band.any())
+        from scipy import ndimage
+        near = ndimage.distance_transform_edt(hf.layers["water"] < 0.5)
+        far = ndimage.distance_transform_edt(hf.layers["water"] > 0.5)
+        self.assertLess(np.maximum(near, far)[band].max(), 5)  # within a few metres of the edge, either side
+
+
 class Refine(unittest.TestCase):
     def test_validate_keeps_only_what_generators_honour(self):
         from plandscape.scene.planner import refine

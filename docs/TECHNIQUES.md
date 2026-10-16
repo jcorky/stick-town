@@ -656,3 +656,29 @@ At rest the head scans; in motion it leads into turns, because the turn-limited 
 The neck node's rotation composes yaw after the state pitch (§28): $q = q_\text{yaw}(\psi)\,q_\text{pitch}(-\theta)$, a Hamilton product, so a
 grazing deer can still look sideways. Keys come from the union of the log and the pitch keys, reduced by the two-channel
 Ramer–Douglas–Peucker of §30 (2° on both angles).
+
+## 32. New species from sources: raccoon, eastern box turtle, great blue heron
+`plandscape/fauna/agents.py: FAUNA, World.shore, withdraws`; `bodies.py: rig`; `catalog/fauna_sources.json`
+
+Three Southern animals join, each with sizes, top speeds, activity and grouping quoted from fetched pages (Animal
+Diversity Web, state wildlife agencies, the Smithsonian, IUCN TFTSG, the Heron Conservation glossary, Maine IFW
+heron GPS). Walking speeds the sources do not give are design values, marked `design` in the file with the reason. A test
+holds code and file together.
+
+| | raccoon | box turtle | great blue heron |
+|---|---|---|---|
+| body | shoulder 0.27 m (SC DNR 9–10 in; NC 12 in) | carapace 15.4 cm, shell ~5 cm | stands 1.19 m (TWRA 46 in) |
+| top speed | 6.7 m/s (15 mph, ADW) | 0.49 m/s (max, IUCN) | flies ~10.7 m/s; walks off at 3 m/s (design) |
+| walk | 0.5 m/s (design) | 0.05 m/s (field mean, ornate box turtle) | 0.15 m/s = 25 steps/min × 0.35 m (design step) |
+| active | nocturnal | mornings | dawn and dusk |
+| feeds | shore | forage | shore |
+
+**Shore.** Raccoons dabble and herons wade at the water's edge, which no food layer held. A shore layer does:
+$$\text{shore} = \operatorname{clip}\big(1.6\, G_{1} * (D_3(W) \setminus E_2(W)),\ 0,\ 1\big),$$
+a band from 2 cells inside the water to 3 cells outside (binary dilation $D$ and erosion $E$ of the water mask $W$, Gaussian
+$\sigma$ = 1 cell). Shore feeders forage it and spawn on it.
+
+**Withdrawal.** A box turtle that meets a threat does not run: it freezes 30–120 s, shut in its shell.
+
+The planner matches the longest animal phrase first and blanks it, so "a box turtle" is one turtle, not one plus
+"a few".

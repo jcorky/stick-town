@@ -64,6 +64,13 @@ FAUNA: dict[str, FaunaSpec] = {f.key: f for f in [
               rgb=(0.58, 0.50, 0.40)),
     FaunaSpec("human", "Person walking", 1.3, 3.0, 30, (), "none", (7, 20), group=(1, 2), shy=0.0,
               trail_use=1.0, size=0.9, rgb=(0.25, 0.35, 0.55)),
+    # sizes, top speeds, activity and grouping sourced in catalog/fauna_sources.json (§32); walks marked design there
+    FaunaSpec("raccoon", "Raccoon", 0.5, 6.7, 25, ("human", "coyote", "dog"), "shore", (19, 5), group=(1, 1),
+              shy=0.6, trail_use=0.5, climbs=True, size=0.3, rgb=(0.45, 0.43, 0.40)),
+    FaunaSpec("box_turtle", "Eastern box turtle", 0.05, 0.49, 5, ("human", "dog", "coyote", "raccoon"), "forage",
+              (6, 11), group=(1, 1), shy=0.5, trail_use=0.1, size=0.15, rgb=(0.35, 0.25, 0.12), withdraws=True),
+    FaunaSpec("great_blue_heron", "Great blue heron", 0.15, 3.0, 50, ("human", "dog", "coyote"), "shore", (5, 9),
+              crepuscular=True, group=(1, 1), shy=0.7, trail_use=0.0, size=0.6, rgb=(0.45, 0.52, 0.60)),
 ]}
 
 

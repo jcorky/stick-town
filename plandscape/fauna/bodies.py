@@ -89,6 +89,45 @@ def rig(key, rgb, scale=1.0):
             for y in (0.08, -0.08):
                 leg(x, y, 0.08, 0.04, rgb * 0.7, knee)
         hip, kind = 0.08, "quad"
+    elif key == "raccoon":  # shoulder 0.27 m (SC DNR 9–10 in, NCpedia 12 in), ringed tail ~45 % of total length
+        h = 0.27
+        parts += [ellipsoid((0, 0, h + 0.03), (0.24, 0.11, 0.12), rgb)]
+        for i in range(6):  # ringed tail, alternating dark and light
+            parts.append(ellipsoid((-0.25 - 0.045 * i, 0, h + 0.06 - 0.01 * i), (0.03, 0.045, 0.045),
+                                   rgb * (0.45 if i % 2 else 1.15)))
+        pv = np.array([0.2, 0, h + 0.06])
+        neck = dict(mesh=Mesh.merge([ellipsoid(np.array([0.29, 0, h + 0.07]) - pv, (0.08, 0.07, 0.065), rgb * 1.1),
+                                     ellipsoid(np.array([0.31, 0, h + 0.085]) - pv, (0.05, 0.075, 0.02), rgb * 0.3),
+                                     ellipsoid(np.array([0.37, 0, h + 0.06]) - pv, (0.035, 0.025, 0.025), rgb * 0.9)]),
+                    pivot=tuple(pv), graze=np.radians(70))
+        for x, knee in ((0.15, -1.0), (-0.15, 1.0)):
+            for y in (0.07, -0.07):
+                leg(x, y, h, 0.04, rgb * 0.35, knee)
+        hip, kind = h, "quad"
+    elif key == "box_turtle":  # carapace ~15 × 10 cm, shell height 5.3 cm (ADW; Maryville College)
+        h = 0.02
+        parts += [ellipsoid((0, 0, h + 0.01), (0.075, 0.05, 0.03), rgb),              # domed carapace
+                  ellipsoid((0, 0, h + 0.002), (0.077, 0.052, 0.006), (0.75, 0.6, 0.25))]  # yellow rim
+        pv = np.array([0.07, 0, h + 0.005])
+        neck = dict(mesh=ellipsoid(np.array([0.095, 0, h + 0.012]) - pv, (0.025, 0.017, 0.016), (0.55, 0.4, 0.2)),
+                    pivot=tuple(pv), graze=np.radians(35))
+        for x, knee in ((0.045, -1.0), (-0.045, 1.0)):
+            for y in (0.04, -0.04):
+                leg(x, y, h, 0.018, (0.45, 0.32, 0.15), knee)
+        hip, kind = h, "quad"
+    elif key == "great_blue_heron":  # stands ~1.1–1.2 m (TWRA 46 in); hip 0.55 m is a design value
+        h = 0.55
+        parts += [ellipsoid((0, 0, h + 0.2), (0.22, 0.1, 0.12), rgb),
+                  ellipsoid((-0.25, 0, h + 0.17), (0.1, 0.07, 0.04), rgb * 0.8)]
+        pv = np.array([0.14, 0, h + 0.27])
+        neck = dict(mesh=Mesh.merge([ellipsoid(np.array([0.2, 0, h + 0.42]) - pv, (0.04, 0.035, 0.16), rgb * 1.1),
+                                     ellipsoid(np.array([0.25, 0, h + 0.6]) - pv, (0.05, 0.04, 0.04), (0.92, 0.92, 0.9)),
+                                     ellipsoid(np.array([0.24, 0, h + 0.63]) - pv, (0.05, 0.042, 0.012), (0.1, 0.1, 0.12)),
+                                     ellipsoid(np.array([0.36, 0, h + 0.6]) - pv, (0.08, 0.012, 0.012), (0.85, 0.65, 0.2))]),
+                    pivot=tuple(pv), graze=np.radians(105))
+        for y in (0.05, -0.05):
+            leg(0.02, y, h, 0.018, (0.35, 0.3, 0.25), -1.0)
+        hip, kind = h, "biped"
     else:  # human
         parts += [box((0, 0, 1.2), (0.25, 0.42, 0.6), rgb),
                   ellipsoid((0, 0, 1.62), (0.11, 0.1, 0.13), (0.72, 0.55, 0.42))]
@@ -107,7 +146,7 @@ def rig(key, rgb, scale=1.0):
         lg["hip"] = tuple(c * scale for c in lg["hip"])
         lg["l1"] *= scale
         lg["l2"] *= scale
-    drop = {"quad": 0.62, "biped": 0.4}.get(kind, 0.0) if key != "human" else 0.0
+    drop = {"quad": 0.62, "biped": 0.4}.get(kind, 0.0) if key not in ("human", "great_blue_heron", "box_turtle") else 0.0
     return dict(torso=torso, legs=legs, neck=neck, tail=tail, hip=hip * scale, kind=kind, lie=drop)
 
 

@@ -3,6 +3,10 @@
 ## Unreleased
 
 **Added**
+- Raccoon, eastern box turtle and great blue heron (TECHNIQUES §32), with sourced sizes, speeds and activity in `catalog/fauna_sources.json` (unsourced walking speeds are marked as design values). A shore food layer is added along the creek edge for raccoons and herons, and box turtles withdraw into the shell instead of fleeing. The bayou reference scene now has a heron, a raccoon and a box turtle. Gallery adds `fauna.jpg`, all species to scale.
+
+**Fixed**
+- "a box turtle" planned three turtles; animal phrases now match longest first.
 - Gaze (TECHNIQUES §31). The heading the body no longer follows at rest becomes head yaw ψ (±70°, low-passed with τ 0.3 s), composed with the state pitch as q = yaw · pitch. Heads scan while bodies stand and lead into turns.
 - Smooth turning (TECHNIQUES §30). Exported headings are turn-rate limited per species, and standing animals hold their body heading instead of spinning in place. Paths are exported from the full 0.25 s log, keyframes reduced by Ramer–Douglas–Peucker (2 cm, 2°). Gallery adds `motion.jpg`.
 - Lying down and the deer's flag (TECHNIQUES §29). Resting animals lower the trunk (0.62 h for quadrupeds, 0.4 h for turkeys) and fold their legs by IK with the feet kept on the ground. Deer raise the white tail when they flee and half-raise it when alert. Gallery `poses.jpg` adds rest and flee.

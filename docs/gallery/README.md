@@ -21,6 +21,13 @@ that space colonisation bridged with vertical stems, giving boxy right angles. S
 
 ![dogwood tiers](dogwood-tiers.jpg)
 
+## Animals to scale (§32)
+
+![fauna](fauna.jpg)
+
+Every species' rig in its rest pose, ticks every metre: deer, squirrel, turkey, armadillo, coyote, a person, and the
+sourced newcomers raccoon, eastern box turtle and great blue heron.
+
 ## Gaits (§25)
 
 ![gaits](gaits.jpg)

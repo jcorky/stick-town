@@ -22,7 +22,7 @@ SCENES = {
     "monte-sano": "Monte Sano hardwood cove with a dogtrot cabin, a creek, two deer, three squirrels "
                   "and a turkey flock at golden hour in fall",
     "longleaf": "longleaf pine savanna near Mobile at dusk, dirt path, a few deer",
-    "bayou": "cypress bayou floodplain with a shotgun house and an armadillo at noon in summer",
+    "bayou": "cypress bayou floodplain with a shotgun house, a heron, a raccoon, a box turtle and an armadillo at dusk in summer",
 }
 OUT = os.path.join(ROOT, "docs", "gallery")
 
@@ -241,6 +241,31 @@ def motion_sheet(path):
     return path
 
 
+def fauna_sheet(path):
+    """Every species' rig in its rest pose, side by side to scale on a 1 m-gridded ground (§32)."""
+    import numpy as np
+    from plandscape.fauna.agents import FAUNA
+    from plandscape.fauna.bodies import body
+    from plandscape.mesh import Mesh, box
+    from plandscape.render import render
+    parts, x = [], 0.0
+    for key, spec in FAUNA.items():
+        b = body(key, spec.rgb)
+        w = float(np.ptp(b.positions[:, 0]))
+        x += w / 2 + 0.25
+        parts.append(Mesh(b.positions + np.array([x - b.positions[:, 0].mean(), 0, 0], np.float32), b.colors, b.indices))
+        x += w / 2 + 0.25
+    ground = [box((x / 2, 0, -0.01), (x + 0.4, 1.0, 0.02), (0.55, 0.55, 0.5))]
+    ground += [box((i, 0.3, 0.0), (0.02, 0.4, 0.004), (0.2, 0.2, 0.2)) for i in range(int(x) + 1)]  # 1 m ticks
+    render(ground + parts, path, size=(1500, 420), azimuth=0, elevation=6, keep_first=99,
+           fit=((-0.2, -0.5, -0.05), (x + 0.2, 0.5, 1.9)))
+    im = Image.open(path)
+    d = ImageDraw.Draw(im)
+    d.text((8, 8), "all species to scale; ticks every 1 m: " + ", ".join(s.common for s in FAUNA.values()), fill=(0, 0, 0))
+    im.save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -262,6 +287,7 @@ def main(argv=None):
     _jpeg(gait_sheet(os.path.join(ROOT, "out", "gaits.png")), os.path.join(OUT, "gaits.jpg"), 1600)
     _jpeg(pose_sheet(os.path.join(ROOT, "out", "poses.png")), os.path.join(OUT, "poses.jpg"), 1100)
     _jpeg(motion_sheet(os.path.join(ROOT, "out", "motion.png")), os.path.join(OUT, "motion.jpg"), 1200)
+    _jpeg(fauna_sheet(os.path.join(ROOT, "out", "fauna.png")), os.path.join(OUT, "fauna.jpg"), 1500)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)
