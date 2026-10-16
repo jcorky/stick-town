@@ -183,7 +183,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/terrain3d"
  },
  "simple-hydrology": {
   "id": "simple-hydrology",
@@ -219,7 +221,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/seblague-erosion"
  },
  "fastnoiselite": {
   "id": "fastnoiselite",
@@ -231,7 +235,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/fastnoiselite"
  },
  "opensimplex2": {
   "id": "opensimplex2",
@@ -303,7 +309,9 @@
   "license_expected": "Apache-2.0",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/mesa"
  },
  "ml-agents": {
   "id": "ml-agents",
@@ -327,7 +335,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/worldengine"
  },
  "fantasy-map-generator": {
   "id": "fantasy-map-generator",
@@ -339,7 +349,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/fantasy-map-generator"
  },
  "three": {
   "id": "three",
@@ -363,7 +375,9 @@
   "license_expected": "MIT",
   "matches": true,
   "permissive": true,
-  "study_only": false
+  "study_only": false,
+  "cloned": true,
+  "path": ".cache/sources/ocean"
  },
  "ms-building-footprints": {
   "id": "ms-building-footprints",
