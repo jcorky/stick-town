@@ -623,3 +623,21 @@ The pitch is $-\theta$ about the lateral axis, because the tail lies behind its 
 
 Head pitch (§28), the flag and the lying drop all come from one helper, `pose_track(times, states, full, table, ease)`:
 a state→fraction table, keys at each change and one `ease` later, and overlapping eases collapsed.
+
+## 30. Bounded turning, still bodies at rest, and key reduction
+`plandscape/fauna/motion.py: body_heading_target, turn_limited, simplify, export_track`; `scene/compose.py`
+
+The simulation can snap an agent's heading: a new plan points it at its goal with noise, and an obstacle turns it 90°.
+While standing, "look around" random-walks the heading. The GLB used to sample paths once a second, so animals
+pivoted through half a turn between keys or spun in place while grazing. Export now:
+
+1. **Holds the body still at rest.** While not moving (displacement under 5 cm/s), the target heading is held. A stop longer
+   than 3 s gets one turn, to the circular mean $\bar h = \operatorname{atan2}(\sum\sin h, \sum\cos h)$ over the stop; the
+   scanning is a gaze, not a body spin.
+2. **Bounds the turn rate.**
+   $$\hat h_i = \hat h_{i-1} + \operatorname{clip}\big(\operatorname{wrap}(h^*_i - \hat h_{i-1}),\ -\omega_\text{max}\Delta t,\ \omega_\text{max}\Delta t\big),$$
+   with $\omega_\text{max}$ per species (squirrel 8, deer and coyote 4, turkey 3, person 2.5, armadillo 2 rad/s). These are design values, not measurements.
+3. **Keeps only needed keys.** Ramer–Douglas–Peucker over time on the 0.25 s log: a sample is dropped when the segment between
+   kept neighbours reproduces its position within 2 cm and its heading within 2°.
+
+The example clip in the gallery keeps 287 of its 720 samples: turns stay curves, and stops cost two keys.

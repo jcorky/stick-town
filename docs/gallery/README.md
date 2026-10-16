@@ -36,6 +36,14 @@ angles keyed into the GLB by stride phase. The grey line is the ground.
 The head pitches by the agent's logged state: down to eat or drink, raised when alert. Resting animals lie down,
 with legs folded by the same IK, and a fleeing deer raises its white flag. The same keys drive the GLB's nodes.
 
+## Turning (§30)
+
+![motion](motion.jpg)
+
+A stored deer clip: the logged heading (grey) snaps and jitters while the deer stands; the old export (red) sampled it
+once a second. The exported heading (blue) turns at no more than 4 rad/s, holds still at rest, and keeps 287 of 720
+keys (right: the path with its kept keys and headings).
+
 ## Terrain: droplet erosion (§14)
 
 ![terrain erosion](terrain-erosion.jpg)
