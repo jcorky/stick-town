@@ -822,3 +822,81 @@ and a direction selector. `?force=` and `?from=` set them from the URL.
 **Checks** (gallery `wind.jpg`):
 - **Calibration.** Motion climbs with force through the NOAA land descriptions. At force 3 leaves and twigs move about 1–2 cm. At force 6 limbs move about 10 cm and the tops of 25 m oaks about 5–15 cm.
 - **Known gap: broadleaf frequencies.** They come out 0.6–1.5 Hz, above the two measured broadleaves, 0.26 Hz (sycamore) and 0.34 Hz (19.7 m silver maple). Conifers, white oak, redbud and tulip poplar fall at 0.27–0.7 Hz. Two causes: our stems are stocky (DBH at the sourced upper range), and mass damping by branch–trunk coupling is not modelled.
+
+## 35. Walking in: what animals and people notice, and what they do about it
+`plandscape/fauna/perception.py` (the model, Python); `viewer/life.js` (its mirror, tested to 1e-9); `viewer/player.js` (the player, live controllers); `scene/compose.py: write_world`
+
+The viewer's **Walk in** button puts the player in the scene as a person. Each animal senses them three ways, and
+the three cues combine as independent detections:
+
+$$S = 1 - (1-s_v)(1-s_h)(1-s_o), \qquad S' = \min\!\big(1,\ S\,e^{\sigma-\eta}\big)$$
+
+Here σ is sensitisation and η habituation, both learned from this player.
+
+**Sight** (all factors design values; their directions are sourced):
+
+$$s_v = \text{acuity}\cdot\text{fov}(\theta)\cdot\big(0.25+0.75\,\min(v/1.31,1.5)/1.5\big)\cdot\text{posture}\cdot\text{light}\cdot e^{-d/R_v}\cdot e^{-0.08\int\text{cover}\,ds}$$
+
+- **Field of view and acuity.** Field of view is 310° for deer and 270° for turkeys, whose vision is "three to four times more acute than ours" (acuity 3.5). Outside the field of view the factor is 0.15.
+- **Motion.** A still person is a quarter as visible as one walking at the usual pace of 1.31 m/s; deer rods are "better motion sensors".
+- **Posture and light.** Crouching halves it. Deer, coyotes, raccoons and armadillos keep 0.9 of their sight at dusk ("most sensitive, during twilight periods").
+- **Cover.** Cover along the sight line is 0.7 × canopy + understory props.
+
+**Hearing.** Levels follow spherical spreading ("drops 6 dB for every doubling") and lose 0.05 dB/m through foliage (VDI 2714):
+
+$$L = L_\text{src} - 20\log_{10} d - 0.05\,d_\text{fol},\qquad
+L_\text{wind} = \max\!\big(25,\ 55.2 + 23\log_{10}(U/5.1)\big)\ \text{dBA},\qquad s_h = \operatorname{clip}\!\big((L - L_\text{wind} + H)/10,\ 0, 1\big)$$
+
+- **Masking.** Footsteps are masked by vegetation noise, using Bolin's log fit at the local wind speed $U$ at 1.5 m. $U$ comes from the §34 field, gusts included.
+- **Footsteps.** Walk 55, run 65, creep 42 dB at 1 m; leaf litter +6, trail −4, water +10. All are design values (no measurement found).
+- **Clap.** 85.2 dB (taken at 1 m).
+- **Species bonus H.** Deer get +5 dB ("best sensitivity of −3 dB at 8 kHz").
+- **The result.** In still air a deer hears you in the leaves from ~35 m; in a 2 m/s breeze only from ~8 m. "When the wind blows you can move, when it stops, so must you."
+
+**Smell.** The player's scent is a Gaussian plume carried by the wind at the player's position, so it meanders with each gust. The spread is Briggs's open-country neutral (class D) fit, extrapolated below its stated 100 m:
+
+$$c \propto \frac{e^{-y^2/2\sigma_y^2}\,e^{-h^2/2\sigma_z^2}}{U\sigma_y\sigma_z},\quad \sigma_y = 0.5 + \frac{0.08x}{\sqrt{1+0.0001x}},\ \sigma_z = 0.5 + \frac{0.06x}{\sqrt{1+0.0015x}},\qquad
+s_o = 0.75\,\operatorname{clip}\!\big(1 + \ln\tfrac{c}{c(R_o,0)},\ 0, 1\big)$$
+
+Here x is downwind and y across, at nose height h = 1 m.
+- **Range.** Design scent ranges $R_o$: deer and coyote 250 m, raccoon 120, armadillo 40, squirrel 30, turkey 15. Herons don't smell you.
+- **Cap.** Scent alone caps at 0.75, so it alerts but never stampedes: "Keep the wind in your face"; suspicious game "will circle downwind". An animal alerted by scent alone slips away crosswind at walking pace.
+- **On screen.** The viewer draws the plume as drifting motes advected by `Wind.at`, so you can see who is about to smell you.
+
+**Alarm.** The alarm follows cues up in about 1 s and lets go over about 20 s (both design values):
+
+$$\dot a = \begin{cases}(S'-a)/\tau_r & S' > a\\ -a/\tau_d & \text{otherwise}\end{cases},\quad \tau_r = 1\ \text{s},\ \tau_d = 20\ \text{s}$$
+
+- **Thresholds.** Calm → alert at a ≥ 0.3. Flight comes at a ≥ 0.8, or at a ≥ 0.3 inside the flight-initiation distance:
+
+$$D = D_0\,\big(0.6 + 0.4\min(v/1.31, 2.5)\big)\big(0.7 + 0.3\max(\cos\beta,0)\big)\,e^{\sigma-\eta}$$
+
+  β is the angle between the player's path and the line to the animal. "Deer fled at greater distances when approached more quickly and directly" (Stankowich & Coss 2006). $D_0$ is 9.2 m for gray squirrels ("mean FID = 9.2 ± 0.33 m", urban parks). The rest are design values within the sourced bounds in `catalog/perception_sources.json`; the deer value, for example, is below the 69 m median for vehicle approaches.
+- **Displays.** Alert animals freeze and turn toward the cue, with their head up and neck turned (yaw up to 70°). Each shows its sourced display: deer "stomp its foot … and snort" with a half-raised flag; turkeys putt; squirrels kuk and flag their tails.
+- **Flight.** Deer run with the flag up. Squirrels and raccoons bolt for the nearest trunk and climb it. Herons flush and fly. Box turtles shut in and re-emerge slowly ("bold if head emergence latency time was less than or equal to ten seconds"). Armadillos first "jump straight into the air, sometimes as high as three or four feet".
+
+**Learning.** Experience shifts every later reaction: η lowers both the salience gain and D, and σ raises them.
+- **Habituation.** An alert that comes to nothing adds η += 0.15. "Disturbed populations … are more tolerant" (Samia et al. 2015).
+- **Sensitisation.** A clap, or a run straight at an animal, adds σ += 0.3 × salience. "Hunted populations showed significantly greater flight responses".
+- **Food.** Scattered corn draws calm animals that eat forage, mast or shore food within 70 m, but only while the player stands farther than 0.8 D from it. Each 4 s of eating adds η += 0.3. Squirrels fed this way come to 4–5 m ("Feeding … can cause turkeys to act tame"; raccoons "may easily become food conditioned").
+- The step sizes are design values (no per-encounter rates found).
+
+**Live control.** An animal that stops being calm leaves its baked clip. Each frame, after the mixer, the controller writes its root, legs, trunk, neck, tail and wings.
+- **Gait.** The gait maths is ported line for line: Froude number, stride λ = 2.3 h Fr^0.3, gait by Fr, foot paths, and two-bone IK from `life.js`, using the rig exported in each animal node's `extras.rig`.
+- **Turning.** Heading is turn-limited to 3 rad/s.
+- **Ground.** The animal walks on `world.bin`, which `compose.write_world` writes: height as float32, plus canopy, trail, water, grass, shore, forage, mast and cover as uint8 (~0.2 MB).
+
+**People.** Hikers become live within 12 m and keep Hall's distances. At public distance (≤ 7.6 m) they look and nod, Kendon's distance salutation. At social distance (≤ 3.7 m) they say hello, or stop to chat if you waved before. They wave back. Within personal space (1.22 m) they sidestep. A clap within 6 m, or a run at them, makes them wary: no more greetings, and 3.7 m kept.
+
+**Trails.** People walk as active walkers toward the scene's attractors, with the same rule as `paths/desire.py`:
+
+$$\hat e \propto \hat g + 1.4\,\frac{\nabla V}{|\nabla V|}\min(1, 40|\nabla V|) - 6\nabla c$$
+
+V is the trail field blurred by σ = 2.5 m. Both people and the player deposit G += 0.036(1 − G) every 0.35 m, so a path the player keeps walking starts to pull the hikers onto it. The grass shader samples the newly trodden part as a texture: those blades lie over and shorten.
+
+**Checks.** `scripts/play_check.py` drives the viewer headless on a fixed 0.1 s clock and prints what happened; gallery `play.jpg` shows one run. `perception.jpg` plots:
+- the deer's scent zone swinging with the gusts;
+- footstep audibility against wind;
+- sight curves;
+- flight distance against speed, directness and feeding;
+- the alarm of a deer walked at from 150 m. Upwind, scent alerts it at once and it bolts at its 45 m flight distance; downwind the player gets to 23 m.

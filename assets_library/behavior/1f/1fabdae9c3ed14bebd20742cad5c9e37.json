@@ -1,0 +1,119 @@
+{
+ "key": "1fabdae9c3ed14bebd20742cad5c9e37",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 3,
+  "scene": "1373065c7c2d",
+  "species": "gray_squirrel",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 13.4028,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:climb"
+   ],
+   [
+    4.5,
+    "arrive:climb"
+   ],
+   [
+    4.5,
+    "canopy:eat"
+   ],
+   [
+    27.8,
+    "plan:drink"
+   ],
+   [
+    47.0,
+    "alert:human"
+   ],
+   [
+    52.8,
+    "plan:explore"
+   ],
+   [
+    59.0,
+    "alert:human"
+   ],
+   [
+    66.8,
+    "plan:climb"
+   ],
+   [
+    67.0,
+    "arrive:climb"
+   ],
+   [
+    67.0,
+    "canopy:eat"
+   ],
+   [
+    84.8,
+    "plan:climb"
+   ],
+   [
+    85.0,
+    "arrive:climb"
+   ],
+   [
+    85.0,
+    "canopy:rest"
+   ],
+   [
+    101.8,
+    "plan:climb"
+   ],
+   [
+    102.0,
+    "arrive:climb"
+   ],
+   [
+    102.0,
+    "canopy:eat"
+   ],
+   [
+    116.5,
+    "alert:human"
+   ],
+   [
+    123.0,
+    "plan:rest"
+   ],
+   [
+    135.0,
+    "alert:human"
+   ],
+   [
+    138.8,
+    "plan:rest"
+   ],
+   [
+    142.8,
+    "arrive:rest"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "alert": 91,
+   "eat": 220,
+   "idle": 7,
+   "pause": 6,
+   "rest": 215,
+   "travel": 181
+  },
+  "traits": {
+   "boldness": 0.166,
+   "curiosity": 0.127,
+   "laziness": 0.766,
+   "patience": 0.903,
+   "wanderlust": 0.178
+  }
+ },
+ "path": "behavior/1f/1fabdae9c3ed14bebd20742cad5c9e37.npz"
+}

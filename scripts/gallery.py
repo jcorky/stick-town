@@ -23,6 +23,8 @@ SCENES = {
                   "and a turkey flock at golden hour in fall",
     "longleaf": "longleaf pine savanna near Mobile at dusk, dirt path, a few deer",
     "bayou": "cypress bayou floodplain with a shotgun house, a heron, a raccoon, a box turtle and an armadillo at dusk in summer",
+    "walk": "Piedmont hardwood hollow with a farmhouse, a creek, two deer, three squirrels, a turkey flock and two hikers "
+            "in the evening in summer, breezy",
 }
 OUT = os.path.join(ROOT, "docs", "gallery")
 
@@ -496,6 +498,155 @@ def wind_specimen(path, species="white_oak", force=6, frames=16, dt=0.2):
     return path
 
 
+def perception_sheet(path, scene="monte-sano"):
+    """How animals sense the player (§35): scent plume, footsteps against wind noise, sight and flight distance,
+    and the alarm of a deer approached up- and downwind."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from plandscape.fauna import perception as P
+    from plandscape.wind import Wind
+    d = os.path.join(ROOT, "out", scene)
+    s = json.load(open(os.path.join(d, "scene.json")))
+    Ls = np.load(os.path.join(d, "layers.npz"))
+    wj = s["wind"]
+    w = Wind(force=3, from_deg=wj["from_deg"], canopy_h=wj["canopy_h"], seed=s["plan"]["seed"])
+    S = s["plan"]["size_m"]
+    px, py = S / 2, S / 2
+    x = np.linspace(0, S, 200)
+    X, Y = np.meshgrid(x, x)
+    fig, ax = plt.subplots(2, 3, figsize=(21, 12.5))
+    # 1 scent: deer salience around a standing player, at one instant (the plume meanders with v')
+    a = ax[0, 0]
+    a.imshow(Ls["canopy"], origin="lower", extent=(0, S, 0, S), cmap="Greens", alpha=0.35, vmin=0, vmax=1.4)
+    for t, c in ((0.0, "#c0392b"), (20.0, "#7d5ba6"), (40.0, "#1f6f8b")):
+        vx, vy = w.at(px, py, 1.5, t, 0.8)
+        U = float(np.hypot(vx, vy))
+        ux, uy = vx / U, vy / U
+        along = (X - px) * ux + (Y - py) * uy
+        across = -(X - px) * uy + (Y - py) * ux
+        sal = np.vectorize(lambda a_, b_: P.smell("white_tailed_deer", a_, b_, U))(along, across)
+        a.contour(X, Y, sal, levels=[0.3, 0.99], colors=c, linewidths=[0.8, 1.6])
+        a.plot([], [], color=c, label=f"t = {t:.0f} s, U = {U:.1f} m/s")
+    a.plot(px, py, "k*", ms=14, label="player")
+    a.set_title("where a deer smells you (salience 0.3 and 1), Beaufort 3:\nthe plume swings with the gusts")
+    a.legend(fontsize=8, loc="lower left")
+    a.set_aspect("equal")
+    # 2 hearing: footsteps on leaf litter, audible range by wind
+    a = ax[0, 1]
+    dist = np.linspace(1, 120, 300)
+    for U, c in ((0.2, "#1f6f8b"), (0.5, "#2e8b57"), (1.0, "#b8860b"), (2.0, "#c0392b"), (4.0, "#7d5ba6")):
+        L = P.STEP_DB["walk"] + P.GROUND_DB["litter"]
+        h = [P.hearing("white_tailed_deer", L, r, 0, U) for r in dist]
+        a.plot(dist, h, color=c, label=f"wind {U} m/s at 1.5 m: noise {P.wind_noise(U):.0f} dBA")
+    a.plot(dist, [P.hearing("white_tailed_deer", P.CLAP_DB, r, 0, 1.0) for r in dist], "k--", label="a clap, wind 1 m/s")
+    a.set_xlabel("distance (m)")
+    a.set_ylabel("hearing salience")
+    a.set_title("footsteps in leaf litter, heard by a deer:\n\"when the wind blows you can move\" (TPWD)")
+    a.legend(fontsize=8)
+    # 3 sight
+    a = ax[0, 2]
+    for sp, c in (("wild_turkey", "#b8860b"), ("white_tailed_deer", "#c0392b"), ("gray_squirrel", "#7d5ba6"),
+                  ("armadillo", "#2e8b57")):
+        a.plot(dist, [P.sight(sp, r, 0.0, P.WALK) for r in dist], color=c, label=f"{sp.replace('_', ' ')}, walking")
+        a.plot(dist, [P.sight(sp, r, 0.0, 0.0, "crouch") for r in dist], ":", color=c)
+    a.plot(dist, [P.sight("white_tailed_deer", r, 0.0, P.WALK, intensity=0.3) for r in dist], "--", color="#c0392b",
+           label="deer at dusk (twilight eyes)")
+    a.axhline(P.A_ALERT, color="0.5", lw=0.8)
+    a.text(118, P.A_ALERT + 0.01, "alert", ha="right", fontsize=8, color="0.4")
+    a.set_xlabel("distance (m)")
+    a.set_ylabel("sight salience (dotted: crouched and still)")
+    a.set_title("sight: acuity × field of view × motion × posture × light × e^{−d/R}")
+    a.legend(fontsize=8)
+    # 4 flight-initiation distance
+    a = ax[1, 0]
+    v = np.linspace(0.2, 4.5, 100)
+    for sp, c in (("great_blue_heron", "#1f6f8b"), ("white_tailed_deer", "#c0392b"), ("wild_turkey", "#b8860b"),
+                  ("gray_squirrel", "#7d5ba6")):
+        a.plot(v, [P.fid(sp, u, 1.0) for u in v], color=c, label=sp.replace("_", " ") + ", straight at it")
+        a.plot(v, [P.fid(sp, u, 0.0) for u in v], ":", color=c)
+    for hb in (0.5, 1.0, 1.5):
+        a.plot(v, [P.fid("gray_squirrel", u, 1.0, habit=hb) for u in v], "--", color="#7d5ba6", lw=0.7)
+    a.axhline(9.2, color="#7d5ba6", lw=0.5)
+    a.text(4.4, 9.6, "squirrels, urban parks: 9.2 m", ha="right", fontsize=8, color="#7d5ba6")
+    a.set_xlabel("player speed (m/s)")
+    a.set_ylabel("flight-initiation distance (m)")
+    a.set_title("FID: faster and more direct = farther (dotted: passing by;\ndashed: a squirrel fed 2, 4, 5 times)")
+    a.legend(fontsize=8)
+    # 5 alarm traces: walking at a deer from 150 m, up- vs downwind
+    a = ax[1, 1]
+    for k, (label, c) in enumerate((("player downwind of the deer", "#1f6f8b"), ("player upwind (scent reaches it)", "#c0392b"),
+                                     ("player upwind, crouched and creeping", "#7d5ba6"))):
+        m = P.Mind("white_tailed_deer")
+        dd, tt, al, states = 150.0, [], [], []
+        speed = 0.6 if k == 2 else P.WALK
+        for i in range(2400):
+            t = i * 0.1
+            sig = P.sight("white_tailed_deer", dd, 0.3, speed, "crouch" if k == 2 else "stand", 0.6, P.COVER_K * 0.2 * dd)
+            hear = P.hearing("white_tailed_deer", P.STEP_DB["crouch" if k == 2 else "walk"] + P.GROUND_DB["litter"], dd,
+                             0.5 * dd, 0.8)
+            sm = P.smell("white_tailed_deer", dd, 2.0, 2.0) if k else 0.0
+            D = P.fid("white_tailed_deer", speed, 1.0, m.sens, m.habit)
+            m.step(0.1, P.combine(sig, hear, sm), dd, D)
+            tt.append(t)
+            al.append(m.alarm)
+            states.append(m.state)
+            if m.state == "flee":
+                break
+            dd = max(dd - speed * 0.1, 1.0)
+        a.plot(tt, al, color=c, label=f"{label}: {'flees' if states[-1] == 'flee' else states[-1]} at {dd:.0f} m")
+    a.axhline(P.A_ALERT, color="0.5", lw=0.8)
+    a.axhline(P.A_FLEE, color="0.3", lw=0.8)
+    a.set_xlabel("time (s), walking straight at a deer from 150 m (20 % cover)")
+    a.set_ylabel("alarm")
+    a.set_title("alarm: follows the strongest cues up in ~1 s, lets go over ~20 s")
+    a.legend(fontsize=8)
+    # 6 people: Hall's zones and Kendon's greeting phases
+    a = ax[1, 2]
+    for r, name, c in ((7.6, "public: distance salutation (a nod)", "#dfe8d8"), (3.7, "social: close salutation, chat", "#c9dcc0"),
+                       (1.22, "personal: sidestep", "#a8c79a")):
+        a.add_patch(plt.Circle((0, 0), r, color=c, ec="0.5"))
+        a.text(0, r - 0.45, name, ha="center", fontsize=9)
+    a.plot(0, 0, "o", color="#34415a", ms=12)
+    a.text(0, -0.6, "hiker", ha="center", fontsize=9)
+    a.set_xlim(-9, 9)
+    a.set_ylim(-9, 9)
+    a.set_aspect("equal")
+    a.set_title("people keep Hall's distances; a clap within 6 m or a run at them\nmakes them wary (no more greetings, 3.7 m kept)")
+    fig.tight_layout()
+    fig.savefig(path, dpi=72)
+    plt.close(fig)
+    return path
+
+
+def play_sheet(path, scene="walk"):
+    """The player walks in (§35): headless play test on a fixed clock; four moments and the event log."""
+    import subprocess
+    d = os.path.join(ROOT, "out", scene)
+    shot = os.path.join(d, "play.png")
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "play_check.py"), d, shot], capture_output=True,
+                       text=True, timeout=1800)
+    log = [ln for ln in r.stdout.splitlines() if "·" in ln][:34]
+    base = os.path.splitext(shot)[0]
+    ims = [Image.open(f"{base}-{n}.png").convert("RGB").resize((770, 490)) for n in ("smell", "flee", "food", "people")]
+    W = Image.new("RGB", (1540 + 560, 980), (247, 248, 242))
+    for i, im in enumerate(ims):
+        W.paste(im, ((i % 2) * 770, (i // 2) * 490))
+    dr = ImageDraw.Draw(W)
+    try:
+        from PIL import ImageFont
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
+    except OSError:
+        font = None
+    y = 10
+    for ln in log:
+        dr.text((1550, y), ln.replace("<b>", "").replace("</b>", "")[:70], fill=(31, 38, 32), font=font)
+        y += 28
+    W.save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -521,6 +672,8 @@ def main(argv=None):
     _jpeg(flight_sheet(os.path.join(ROOT, "out", "flight.png")), os.path.join(OUT, "flight.jpg"), 1200)
     _jpeg(wind_sheet(os.path.join(ROOT, "out", "wind.png")), os.path.join(OUT, "wind.jpg"), 1600)
     wind_specimen(os.path.join(OUT, "wind-oak.gif"))
+    _jpeg(perception_sheet(os.path.join(ROOT, "out", "perception.png")), os.path.join(OUT, "perception.jpg"), 1600)
+    _jpeg(play_sheet(os.path.join(ROOT, "out", "play-sheet.png")), os.path.join(OUT, "play.jpg"), 1700)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

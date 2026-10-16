@@ -1,0 +1,134 @@
+{
+ "key": "f8602f6a0784ad55b0af5aa91089f4c7",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 9,
+  "scene": "1373065c7c2d",
+  "species": "wild_turkey",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 71.442,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:drink"
+   ],
+   [
+    1.0,
+    "alert:human"
+   ],
+   [
+    5.0,
+    "plan:eat"
+   ],
+   [
+    18.8,
+    "alert:human"
+   ],
+   [
+    22.2,
+    "plan:eat"
+   ],
+   [
+    32.0,
+    "alert:human"
+   ],
+   [
+    34.2,
+    "plan:rest"
+   ],
+   [
+    46.2,
+    "plan:explore"
+   ],
+   [
+    50.0,
+    "plan:explore"
+   ],
+   [
+    50.5,
+    "alert:human"
+   ],
+   [
+    52.8,
+    "plan:explore"
+   ],
+   [
+    68.0,
+    "alert:human"
+   ],
+   [
+    72.8,
+    "plan:drink"
+   ],
+   [
+    78.0,
+    "plan:drink"
+   ],
+   [
+    84.2,
+    "alert:human"
+   ],
+   [
+    87.2,
+    "plan:drink"
+   ],
+   [
+    97.5,
+    "alert:human"
+   ],
+   [
+    99.5,
+    "plan:drink"
+   ],
+   [
+    106.8,
+    "alert:human"
+   ],
+   [
+    109.5,
+    "plan:drink"
+   ],
+   [
+    114.0,
+    "arrive:drink"
+   ],
+   [
+    122.5,
+    "plan:drink"
+   ],
+   [
+    122.8,
+    "arrive:drink"
+   ],
+   [
+    134.2,
+    "plan:eat"
+   ],
+   [
+    145.5,
+    "plan:rest"
+   ]
+  ],
+  "species": "wild_turkey",
+  "state_mix": {
+   "alert": 90,
+   "drink": 78,
+   "idle": 14,
+   "pause": 56,
+   "travel": 482
+  },
+  "traits": {
+   "boldness": 0.705,
+   "curiosity": 0.599,
+   "laziness": 0.437,
+   "patience": 0.498,
+   "wanderlust": 0.234
+  }
+ },
+ "path": "behavior/f8/f8602f6a0784ad55b0af5aa91089f4c7.npz"
+}

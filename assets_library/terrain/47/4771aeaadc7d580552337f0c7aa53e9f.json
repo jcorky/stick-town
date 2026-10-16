@@ -1,0 +1,26 @@
+{
+ "key": "4771aeaadc7d580552337f0c7aa53e9f",
+ "kind": "terrain",
+ "version": "terrain-0.3.1",
+ "params": {
+  "creek": true,
+  "province": "piedmont",
+  "res": 1.0,
+  "seed": 974227,
+  "size": 128.0
+ },
+ "meta": {
+  "created": "2026-10-16T19:45:41",
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "province": "piedmont",
+  "res": 1.0,
+  "shape": [
+   129,
+   129
+  ]
+ },
+ "path": "terrain/47/4771aeaadc7d580552337f0c7aa53e9f.npz"
+}

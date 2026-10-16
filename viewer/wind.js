@@ -10,6 +10,7 @@
       uTime: { value: 0 }, uDir: { value: [0, 1] }, uUh: { value: 2 }, uUc: { value: 2 },
       uF: { value: [] }, uAU: { value: [] }, uAV: { value: [] }, uPU: { value: [] }, uPV: { value: [] },
       uLU: { value: [] }, uLV: { value: [] },
+      uTrail: { value: null }, uTrailXf: { value: [0, 0, 1, 1] },   // live trampling (player.js), grass only
     },
   };
 
@@ -17,7 +18,11 @@
     W.json = json; W.C = json.constants; W.n = json.f.length;
     for (const [u, k] of [['uF', 'f'], ['uAU', 'au'], ['uAV', 'av'], ['uPU', 'pu'], ['uPV', 'pv'], ['uLU', 'lu'], ['uLV', 'lv']])
       W.uniforms[u].value = json[k].slice();
-    W.ratio = json.Uh / Math.max(json.U10, 1e-6);   // every profile step is linear in U10, so U_h/U10 is fixed
+    W.ratio = json.Uh / Math.max(json.U10, 1e-6);
+    if (typeof THREE !== 'undefined' && !W.uniforms.uTrail.value) {   // nothing trodden yet: one black texel
+      W.uniforms.uTrail.value = new THREE.DataTexture(new Uint8Array([0]), 1, 1, THREE.LuminanceFormat);
+      W.uniforms.uTrail.value.needsUpdate = true;
+    }   // every profile step is linear in U10, so U_h/U10 is fixed
     W.setForce(json.force); W.setFrom(json.from_deg);
   };
   W.beaufortU10 = function (F) {
@@ -74,6 +79,7 @@
       #define NW ${W.n}
       uniform float uTime, uUh, uUc; uniform vec2 uDir;
       uniform float uF[NW], uAU[NW], uAV[NW], uPU[NW], uPV[NW], uLU[NW], uLV[NW];
+      uniform sampler2D uTrail; uniform vec4 uTrailXf;
       // F ∝ U² (1 + U/U0)^b: gain relative to U_REF, and its log-slope β
       float windGain(float U) { return pow(U / ${f(C.U_REF)}, 2.0) * pow((1.0 + U / ${f(C.U0)}) / ${f(1 + C.U_REF / C.U0)}, ${f(C.VOGEL_B)}); }
       float windBeta(float U) { float x = U / ${f(C.U0)}; return 2.0 + ${f(C.VOGEL_B)} * x / (1.0 + x); }
@@ -129,7 +135,10 @@
       vec2 rg = windModal(vxy, ${f(C.GRASS_HZ)}, ${f(C.ZETA_GRASS)}, _wind0.w, 0.3);
       float bend = ${f(C.GRASS_BETA)} * gC / (1.0 + gC);
       float beta = clamp(bend * (1.0 + 2.0 * rg.x), 0.0, 1.45), side = bend * rg.y;
-      float hh = _wind0.x * _wind0.z;
+      // blades the player has trodden lie over and shorten (the baked trail is already in the geometry)
+      float trod = texture2D(uTrail, (vxy - uTrailXf.xy) / uTrailXf.zw).r;
+      bend += (1.3 - bend) * trod; beta = max(beta, bend);
+      float hh = _wind0.x * _wind0.z * (1.0 - 0.45 * trod);
       vec2 dxy = hh * (sin(beta) * uDir + sin(side) * vec2(-uDir.y, uDir.x));
       transformed += vec3(dxy.x, -hh * (1.0 - cos(beta)), -dxy.y);`;
   };

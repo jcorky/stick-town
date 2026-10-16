@@ -3,6 +3,17 @@
 ## Unreleased
 
 **Added**
+- Walking in (TECHNIQUES §35). The viewer's **Walk in** button makes the player a person the animals sense:
+  - **Sight:** acuity, field of view, motion, posture, light and cover.
+  - **Hearing:** footsteps by ground and gait, and claps, with 6 dB per distance doubling and foliage loss, masked by wind noise from the §34 field.
+  - **Smell:** a Briggs class-D plume carried and meandered by that wind, drawn as drifting motes.
+  - **Alarm:** follows the cues up in ~1 s and lets go over ~20 s, leading to sourced displays (stomp and snort, putt, kuk and tail flag).
+  - **Flight:** run with the flag up, bolt up a trunk, flush and fly, shut the shell, or the armadillo's 1 m jump. It triggers inside a flight-initiation distance that grows with speed and directness (squirrels 9.2 m, Eason 2019).
+  - **Learning:** animals habituate to a quiet visitor, are sensitised by claps and charges, and come to scattered food, getting tamer with each meal.
+  - **Hikers:** keep Hall's distances, nod, greet, chat, wave back, sidestep, and become wary if startled. They walk as active walkers, so paths the player wears pull them; trodden grass lies down live.
+  - **Export:** each animal node carries its rig (`extras.rig`); `world.bin` carries the height and habitat layers; `scene.json` carries the perception constants, gait tables and attractors.
+  - **Tests and sources:** `viewer/life.js` mirrors `plandscape/fauna/perception.py` and the gait maths, tested to 1e-9. Sources are in `catalog/perception_sources.json`.
+  - **Tools:** `scripts/play_check.py` is a headless play test. Gallery adds the `walk` scene, `perception.jpg` and `play.jpg`.
 - Wind (TECHNIQUES §34). One deterministic gust field drives every tree, limb, branch, leaf and grass blade, evaluated per vertex in the viewer with no state and mirrored exactly in Python.
   - **Field.** Kaimal spectra scaled to measured intensities (σ_u = 1.7 u* over canopies, σ_v = 0.8 σ_u). Frozen turbulence travels downwind at U_h, with Davenport lateral coherence from Cauchy-tilted waves. The mean profile is log-law above the canopy (d = ⅔h, z₀ = 0.123h) and exponential inside it; Beaufort force comes from the NOAA table.
   - **Drag.** Vogel streamlining in a smooth law, F ∝ U²(1 + U/U0)^b with b = −1, giving C_d = 0.185 at 20 m/s.

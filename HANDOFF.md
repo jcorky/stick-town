@@ -34,6 +34,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 | `sources/` + `catalog/` | 23 repos probed; asset sites (Poly Haven, ambientCG) probed CC0; credits in `catalog/PROVENANCE.md` |
 | `wind/` + `viewer/wind.js` | one gust field (Kaimal, frozen turbulence, Davenport coherence, log/exponential profile, NOAA Beaufort) driving trunk, limb, branch, leaf and grass oscillators per vertex (§34); constants in `catalog/wind_sources.json` |
 | `viewer/index.html` | lighting, physically based wind with Beaufort slider, leaf-shaped shadows, timeline, follow-cam, event log |
+| `viewer/player.js` + `life.js` + `fauna/perception.py` | Walk in: sight/hearing/smell → alarm → displays, flight, learning, food; hikers with proxemics; live trails (§35) |
 
 **Session 2 history note:** session 1's commits were imported from the owner's bundle. Its building/body/terrain/behaviour LFS objects were never pushed and are lost; they were regenerated, and the asset commit was rewritten (owner approved) so the history only references objects that exist.
 
@@ -51,7 +52,11 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 ## 3. Next priorities, in order
 
 **Session 4 asked for:** wind through the foliage (done, §34) and player actions that change how animals and NPCs
-behave (in progress: sourced perception data is in the session-4 notes, see `catalog/` when it lands). Wind gaps:
+behave (done, §35: Walk in; `catalog/perception_sources.json`; `scripts/play_check.py`). Perception gaps: FIDs for
+deer on foot, turkeys, raccoons, coyotes and herons, footstep levels, scent ranges, crouching and per-encounter
+habituation rates are design values (nothing citable found); live animals never hand back to their clip; people
+do not path-find around buildings; the avatar is a box figure. Next: predators that use the same senses (coyote
+stalking downwind), herd alarm spreading (one deer's snort alerts the rest), and saving a player's visit. Wind gaps:
 broadleaf f0 comes out 0.6–1.5 Hz vs 0.26–0.34 Hz measured (stocky stems, no branch–trunk mass damping); grass and
 leaf-flutter amplitudes and U0 are design values; Kaimal is extrapolated above 0.3 Hz.
 

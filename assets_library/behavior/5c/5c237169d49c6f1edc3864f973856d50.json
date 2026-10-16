@@ -1,0 +1,147 @@
+{
+ "key": "5c237169d49c6f1edc3864f973856d50",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 0,
+  "scene": "1373065c7c2d",
+  "species": "white_tailed_deer",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T19:46:02",
+  "distance": 188.3125,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "flee:human"
+   ],
+   [
+    5.2,
+    "plan:explore"
+   ],
+   [
+    11.0,
+    "arrive:explore"
+   ],
+   [
+    12.5,
+    "plan:explore"
+   ],
+   [
+    18.5,
+    "plan:explore"
+   ],
+   [
+    35.8,
+    "plan:explore"
+   ],
+   [
+    49.0,
+    "alert:human"
+   ],
+   [
+    53.2,
+    "plan:drink"
+   ],
+   [
+    58.5,
+    "plan:eat"
+   ],
+   [
+    59.5,
+    "alert:human"
+   ],
+   [
+    66.0,
+    "plan:eat"
+   ],
+   [
+    74.5,
+    "alert:human"
+   ],
+   [
+    77.2,
+    "plan:drink"
+   ],
+   [
+    87.0,
+    "alert:human"
+   ],
+   [
+    90.8,
+    "plan:eat"
+   ],
+   [
+    100.2,
+    "plan:rest"
+   ],
+   [
+    104.0,
+    "alert:human"
+   ],
+   [
+    109.5,
+    "plan:eat"
+   ],
+   [
+    125.2,
+    "arrive:eat"
+   ],
+   [
+    129.5,
+    "alert:human"
+   ],
+   [
+    132.2,
+    "plan:explore"
+   ],
+   [
+    144.0,
+    "arrive:explore"
+   ],
+   [
+    146.8,
+    "alert:human"
+   ],
+   [
+    150.0,
+    "plan:eat"
+   ],
+   [
+    164.0,
+    "alert:human"
+   ],
+   [
+    167.5,
+    "plan:rest"
+   ],
+   [
+    175.2,
+    "alert:human"
+   ],
+   [
+    179.0,
+    "plan:drink"
+   ]
+  ],
+  "species": "white_tailed_deer",
+  "state_mix": {
+   "alert": 135,
+   "eat": 17,
+   "flee": 20,
+   "idle": 15,
+   "pause": 64,
+   "travel": 469
+  },
+  "traits": {
+   "boldness": 0.325,
+   "curiosity": 0.23,
+   "laziness": 0.096,
+   "patience": 0.529,
+   "wanderlust": 0.161
+  }
+ },
+ "path": "behavior/5c/5c237169d49c6f1edc3864f973856d50.npz"
+}

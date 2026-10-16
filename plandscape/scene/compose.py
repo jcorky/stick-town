@@ -20,7 +20,7 @@ from .. import textures
 from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
 from ..export.gltf import GLB, _to_gltf, pitch_quat, qmul, yaw_quat
 from ..fauna.agents import FAUNA, World, run, spawn
-from ..fauna import gait, motion
+from ..fauna import gait, motion, perception
 from ..fauna.bodies import rig
 from ..flora import impostor
 from ..flora.species import SPECIES
@@ -77,6 +77,34 @@ def _poisson(r, n_try, bounds, min_d, ok_fn):
             continue
         pts.append((p[0], p[1], min_d(p) * 0.5))
     return pts
+
+
+def _occupancy(hf, gprops):
+    """1 m grid count of ground props (shrubs, ferns, logs): the understory part of visual cover."""
+    occ = np.zeros_like(hf.z)
+    for gp in gprops:
+        i, j = int(round((gp["y"] - hf.origin[1]) / hf.res)), int(round((gp["x"] - hf.origin[0]) / hf.res))
+        if 0 <= i < occ.shape[0] and 0 <= j < occ.shape[1]:
+            occ[i, j] += 1
+    return occ
+
+
+def write_world(path, hf, layers):
+    """The world the viewer's live animals and player walk on (§35): heights as float32, 0..1 layers as uint8,
+    one flat binary; returns its index for scene.json."""
+    ny, nx = hf.z.shape
+    idx, off = {}, 0
+    with open(path, "wb") as f:
+        z = hf.z.astype(np.float32)
+        f.write(z.tobytes())
+        idx["z"] = dict(offset=0, dtype="float32")
+        off = z.nbytes
+        for k, a in layers.items():
+            b = np.round(np.clip(np.asarray(a, float), 0, 1) * 255).astype(np.uint8)
+            f.write(b.tobytes())
+            idx[k] = dict(offset=off, dtype="uint8", scale=1 / 255)
+            off += b.nbytes
+    return dict(file="world.bin", shape=[ny, nx], res=hf.res, origin=list(hf.origin), layers=idx)
 
 
 def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: AssetStore | None = None,
@@ -467,7 +495,15 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             g.nodes[wn]["scale"] = [1.0, 1.0, gait.WING_FOLD]  # span is world y = glTF z
             wings.append(wn)
         trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs + wings)
-        node = g.node(f"{a.spec.key}_{a.id}", children=[trunk])
+        # what the viewer's live controller needs to walk, look and flee by itself (viewer/life.js, §35)
+        live = dict(kind=rg["kind"], hip=round(float(rg["hip"]), 4), lie=round(float(rg["lie"] or 0), 4),
+                    legs=[dict(l1=round(float(lg["l1"]), 4), l2=round(float(lg["l2"]), 4), knee=float(lg["knee"]))
+                          for lg in rg["legs"]],
+                    graze=round(float(rg["neck"]["graze"]), 4) if rg["neck"] else 0.0,
+                    flag=round(float(rg["tail"]["flag"]), 4) if rg["tail"] else 0.0,
+                    walk=a.spec.walk, run=a.spec.run, flies=a.spec.flies, climbs=a.spec.climbs,
+                    withdraws=a.spec.withdraws, eats=a.spec.eats)
+        node = g.node(f"{a.spec.key}_{a.id}", children=[trunk], extras={"rig": live})
         akids.append(node)
         if len(a.log) > 1:  # full-rate path, turn-rate-limited heading, keys reduced (TECHNIQUES §30)
             tracks.append((node, *motion.export_track(a.log, a.spec.key)))
@@ -535,11 +571,20 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                  credits=sorted({(p_.meta["source"]["url"], p_.meta["source"]["licence"],
                                   ", ".join(p_.meta["source"].get("authors", []))) for p_ in gparts.values()}),
                  agents=[dict(id=a.id, species=a.spec.key, traits={k: round(v, 2) for k, v in a.trait.items()},
-                              events=a.events[:80]) for a in agents])
-    with open(os.path.join(out_dir, "scene.json"), "w") as f:
-        json.dump(scene, f, indent=1, default=float)
+                              events=a.events[:80]) for a in agents],
+                 perception=perception.to_json(), attractors=[[float(x), float(y)] for x, y in world.attractors],
+                 gait=dict(QUAD={k: [list(v[0]), v[1]] for k, v in gait.QUAD.items()},
+                           BIPED={k: [list(v[0]), v[1]] for k, v in gait.BIPED.items()},
+                           LIFT=gait.LIFT, BOB=gait.BOB, FLAP_HZ=gait.FLAP_HZ, FLAP_AMP=float(gait.FLAP_AMP),
+                           WING_FOLD=gait.WING_FOLD))
     np.savez_compressed(os.path.join(out_dir, "layers.npz"), z=hf.z, trail=field.G, canopy=canopy,
                         grass=dens, moisture=moist, water=water)
+    scene["world"] = write_world(os.path.join(out_dir, "world.bin"), hf, dict(
+        canopy=canopy, trail=field.G, water=water, grass=dens, shore=world.shore, forage=world.forage,
+        mast=world.mast, cover=np.clip(0.7 * canopy + 0.3 * ndimage.gaussian_filter(
+            _occupancy(hf, gprops), 1.5) * 4, 0, 1)))
+    with open(os.path.join(out_dir, "scene.json"), "w") as f:
+        json.dump(scene, f, indent=1, default=float)
     log(f"exported {glb} ({size_mb:.1f} MB) in {time.time() - t0:.1f}s")
     return dict(dir=out_dir, glb=glb, stats=stats, hf=hf, field=field, canopy=canopy, agents=agents,
                 world=world, placements=placements, variants=variants, ter=ter, grass=grass,
