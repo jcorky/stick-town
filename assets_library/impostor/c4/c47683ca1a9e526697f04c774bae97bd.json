@@ -1,0 +1,20 @@
+{
+ "key": "c47683ca1a9e526697f04c774bae97bd",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "fall",
+  "seed": [
+   0,
+   3
+  ],
+  "species": "bald_cypress",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:16:00"
+ },
+ "path": "impostor/c4/c47683ca1a9e526697f04c774bae97bd.npz"
+}

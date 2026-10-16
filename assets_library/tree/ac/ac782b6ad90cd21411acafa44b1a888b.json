@@ -1,0 +1,23 @@
+{
+ "key": "ac782b6ad90cd21411acafa44b1a888b",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "spring",
+  "seed": [
+   0,
+   2
+  ],
+  "species": "tulip_poplar"
+ },
+ "meta": {
+  "created": "2026-10-16T20:18:36",
+  "height": 30.9836,
+  "species": "tulip_poplar",
+  "tris": 15256,
+  "trunk_radius": 0.3574
+ },
+ "path": "tree/ac/ac782b6ad90cd21411acafa44b1a888b.npz"
+}

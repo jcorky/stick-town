@@ -1,0 +1,20 @@
+{
+ "key": "41385207753f0ecdf644edb69b6f2786",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "fall",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "live_oak",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:12:18"
+ },
+ "path": "impostor/41/41385207753f0ecdf644edb69b6f2786.npz"
+}

@@ -1,0 +1,23 @@
+{
+ "key": "e789126086e588b04484312326be300b",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "winter",
+  "seed": [
+   0,
+   3
+  ],
+  "species": "loblolly_pine"
+ },
+ "meta": {
+  "created": "2026-10-16T20:14:10",
+  "height": 27.7525,
+  "species": "loblolly_pine",
+  "tris": 11544,
+  "trunk_radius": 0.3101
+ },
+ "path": "tree/e7/e789126086e588b04484312326be300b.npz"
+}

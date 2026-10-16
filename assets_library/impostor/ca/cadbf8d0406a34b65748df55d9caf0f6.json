@@ -1,0 +1,20 @@
+{
+ "key": "cadbf8d0406a34b65748df55d9caf0f6",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.5,
+  "season": "spring",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "tulip_poplar",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:18:34"
+ },
+ "path": "impostor/ca/cadbf8d0406a34b65748df55d9caf0f6.npz"
+}

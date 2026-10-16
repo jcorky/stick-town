@@ -1,0 +1,23 @@
+{
+ "key": "8a278693064031aa3fb6f2f954aed7eb",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "fall",
+  "seed": [
+   0,
+   2
+  ],
+  "species": "sabal_palmetto"
+ },
+ "meta": {
+  "created": "2026-10-16T20:24:06",
+  "height": 20.144,
+  "species": "sabal_palmetto",
+  "tris": 1520,
+  "trunk_radius": 0.15
+ },
+ "path": "tree/8a/8a278693064031aa3fb6f2f954aed7eb.npz"
+}

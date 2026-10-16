@@ -1,0 +1,20 @@
+{
+ "key": "37a24f77ece4813ddd3552c2097e25fc",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "summer",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "flowering_dogwood",
+  "tree": "tree-0.3.3"
+ },
+ "meta": {
+  "created": "2026-10-16T20:22:22"
+ },
+ "path": "impostor/37/37a24f77ece4813ddd3552c2097e25fc.npz"
+}

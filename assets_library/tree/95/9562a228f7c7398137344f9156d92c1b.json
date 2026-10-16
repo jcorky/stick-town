@@ -1,0 +1,23 @@
+{
+ "key": "9562a228f7c7398137344f9156d92c1b",
+ "kind": "tree",
+ "version": "tree-0.3.3",
+ "params": {
+  "detail": "med",
+  "moisture": 0.8,
+  "season": "summer",
+  "seed": [
+   0,
+   1
+  ],
+  "species": "southern_magnolia"
+ },
+ "meta": {
+  "created": "2026-10-16T20:16:35",
+  "height": 23.7885,
+  "species": "southern_magnolia",
+  "tris": 20242,
+  "trunk_radius": 0.3775
+ },
+ "path": "tree/95/9562a228f7c7398137344f9156d92c1b.npz"
+}
