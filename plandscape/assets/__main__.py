@@ -23,13 +23,21 @@ from ..scene.buildings import generate_building
 from .store import GENERATOR_VERSIONS, AssetStore, mesh_codec, tree_codec
 
 
+DERIVED = {"behavior": "terrain", "impostor": "tree"}  # kind → the upstream generator its params must name
+
+
 def prune(store):
     """Delete entries whose generator version is no longer current (they can never be hit again), and
-    behaviour clips lived on a superseded terrain version."""
+    derived entries built on a superseded upstream: a param named after a kind whose value is a version string
+    of that kind (behaviour clips carry terrain="terrain-…", impostors tree="tree-…") must still be current."""
     keep, gone = {}, 0
     for k, e in store.entries.items():
-        stale_ground = e.kind == "behavior" and e.params.get("terrain") != GENERATOR_VERSIONS["terrain"]
-        if e.version == GENERATOR_VERSIONS.get(e.kind) and not stale_ground:
+        if DERIVED.get(e.kind) and DERIVED[e.kind] not in e.params:  # made before they recorded their upstream
+            stale_up = True
+        else:
+            stale_up = any(isinstance(v, str) and q in GENERATOR_VERSIONS and v.startswith(f"{q}-")
+                           and v != GENERATOR_VERSIONS[q] for q, v in e.params.items())
+        if e.version == GENERATOR_VERSIONS.get(e.kind) and not stale_up:
             keep[k] = e
             continue
         gone += 1

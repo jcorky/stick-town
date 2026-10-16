@@ -17,7 +17,7 @@ import numpy as np
 from scipy import ndimage
 
 from .. import textures
-from ..assets.store import AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
+from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
 from ..export.gltf import GLB
 from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna.bodies import body
@@ -234,9 +234,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                                                       detail=plan.detail, moisture=params["moisture"]), tenc, tdec)
     impostors = {}
     for key, tm in variants.items():  # far-LOD cross billboards, baked once per tree model (TECHNIQUES §23)
-        rgba = store.get_or_build("impostor", vparams[key], lambda: impostor.bake(tm),
+        ip = dict(vparams[key], tree=GENERATOR_VERSIONS["tree"])  # a new tree generator makes new impostors
+        rgba = store.get_or_build("impostor", ip, lambda: impostor.bake(tm),
                                   lambda a: ({"rgba": a}, {}, None), lambda a, meta: a["rgba"])
-        tex = textures.register(textures.Texture.from_rgba(f"impostor/{AssetStore.key('impostor', vparams[key])}", rgba))
+        tex = textures.register(textures.Texture.from_rgba(f"impostor/{AssetStore.key('impostor', ip)}", rgba))
         impostors[key] = impostor.mesh(tm, tex.key, tex.mean)
     log(f"trees {len(placements)} placed, {len(variants)} unique models + impostors ({time.time() - t0:.1f}s)")
 

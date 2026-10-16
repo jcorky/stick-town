@@ -1,0 +1,384 @@
+{
+ "_about": "Sourced reference values for plandscape.flora.species (session 3). Every value has a URL and a verbatim quote; metres converted from the source's units. Silvics = Burns & Honkala (1990), Agriculture Handbook 654; '#page=' is the PDF page. Fetched 2026-10-16. '[ft]' marks the scan's OCR misreading of 'ft'.",
+ "species": {
+  "live_oak": {
+   "height": {
+    "value": [
+     15,
+     24
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=761",
+    "quote": "Open-grown specimens may have trunks 200 cm (79 in) in d.b.h. and average 15 m (50 ft) in height.",
+    "note": "low end Silvics average (open-grown); high end EDIS ST564 'Height: 60 to 80 feet' (24.4 m)"
+   },
+   "dbh": {
+    "value": [
+     0.91,
+     1.22
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/quevir/all.html",
+    "quote": "Open-grown trees average 50 feet (15 m) in height and 36 to 48 inches (91-122 cm) in d.b.h."
+   },
+   "leaf_size": {
+    "value": [
+     0.051,
+     0.127
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST564",
+    "quote": "Leaf blade length: 2 to 5 inches"
+   },
+   "habit": {
+    "value": "evergreen",
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=761",
+    "quote": "is evergreen with a variety of forms, shrubby or dwarfed to large and spreading"
+   }
+  },
+  "loblolly_pine": {
+   "height": {
+    "value": [
+     27,
+     34
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pintae/all.html",
+    "quote": "is 90 to 110 feet (27-34 m) tall and 24 to 30 inches (61-76 cm) in diameter at maturity"
+   },
+   "dbh": {
+    "value": [
+     0.61,
+     0.76
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pintae/all.html",
+    "quote": "is 90 to 110 feet (27-34 m) tall and 24 to 30 inches (61-76 cm) in diameter at maturity"
+   },
+   "leaf_size": {
+    "value": [
+     0.152,
+     0.229
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST478",
+    "quote": "Leaf blade length: 6 to 9 inches"
+   },
+   "habit": {
+    "value": "evergreen",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pintae/all.html",
+    "quote": "Loblolly pine is a medium- to large-sized native, evergreen conifer"
+   }
+  },
+  "longleaf_pine": {
+   "height": {
+    "value": [
+     30.5,
+     36.6
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pinpal/all.html",
+    "quote": "Mature trees attain a height of 100 to 120 feet (30.5-36.6 m)"
+   },
+   "dbh": {
+    "value": [
+     0.61,
+     0.76
+    ],
+    "url": "https://plants.sc.egov.usda.gov/DocumentLibrary/factsheet/pdf/fs_pipa2.pdf",
+    "quote": "Mature trees attain a height of 100 to 120 feet and 2½ feet in diameter.",
+    "note": "source gives one value (0.76 m); the lower bound 0.8 × that is ours"
+   },
+   "leaf_size": {
+    "value": [
+     0.2,
+     0.46
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pinpal/all.html",
+    "quote": "Needles are 8 to 18 inches (20-46 cm) long"
+   },
+   "habit": {
+    "value": "evergreen",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/pinpal/all.html",
+    "quote": "Longleaf pine is a long-lived, native, evergreen conifer with scaly bark."
+   }
+  },
+  "bald_cypress": {
+   "height": {
+    "value": [
+     30.5,
+     36.6
+    ],
+    "url": "https://plants.sc.egov.usda.gov/DocumentLibrary/plantguide/pdf/pg_tadi2.pdf",
+    "quote": "frequently reaches 100 to 120 feet in height and 3 to 6 feet in diameter."
+   },
+   "dbh": {
+    "value": [
+     0.91,
+     1.83
+    ],
+    "url": "https://plants.sc.egov.usda.gov/DocumentLibrary/plantguide/pdf/pg_tadi2.pdf",
+    "quote": "frequently reaches 100 to 120 feet in height and 3 to 6 feet in diameter."
+   },
+   "leaf_size": {
+    "value": [
+     0.013,
+     0.019
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST620",
+    "quote": "Leaf blade length: ½ - ¾ inch"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://research.fs.usda.gov/download/treesearch/1547.pdf#page=571",
+    "quote": "is a deciduous conifer that grows on saturated and seasonally inundated soils"
+   }
+  },
+  "southern_magnolia": {
+   "height": {
+    "value": [
+     18,
+     24
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=455",
+    "quote": "average 18 to 24 m (60 to 80 [ft]) tall and 61 to 91 cm (24 to 36 in) in d.b.h. in 80 to 120 years."
+   },
+   "dbh": {
+    "value": [
+     0.61,
+     0.91
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=455",
+    "quote": "average 18 to 24 m (60 to 80 [ft]) tall and 61 to 91 cm (24 to 36 in) in d.b.h. in 80 to 120 years."
+   },
+   "leaf_size": {
+    "value": [
+     0.102,
+     0.203
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST371",
+    "quote": "Leaf blade length: 4 to 8 inches"
+   },
+   "habit": {
+    "value": "evergreen",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/maggra/all.html",
+    "quote": "medium-sized, native evergreen tree"
+   }
+  },
+  "sweetgum": {
+   "height": {
+    "value": [
+     15,
+     45
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/liqsty/all.html",
+    "quote": "reaches heights of 50 to 150 feet (15-45 m) at maturity",
+    "note": "our range 18–30 m lies inside it (EDIS ST358 landscape: 60 to 75 feet)"
+   },
+   "dbh": {
+    "value": [
+     0.9,
+     1.5
+    ],
+    "url": "https://plants.sc.egov.usda.gov/DocumentLibrary/factsheet/pdf/fs_list2.pdf",
+    "quote": "can grow to over 100 feet in height and 3 to 5 feet in diameter"
+   },
+   "leaf_size": {
+    "value": [
+     0.102,
+     0.152
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST358",
+    "quote": "Leaf blade length: 4 to 6 inches"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/liqsty/all.html",
+    "quote": "large, native, long-lived, deciduous tree"
+   }
+  },
+  "tulip_poplar": {
+   "height": {
+    "value": [
+     30.5,
+     45.7
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=416",
+    "quote": "more often they are from 30.5 to 45.7 m (100 to 150 ft) at maturity, with a straight trunk 0.6 to 1.5 m (2 to 5 ft) in diameter."
+   },
+   "dbh": {
+    "value": [
+     0.6,
+     1.5
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=416",
+    "quote": "more often they are from 30.5 to 45.7 m (100 to 150 ft) at maturity, with a straight trunk 0.6 to 1.5 m (2 to 5 ft) in diameter."
+   },
+   "leaf_size": {
+    "value": [
+     0.102,
+     0.203
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST363",
+    "quote": "Leaf blade length: 4 to 8 inches"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/lirtul/all.html",
+    "quote": "Tuliptree is a tall, deciduous, long-lived, broadleaf tree."
+   }
+  },
+  "white_oak": {
+   "height": {
+    "value": [
+     24,
+     30
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=615",
+    "quote": "often 24 to 30 m (80 to 100 ft) in height and 91 to 122 cm (36 to 48 in) in d.b.h."
+   },
+   "dbh": {
+    "value": [
+     0.91,
+     1.22
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=615",
+    "quote": "often 24 to 30 m (80 to 100 ft) in height and 91 to 122 cm (36 to 48 in) in d.b.h."
+   },
+   "leaf_size": {
+    "value": [
+     0.051,
+     0.203
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST541",
+    "quote": "Leaf blade length: 2 to 8 inches"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/quealb/all.html",
+    "quote": "medium to large, spreading, deciduous tree"
+   }
+  },
+  "water_oak": {
+   "height": {
+    "value": [
+     15.2,
+     24.4
+    ],
+    "url": "https://plants.ces.ncsu.edu/plants/quercus-nigra/",
+    "quote": "usually grows to a height of 50 to 80 feet tall"
+   },
+   "dbh": {
+    "value": [
+     0.86,
+     1.07
+    ],
+    "url": "https://plants.ces.ncsu.edu/plants/quercus-nigra/",
+    "quote": "with a trunk diameter of 3.5 feet",
+    "note": "source gives one value (1.07 m); the lower bound 0.8 × that is ours"
+   },
+   "leaf_size": {
+    "value": [
+     0.051,
+     0.102
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST553",
+    "quote": "Leaf blade length: 2 to 4 inches"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/quenig/all.html",
+    "quote": "semievergreen in warmer parts of its range but completely deciduous in other areas"
+   }
+  },
+  "flowering_dogwood": {
+   "height": {
+    "value": [
+     9,
+     12
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=288",
+    "quote": "Heights on good sites of 9 to 12 m (30 to 40 ft) are common, with ranges in d.b.h. of 20 to 40 cm (8 to 16 in)."
+   },
+   "dbh": {
+    "value": [
+     0.2,
+     0.4
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=288",
+    "quote": "Heights on good sites of 9 to 12 m (30 to 40 ft) are common, with ranges in d.b.h. of 20 to 40 cm (8 to 16 in)."
+   },
+   "leaf_size": {
+    "value": [
+     0.05,
+     0.15
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/shrub/corflo/all.html",
+    "quote": "leaves generally average 2 to 6 inches (5-15 cm) in length"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://ask.ifas.ufl.edu/publication/ST185",
+    "quote": "Leaf type and persistence: deciduous"
+   }
+  },
+  "eastern_redbud": {
+   "height": {
+    "value": [
+     4.6,
+     9.1
+    ],
+    "url": "https://plants.sc.egov.usda.gov/DocumentLibrary/factsheet/pdf/fs_ceca4.pdf",
+    "quote": "grows 15 to 30 feet tall",
+    "note": "FEIS: 25 to 50 feet, 'the smaller figure is probably closer to average'"
+   },
+   "dbh": {
+    "value": [
+     0.15,
+     0.25
+    ],
+    "url": "https://ibiblio.org/pic/NCTrees/redbud.htm",
+    "quote": "ordinarily reaches a height of 15 to 30 feet and a diameter of 6 to 10 inches",
+    "note": "lower-tier source (UNC Plant Information Center); not found in Silvics, FEIS, PLANTS or EDIS"
+   },
+   "leaf_size": {
+    "value": [
+     0.076,
+     0.127
+    ],
+    "url": "https://ask.ifas.ufl.edu/publication/ST145",
+    "quote": "Leaf blade length: 3 to 5 inches"
+   },
+   "habit": {
+    "value": "deciduous",
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=276",
+    "quote": "is a small, short-lived deciduous tree found throughout the eastern United States."
+   }
+  },
+  "sabal_palmetto": {
+   "height": {
+    "value": [
+     10,
+     25
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=772",
+    "quote": "Mature trees are straight, unbranched, with heights from 10 to 25 m (33 to 82 ft) and diameters of 30 to 61 cm (12 to 24 in)"
+   },
+   "dbh": {
+    "value": [
+     0.3,
+     0.61
+    ],
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=772",
+    "quote": "Mature trees are straight, unbranched, with heights from 10 to 25 m (33 to 82 ft) and diameters of 30 to 61 cm (12 to 24 in)"
+   },
+   "leaf_size": {
+    "value": [
+     1.0,
+     3.0
+    ],
+    "url": "https://www.fs.usda.gov/database/feis/plants/tree/sabpal/all.html",
+    "quote": "borne on a prominately-arching midrib and may be 3 to 9 feet (1-3 m) long.",
+    "note": "whole leaf; EDIS ST575: blades 3–4 feet long and petioles 3–6 feet long"
+   },
+   "habit": {
+    "value": "evergreen",
+    "url": "https://research.fs.usda.gov/download/treesearch/1548.pdf#page=772",
+    "quote": "This medium-sized unbranched evergreen palm"
+   }
+  }
+ }
+}

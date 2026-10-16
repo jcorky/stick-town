@@ -102,6 +102,7 @@ Open `map.png` and `scene.json` and check:
   is a copy made at generation time, so it goes stale; `viewer_shot` refreshes it via `write_viewer`.
 
 ### Data / licences
+- Species numbers come from `catalog/species_sources.json` (URL + verbatim quote each). Silvics: research.fs.usda.gov/download/treesearch/1547.pdf and 1548.pdf (pdftotext per chapter, not `-layout`; OCR reads "ft" as "R"). srs.fs.usda.gov fails TLS; srs.fs.fed.us and na.fs.fed.us are blocked. FEIS: fs.usda.gov/database/feis/plants/tree/<code>/all.html (no bald cypress review). EDIS: ask.ifas.ufl.edu/publication/ST###.
 - 6 of 23 licences in the first catalog draft were wrong when probed: terra (grass) is CC BY-NC; proctree, SimpleHydrology and SimpleErosion have no licence file (all rights reserved); Blender add-ons and blosm have no root licence file. Always probe.
 
 ### Docs
