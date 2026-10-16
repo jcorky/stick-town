@@ -52,7 +52,8 @@ def simplify(times, P, H, eps_p=0.02, eps_h=np.radians(2.0)):
             continue
         s = (t[a + 1:b] - t[a]) / max(t[b] - t[a], 1e-9)
         ep = np.linalg.norm(P[a + 1:b] - (P[a] + s[:, None] * (P[b] - P[a])), axis=1)
-        eh = np.abs(H[a + 1:b] - (H[a] + s * (H[b] - H[a])))
+        Hs = H.reshape(len(H), -1)  # one or several angle channels
+        eh = np.abs(Hs[a + 1:b] - (Hs[a] + s[:, None] * (Hs[b] - Hs[a]))).max(1)
         err = np.maximum(ep / eps_p, eh / eps_h)
         k = int(np.argmax(err))
         if err[k] > 1.0:
@@ -85,11 +86,34 @@ def body_heading_target(times, xy, headings, v_min=0.05, long_stop=3.0):
     return out
 
 
-def export_track(log, species):
-    """(times, positions (K,3), headings (K,)) for the GLB, from an agent log of (t, x, y, z, heading, state)."""
+GAZE_MAX = np.radians(70)  # how far the head turns from the body
+GAZE_TAU = 0.3  # s, low-pass on the gaze
+
+
+def body_headings(log, species):
+    """Full-rate (times, positions, displayed body heading) from an agent log."""
     t = np.array([l[0] for l in log], float)
     P = np.array([(l[1], l[2], l[3]) for l in log], float)
     target = body_heading_target(t, P[:, :2], [l[4] for l in log])
-    H = turn_limited(t, np.unwrap(target), OMEGA_MAX.get(species, 3.0))
+    return t, P, turn_limited(t, np.unwrap(target), OMEGA_MAX.get(species, 3.0))
+
+
+def gaze(log, body):
+    """Head yaw relative to the body: what the logged heading points at that the body does not,
+        ψ = lowpass(clip(wrap(h − ĥ), ±70°)),  first-order, τ = 0.3 s.
+    At rest that is the simulation's "look around"; in motion the head leads into turns."""
+    t = np.array([l[0] for l in log], float)
+    raw = np.clip(wrap(np.array([l[4] for l in log], float) - body), -GAZE_MAX, GAZE_MAX)
+    out = np.empty_like(raw)
+    out[0] = raw[0]
+    for i in range(1, len(raw)):
+        a = 1 - np.exp(-max(t[i] - t[i - 1], 0.0) / GAZE_TAU)
+        out[i] = out[i - 1] + a * (raw[i] - out[i - 1])
+    return out
+
+
+def export_track(log, species):
+    """(times, positions (K,3), headings (K,)) for the GLB, from an agent log of (t, x, y, z, heading, state)."""
+    t, P, H = body_headings(log, species)
     k = simplify(t, P, H)
     return t[k], P[k], H[k]

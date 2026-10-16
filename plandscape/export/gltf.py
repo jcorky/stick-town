@@ -35,6 +35,17 @@ def pitch_quat(theta):
     return np.stack([z, z, np.sin(theta / 2), np.cos(theta / 2)], -1)
 
 
+def qmul(a, b):
+    """Hamilton product of quaternions (x, y, z, w), batched: the rotation b, then a."""
+    a, b = np.asarray(a, np.float64), np.asarray(b, np.float64)
+    ax, ay, az, aw = np.moveaxis(a, -1, 0)
+    bx, by, bz, bw = np.moveaxis(b, -1, 0)
+    return np.stack([aw * bx + ax * bw + ay * bz - az * by,
+                     aw * by - ax * bz + ay * bw + az * bx,
+                     aw * bz + ax * by - ay * bx + az * bw,
+                     aw * bw - ax * bx - ay * by - az * bz], -1)
+
+
 def yaw_quat(theta):
     """Quaternion (x,y,z,w) for a world-z heading θ, expressed in glTF space."""
     theta = np.asarray(theta, np.float64)

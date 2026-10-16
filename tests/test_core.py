@@ -159,6 +159,21 @@ class Motion(unittest.TestCase):
         self.assertLess(np.abs(Pi[:, 0] - x).max(), 0.02 + 1e-6)
 
 
+class Gaze(unittest.TestCase):
+    def test_head_looks_around_while_body_holds(self):
+        from plandscape.fauna import motion
+        t = np.arange(0, 12, 0.25)
+        h = np.where((t > 4) & (t < 8), 0.9, 0.0)  # standing; the logged heading looks left for 4 s
+        log = [(ti, 0.0, 0.0, 0.0, hi, "idle") for ti, hi in zip(t, h)]
+        _, _, body = motion.body_headings(log, "white_tailed_deer")
+        self.assertLess(np.ptp(body), 1e-9)  # one long stop: the body faces the stop's mean heading and holds
+        psi = motion.gaze(log, body)
+        look = (t > 5) & (t < 8)
+        np.testing.assert_allclose(psi[look] + body[look], 0.9, atol=0.1)  # the head turned to where it looked
+        self.assertLess(abs(psi[-1] + body[-1]), 0.1)  # and came back
+        self.assertLessEqual(np.abs(psi).max(), motion.GAZE_MAX + 1e-9)
+
+
 class Refine(unittest.TestCase):
     def test_validate_keeps_only_what_generators_honour(self):
         from plandscape.scene.planner import refine

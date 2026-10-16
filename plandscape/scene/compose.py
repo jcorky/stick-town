@@ -18,7 +18,7 @@ from scipy import ndimage
 
 from .. import textures
 from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
-from ..export.gltf import GLB, _to_gltf, pitch_quat
+from ..export.gltf import GLB, _to_gltf, pitch_quat, qmul, yaw_quat
 from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna import gait, motion
 from ..fauna.bodies import rig
@@ -448,9 +448,15 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                     extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
                 bz = np.asarray(bob)
                 extra.append((trunk, "translation", tk, _to_gltf(np.c_[0 * bz, 0 * bz, bz])))
-            if neck is not None:  # head down to graze, up when alert (§28)
+            if neck is not None:  # head pitch by state (§28) and yaw by gaze (§31): q = yaw(ψ) · pitch(−θ)
                 hk, hv = gait.head_track(t_, [l[5] for l in a.log], rg["neck"]["graze"])
-                extra.append((neck, "rotation", hk, pitch_quat(-hv)))
+                _, _, body_h = motion.body_headings(a.log, a.spec.key)
+                psi = motion.gaze(a.log, body_h)
+                tt = np.unique(np.r_[t_, hk[hk <= t_[-1]]])
+                th = np.interp(tt, hk, hv)
+                ps = np.interp(tt, t_, psi)
+                keep = motion.simplify(tt, np.zeros((len(tt), 3)), np.c_[th, ps])
+                extra.append((neck, "rotation", tt[keep], qmul(yaw_quat(ps[keep]), pitch_quat(-th[keep]))))
             if tail is not None:  # the white flag goes up when a deer flees (§29)
                 fk, fv = gait.pose_track(t_, [l[5] for l in a.log], rg["tail"]["flag"], gait.TAIL, gait.TAIL_EASE)
                 extra.append((tail, "rotation", fk, pitch_quat(-fv)))
