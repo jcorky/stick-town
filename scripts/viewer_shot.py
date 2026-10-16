@@ -23,6 +23,7 @@ def main(argv=None):
     ap.add_argument("out")
     ap.add_argument("--wait", type=float, default=25.0)
     ap.add_argument("--size", default="1280x800")
+    ap.add_argument("--query", default="", help="URL query, e.g. lod=0 to turn tree impostors off")
     a = ap.parse_args(argv)
     from playwright.sync_api import sync_playwright
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -41,7 +42,7 @@ def main(argv=None):
         page = b.new_page(viewport=dict(width=w, height=h))
         page.on("console", lambda m: errors.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
         page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-        page.goto(f"http://127.0.0.1:{srv.server_port}/index.html")
+        page.goto(f"http://127.0.0.1:{srv.server_port}/index.html" + (f"?{a.query}" if a.query else ""))
         page.wait_for_timeout(a.wait * 1000)
         page.screenshot(path=a.out)
         b.close()

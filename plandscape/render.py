@@ -49,9 +49,15 @@ def _gather(meshes):
 
 
 def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
-           sky=(0.72, 0.80, 0.88), sun=(0.4, -0.3, 0.85), fit=None, max_tris=400_000, keep_first=1):
+           sky=(0.72, 0.80, 0.88), sun=(0.4, -0.3, 0.85), fit=None, max_tris=400_000, keep_first=1, alpha=False, shading=True, viewer_colour=False):
     """Meshes after the first `keep_first` may be thinned to `max_tris` for speed;
-    the leading meshes (terrain, buildings) are never thinned, or the ground gets holes."""
+    the leading meshes (terrain, buildings) are never thinned, or the ground gets holes.
+    alpha=True: no fog or sky, RGBA with alpha where something was drawn (impostor baking).
+    path=None: return the image as a uint8 array instead of saving it.
+    shading=False: unlit colours (albedo), for bakes that the viewer lights again.
+    viewer_colour=True: reproduce the viewer's colour arithmetic for textured triangles instead of c · T / μ:
+        out = encode(clip(c / μ, 0, 1) · decode(T)),   decode(x) = x^2.2, encode(y) = y^(1/2.2)
+    (COLOR_0 is clipped c / μ and linear; glTF base-colour textures are sRGB), so bakes match the GLB look."""
     meshes = list(meshes) if isinstance(meshes, (list, tuple)) else [meshes]
     P, COL, tri, UV, TID, texs, WS, NRM, AUTH = _gather(meshes)
     n_solid = sum(m.n_tris for m in meshes[:keep_first] if m is not None)
@@ -88,11 +94,11 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
         na = NRM[tri[AUTH]].mean(1)
         n[AUTH] = na / np.maximum(np.linalg.norm(na, axis=1, keepdims=True), 1e-12)
     s = np.asarray(sun, float) / np.linalg.norm(sun)
-    shade = 0.5 + 0.6 * np.clip(n @ s, 0, 1) * min(1.0, 0.4 + s[2] * 2)
+    shade = 0.5 + 0.6 * np.clip(n @ s, 0, 1) * min(1.0, 0.4 + s[2] * 2) if shading else np.ones(len(n))
     col = m.colors[tri].mean(1) * shade[:, None]
     # atmospheric perspective
     dz = depth[tri].mean(1)
-    fog = np.clip((dz - dz.min()) / max(np.ptp(dz), 1e-6), 0, 1)[:, None] * 0.25
+    fog = np.clip((dz - dz.min()) / max(np.ptp(dz), 1e-6), 0, 1)[:, None] * (0.0 if alpha else 0.25)
     col = col * (1 - fog) + np.asarray(sky) * fog
     # z-buffered rasteriser (painter's ordering breaks on large triangles)
     g = np.linspace(1.0, 0.75, H)[:, None, None] * np.asarray(sky)[None, None]
@@ -147,10 +153,18 @@ def render(meshes, path, size=(900, 700), azimuth=35.0, elevation=22.0,
             s_ = texs[t].sample(u, v)
             win &= s_[..., 3] > 0.5
             sub[win] = zz[win]
+            if viewer_colour:
+                lin = np.clip(C[i] / np.maximum(means[t], 1e-3), 0, 1) * s_[win][:, :3] ** 2.2
+                frame[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1][win] = np.clip(lin, 0, 1) ** (1 / 2.2)
+                continue
             frame[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1][win] = np.clip(C[i] * s_[win][:, :3] / means[t], 0, 1)
             continue
         sub[win] = zz[win]
-        frame[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1][win] = C[i]
-    img = Image.fromarray((frame * 255).astype(np.uint8))
-    img.save(path)
+        frame[y0[i]:y1[i] + 1, x0[i]:x1[i] + 1][win] = C[i] ** (1 / 2.2) if viewer_colour else C[i]
+    rgb = (frame * 255).astype(np.uint8)
+    if alpha:
+        rgb = np.dstack([rgb, np.where(np.isfinite(zbuf), 255, 0).astype(np.uint8)])
+    if path is None:
+        return rgb
+    Image.fromarray(rgb).save(path)
     return path

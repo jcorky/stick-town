@@ -1,0 +1,19 @@
+{
+ "key": "e516b239666f9b3d4217934bada303f4",
+ "kind": "impostor",
+ "version": "impostor-0.1.2",
+ "params": {
+  "detail": "low",
+  "moisture": 0.5,
+  "season": "summer",
+  "seed": [
+   0,
+   0
+  ],
+  "species": "longleaf_pine"
+ },
+ "meta": {
+  "created": "2026-10-16T07:44:55"
+ },
+ "path": "impostor/e5/e516b239666f9b3d4217934bada303f4.npz"
+}

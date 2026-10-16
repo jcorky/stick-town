@@ -122,6 +122,11 @@ Open `map.png` and `scene.json` and check:
 - Variants of one set share one atlas: key textures by asset and material, not variant, or the GLB embeds it six times.
 - The preview renderer has no near clip: close-ups must crop the terrain first or it covers the view.
 
+### Baking for the viewer
+- The preview renderer's colour (c·T/μ) is not the viewer's (clip(c/μ)·decode_sRGB(T)). Anything baked into a
+  texture for the GLB (impostors) must use `render(viewer_colour=True, shading=False)`, or it comes out darker and
+  more saturated than the meshes beside it. Compare in `viewer_shot.py` with `--query lod=0`.
+
 ### Creeks and flow routing
 - Plain D8 on anisotropic terrain drains in dead-straight grid lines; jitter the slopes (keyed) or the creek looks ruled.
 - Without pit filling, creeks stop at every erosion hollow; route over `channels.routing_surface`, carve the real z.

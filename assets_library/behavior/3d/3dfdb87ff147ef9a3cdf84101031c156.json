@@ -1,0 +1,71 @@
+{
+ "key": "3dfdb87ff147ef9a3cdf84101031c156",
+ "kind": "behavior",
+ "version": "behavior-0.2.0",
+ "params": {
+  "agent": 4,
+  "scene": "8d27e7da152b",
+  "species": "gray_squirrel",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T07:33:04",
+  "distance": 48.384,
+  "duration": 179.75,
+  "events": [
+   [
+    0.0,
+    "plan:rest"
+   ],
+   [
+    17.5,
+    "arrive:rest"
+   ],
+   [
+    93.8,
+    "plan:eat"
+   ],
+   [
+    98.2,
+    "arrive:eat"
+   ],
+   [
+    116.2,
+    "plan:cache"
+   ],
+   [
+    119.8,
+    "plan:cache"
+   ],
+   [
+    130.8,
+    "plan:cache"
+   ],
+   [
+    167.2,
+    "plan:cache"
+   ],
+   [
+    178.5,
+    "arrive:cache"
+   ]
+  ],
+  "species": "gray_squirrel",
+  "state_mix": {
+   "dig": 6,
+   "eat": 71,
+   "idle": 5,
+   "pause": 27,
+   "rest": 304,
+   "travel": 307
+  },
+  "traits": {
+   "boldness": 0.649,
+   "curiosity": 0.324,
+   "laziness": 0.527,
+   "patience": 0.551,
+   "wanderlust": 0.374
+  }
+ },
+ "path": "behavior/3d/3dfdb87ff147ef9a3cdf84101031c156.npz"
+}

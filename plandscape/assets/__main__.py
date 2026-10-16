@@ -24,10 +24,12 @@ from .store import GENERATOR_VERSIONS, AssetStore, mesh_codec, tree_codec
 
 
 def prune(store):
-    """Delete entries whose generator version is no longer current (they can never be hit again)."""
+    """Delete entries whose generator version is no longer current (they can never be hit again), and
+    behaviour clips lived on a superseded terrain version."""
     keep, gone = {}, 0
     for k, e in store.entries.items():
-        if e.version == GENERATOR_VERSIONS.get(e.kind):
+        stale_ground = e.kind == "behavior" and e.params.get("terrain") != GENERATOR_VERSIONS["terrain"]
+        if e.version == GENERATOR_VERSIONS.get(e.kind) and not stale_ground:
             keep[k] = e
             continue
         gone += 1

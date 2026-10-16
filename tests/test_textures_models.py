@@ -269,6 +269,44 @@ class NearTerrain(unittest.TestCase):
         np.testing.assert_array_equal(hf.z, z0)  # refinement never edits the coarse grid
 
 
+class Impostors(Base):
+    def test_bake_and_cards_line_up(self):
+        from plandscape.flora import impostor
+        tm = generate_tree("loblolly_pine", seed=2, season="summer", detail="low")
+        rgba = impostor.bake(tm)
+        w, h = impostor.HALF
+        self.assertEqual(rgba.shape, (h, 2 * w, 4))
+        a = rgba[..., 3] > 127
+        self.assertTrue(0.05 < a.mean() < 0.9)
+        self.assertTrue(set(np.unique(rgba[..., 3])) <= {0, 255})  # alpha-tested, no half texels
+        for k in range(2):  # the trunk stands in the middle of each half, on the bottom of the atlas
+            cols = np.nonzero(a[int(h * 0.9), k * w:(k + 1) * w])[0]
+            self.assertTrue(len(cols) and abs(cols.mean() - w / 2) < 0.1 * w)
+        tex = textures.register(textures.Texture.from_rgba("impostor/test", rgba))
+        m = impostor.mesh(tm, tex.key, tex.mean)
+        self.assertEqual(m.n_tris, 4)
+        self.assertTrue(((m.uvs >= 0) & (m.uvs <= 1)).all())
+        self.assertAlmostEqual(float(m.positions[:, 2].min()), 0.0)
+        self.assertGreater(float(m.positions[:, 2].max()), 0.95 * float(tm.foliage.positions[:, 2].max()))
+        np.testing.assert_allclose(np.linalg.norm(m.nrm, axis=1), 1, atol=1e-5)
+
+    def test_tree_node_references_far_lod(self):
+        import json, struct
+        P = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]], np.float32)
+        g = GLB()
+        near = g.mesh(Mesh(P, np.full((3, 3), 0.5, np.float32), np.array([[0, 1, 2]], np.uint32)), "near", g.material("a"))
+        far = g.mesh(Mesh(P, np.full((3, 3), 0.5, np.float32), np.array([[0, 1, 2]], np.uint32)), "far", g.material("a"))
+        g.node("tree_0", children=[g.node("bark", near)], extras={"lod_far": far})
+        path = os.path.join(self.tmp, "l.glb")
+        g.save(path)
+        self.assertEqual(validate_glb(path), [])
+        d = open(path, "rb").read()
+        doc = json.loads(d[20:20 + struct.unpack_from("<I", d, 12)[0]])
+        tree = [n for n in doc["nodes"] if n["name"] == "tree_0"][0]
+        self.assertEqual(doc["meshes"][tree["extras"]["lod_far"]]["name"], "far")
+        self.assertFalse(any(n.get("mesh") == far for n in doc["nodes"]))  # referenced, never drawn by default
+
+
 class Road(unittest.TestCase):
     def test_route_grade_ribbon(self):
         from plandscape.scene.roads import ROAD_WIDTH, grade, ribbon, route, smooth

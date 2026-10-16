@@ -24,3 +24,8 @@ tip taper 0.5 r (0.3 read as thorns in winter), TWIG_CULL 0.03/0.015/0.006/0. Ba
 (3) adopted too: rounded normals `normalize(0.65 r̂ + 0.35 s n_face)` (ez-tree adds n_face + (v − origin));
 anchors along the parent→node segment, spread N(0, 0.12 L). uv.y-weighted leaf flutter adopted in the viewer's `addWind` (TECHNIQUES §20).
 **We do better:** arc-length bark V, lobed flare, north moss, crown envelopes, pipe radii, folded cards.
+
+**LOD (session 3):** ez-tree's LOD (ring stride 3/6, segment factor 0.75/0.4 at 100/250 m) only thins the mesh. Our far
+tier is a different kind of LOD: two crossed cards with the tree baked onto them (§23), swapped in by `THREE.LOD`
+beyond 110 m. Ring/segment thinning stays a possible middle tier.
+
