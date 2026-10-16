@@ -1,0 +1,79 @@
+{
+ "key": "9e9c58a5488d9b8b5f3e24d33a8a3531",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 0,
+  "scene": "7e0955dd1c88",
+  "species": "armadillo",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:25:58",
+  "distance": 28.5,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:drink"
+   ],
+   [
+    12.8,
+    "plan:drink"
+   ],
+   [
+    16.8,
+    "arrive:drink"
+   ],
+   [
+    23.0,
+    "plan:rest"
+   ],
+   [
+    24.0,
+    "arrive:rest"
+   ],
+   [
+    46.5,
+    "plan:explore"
+   ],
+   [
+    73.0,
+    "plan:eat"
+   ],
+   [
+    82.8,
+    "plan:drink"
+   ],
+   [
+    87.0,
+    "plan:eat"
+   ],
+   [
+    97.0,
+    "arrive:eat"
+   ],
+   [
+    119.8,
+    "plan:explore"
+   ]
+  ],
+  "species": "armadillo",
+  "state_mix": {
+   "drink": 24,
+   "eat": 90,
+   "idle": 7,
+   "pause": 61,
+   "rest": 89,
+   "travel": 209
+  },
+  "traits": {
+   "boldness": 0.503,
+   "curiosity": 0.564,
+   "laziness": 0.679,
+   "patience": 0.508,
+   "wanderlust": 0.367
+  }
+ },
+ "path": "behavior/9e/9e9c58a5488d9b8b5f3e24d33a8a3531.npz"
+}

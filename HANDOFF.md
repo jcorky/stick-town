@@ -30,7 +30,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 | `fauna/` | 6 species with planning, memory, deviation, signs; bodies are static low-poly shapes that slide (no gait) |
 | `scene/` | planner (keyword-based, LLM hook `refine()` unused), composer, 5 building types, props, review renders (`preview`, `closeup`, `homestead`, `creek`, `map`) |
 | `export/` | GLB with instancing, textures, quantised attributes, animations; validator |
-| `assets/` | library + bake/bake-models/prune/find/stats CLI; 36.5 MB in LFS |
+| `assets/` | library + bake/bake-models/prune/find/stats CLI; 213 MB in Git LFS on GitHub (owner decision): 768 trees + impostors at low/med, 106 behaviour clips |
 | `sources/` + `catalog/` | 23 repos probed; asset sites (Poly Haven, ambientCG) probed CC0; credits in `catalog/PROVENANCE.md` |
 | `wind/` + `viewer/wind.js` | one gust field (Kaimal, frozen turbulence, Davenport coherence, log/exponential profile, NOAA Beaufort) driving trunk, limb, branch, leaf and grass oscillators per vertex (§34); constants in `catalog/wind_sources.json` |
 | `viewer/index.html` | lighting, physically based wind with Beaufort slider, leaf-shaped shadows, timeline, follow-cam, event log |

@@ -1,0 +1,61 @@
+{
+ "key": "c8544c82abaf8844419b0bde231e8933",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 1,
+  "scene": "12764a2cd5f0",
+  "species": "box_turtle",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:28:06",
+  "distance": 2.871,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:drink"
+   ],
+   [
+    7.0,
+    "plan:explore"
+   ],
+   [
+    19.8,
+    "plan:eat"
+   ],
+   [
+    29.5,
+    "plan:explore"
+   ],
+   [
+    63.5,
+    "plan:drink"
+   ],
+   [
+    81.0,
+    "plan:eat"
+   ],
+   [
+    101.5,
+    "arrive:eat"
+   ]
+  ],
+  "species": "box_turtle",
+  "state_mix": {
+   "eat": 74,
+   "idle": 5,
+   "pause": 79,
+   "travel": 322
+  },
+  "traits": {
+   "boldness": 0.603,
+   "curiosity": 0.285,
+   "laziness": 0.58,
+   "patience": 0.896,
+   "wanderlust": 0.574
+  }
+ },
+ "path": "behavior/c8/c8544c82abaf8844419b0bde231e8933.npz"
+}

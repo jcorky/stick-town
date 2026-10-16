@@ -1,0 +1,264 @@
+{
+ "key": "6c93d974963f498c92000f9992b5c0c4",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 2,
+  "scene": "752eec844a45",
+  "species": "human",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:25:46",
+  "distance": 0.0,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:walk"
+   ],
+   [
+    0.2,
+    "arrive:walk"
+   ],
+   [
+    4.2,
+    "plan:explore"
+   ],
+   [
+    4.5,
+    "arrive:explore"
+   ],
+   [
+    7.0,
+    "plan:explore"
+   ],
+   [
+    7.2,
+    "arrive:explore"
+   ],
+   [
+    11.5,
+    "plan:explore"
+   ],
+   [
+    11.8,
+    "arrive:explore"
+   ],
+   [
+    15.2,
+    "plan:explore"
+   ],
+   [
+    15.5,
+    "arrive:explore"
+   ],
+   [
+    21.2,
+    "plan:explore"
+   ],
+   [
+    21.5,
+    "arrive:explore"
+   ],
+   [
+    24.2,
+    "plan:walk"
+   ],
+   [
+    24.5,
+    "arrive:walk"
+   ],
+   [
+    28.0,
+    "plan:walk"
+   ],
+   [
+    28.2,
+    "arrive:walk"
+   ],
+   [
+    34.0,
+    "plan:walk"
+   ],
+   [
+    34.2,
+    "arrive:walk"
+   ],
+   [
+    39.2,
+    "plan:walk"
+   ],
+   [
+    39.5,
+    "arrive:walk"
+   ],
+   [
+    45.5,
+    "plan:walk"
+   ],
+   [
+    45.8,
+    "arrive:walk"
+   ],
+   [
+    48.2,
+    "plan:walk"
+   ],
+   [
+    48.5,
+    "arrive:walk"
+   ],
+   [
+    51.5,
+    "plan:walk"
+   ],
+   [
+    51.8,
+    "arrive:walk"
+   ],
+   [
+    56.0,
+    "plan:explore"
+   ],
+   [
+    56.2,
+    "arrive:explore"
+   ],
+   [
+    61.5,
+    "plan:explore"
+   ],
+   [
+    61.8,
+    "arrive:explore"
+   ],
+   [
+    67.0,
+    "plan:walk"
+   ],
+   [
+    67.2,
+    "arrive:walk"
+   ],
+   [
+    73.0,
+    "plan:walk"
+   ],
+   [
+    73.2,
+    "arrive:walk"
+   ],
+   [
+    74.8,
+    "plan:walk"
+   ],
+   [
+    75.0,
+    "arrive:walk"
+   ],
+   [
+    76.8,
+    "plan:walk"
+   ],
+   [
+    77.0,
+    "arrive:walk"
+   ],
+   [
+    78.8,
+    "plan:walk"
+   ],
+   [
+    79.0,
+    "arrive:walk"
+   ],
+   [
+    85.2,
+    "plan:explore"
+   ],
+   [
+    85.5,
+    "arrive:explore"
+   ],
+   [
+    91.0,
+    "plan:walk"
+   ],
+   [
+    91.2,
+    "arrive:walk"
+   ],
+   [
+    96.0,
+    "plan:walk"
+   ],
+   [
+    96.2,
+    "arrive:walk"
+   ],
+   [
+    98.0,
+    "plan:walk"
+   ],
+   [
+    98.2,
+    "arrive:walk"
+   ],
+   [
+    102.5,
+    "plan:walk"
+   ],
+   [
+    102.8,
+    "arrive:walk"
+   ],
+   [
+    106.2,
+    "plan:walk"
+   ],
+   [
+    106.5,
+    "arrive:walk"
+   ],
+   [
+    110.0,
+    "plan:walk"
+   ],
+   [
+    110.2,
+    "arrive:walk"
+   ],
+   [
+    114.5,
+    "plan:walk"
+   ],
+   [
+    114.8,
+    "arrive:walk"
+   ],
+   [
+    118.0,
+    "plan:explore"
+   ],
+   [
+    118.2,
+    "arrive:explore"
+   ]
+  ],
+  "species": "human",
+  "state_mix": {
+   "idle": 28,
+   "pause": 423,
+   "travel": 29
+  },
+  "traits": {
+   "boldness": 0.05,
+   "curiosity": 0.787,
+   "laziness": 0.18,
+   "patience": 0.706,
+   "wanderlust": 0.178
+  }
+ },
+ "path": "behavior/6c/6c93d974963f498c92000f9992b5c0c4.npz"
+}

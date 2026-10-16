@@ -351,6 +351,12 @@ class Planner(unittest.TestCase):
         self.assertEqual(plan("longleaf pine savanna near Mobile").biome, "pine_savanna")
         self.assertEqual(plan("Monte Sano hardwood cove").biome, "hardwood")
 
+    def test_province_from_biome_or_region(self):
+        self.assertEqual(plan("longleaf savanna with a church").province, "coastal_plain")
+        self.assertEqual(plan("a cypress swamp at dawn").province, "floodplain")
+        self.assertEqual(plan("Black Belt prairie pasture").province, "coastal_plain")
+        self.assertEqual(plan("Piedmont longleaf savanna").province, "piedmont")   # a named region wins
+
 
 class Assets(unittest.TestCase):
     def test_store_roundtrip_and_hit(self):

@@ -1,0 +1,60 @@
+{
+ "key": "cbc1ed2f84db4e5ed4e552a4d904fd81",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 3,
+  "scene": "65530e1cebf7",
+  "species": "human",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:27:17",
+  "distance": 137.67,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:walk"
+   ],
+   [
+    27.5,
+    "plan:walk"
+   ],
+   [
+    62.2,
+    "arrive:walk"
+   ],
+   [
+    66.2,
+    "plan:walk"
+   ],
+   [
+    91.8,
+    "plan:walk"
+   ],
+   [
+    96.5,
+    "plan:walk"
+   ],
+   [
+    118.8,
+    "plan:walk"
+   ]
+  ],
+  "species": "human",
+  "state_mix": {
+   "idle": 5,
+   "pause": 60,
+   "travel": 415
+  },
+  "traits": {
+   "boldness": 0.16,
+   "curiosity": 0.259,
+   "laziness": 0.463,
+   "patience": 0.541,
+   "wanderlust": 0.24
+  }
+ },
+ "path": "behavior/cb/cbc1ed2f84db4e5ed4e552a4d904fd81.npz"
+}

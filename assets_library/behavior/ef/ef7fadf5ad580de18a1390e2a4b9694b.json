@@ -1,0 +1,62 @@
+{
+ "key": "ef7fadf5ad580de18a1390e2a4b9694b",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 0,
+  "scene": "128cbad9db14",
+  "species": "wild_turkey",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:26:42",
+  "distance": 26.406,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:rest"
+   ],
+   [
+    33.8,
+    "plan:eat"
+   ],
+   [
+    84.5,
+    "alert:coyote"
+   ],
+   [
+    90.0,
+    "plan:rest"
+   ],
+   [
+    98.0,
+    "alert:coyote"
+   ],
+   [
+    101.2,
+    "plan:rest"
+   ],
+   [
+    111.2,
+    "arrive:rest"
+   ]
+  ],
+  "species": "wild_turkey",
+  "state_mix": {
+   "alert": 33,
+   "idle": 3,
+   "pause": 9,
+   "rest": 35,
+   "travel": 400
+  },
+  "traits": {
+   "boldness": 0.366,
+   "curiosity": 0.276,
+   "laziness": 0.305,
+   "patience": 0.819,
+   "wanderlust": 0.509
+  }
+ },
+ "path": "behavior/ef/ef7fadf5ad580de18a1390e2a4b9694b.npz"
+}

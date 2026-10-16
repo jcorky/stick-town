@@ -1,0 +1,85 @@
+{
+ "key": "38f96115bfcb777354f5a7f23e53a264",
+ "kind": "behavior",
+ "version": "behavior-0.2.1",
+ "params": {
+  "agent": 0,
+  "scene": "b8e6e03e35e0",
+  "species": "coyote",
+  "terrain": "terrain-0.3.1"
+ },
+ "meta": {
+  "created": "2026-10-16T20:28:32",
+  "distance": 118.86,
+  "duration": 119.75,
+  "events": [
+   [
+    0.0,
+    "plan:explore"
+   ],
+   [
+    9.5,
+    "arrive:explore"
+   ],
+   [
+    11.0,
+    "plan:explore"
+   ],
+   [
+    20.8,
+    "plan:explore"
+   ],
+   [
+    33.0,
+    "arrive:explore"
+   ],
+   [
+    37.2,
+    "plan:rest"
+   ],
+   [
+    74.8,
+    "plan:explore"
+   ],
+   [
+    82.0,
+    "plan:drink"
+   ],
+   [
+    88.5,
+    "plan:drink"
+   ],
+   [
+    92.8,
+    "plan:drink"
+   ],
+   [
+    104.8,
+    "arrive:drink"
+   ],
+   [
+    114.5,
+    "plan:drink"
+   ],
+   [
+    115.2,
+    "arrive:drink"
+   ]
+  ],
+  "species": "coyote",
+  "state_mix": {
+   "drink": 57,
+   "idle": 8,
+   "pause": 74,
+   "travel": 341
+  },
+  "traits": {
+   "boldness": 0.658,
+   "curiosity": 0.394,
+   "laziness": 0.369,
+   "patience": 0.415,
+   "wanderlust": 0.396
+  }
+ },
+ "path": "behavior/38/38f96115bfcb777354f5a7f23e53a264.npz"
+}
