@@ -191,6 +191,29 @@ class Erosion(unittest.TestCase):
         self.assertGreater(d[sinks].mean(), d[~sinks].mean())  # sediment settles where flow gathers
 
 
+class Road(unittest.TestCase):
+    def test_route_grade_ribbon(self):
+        from plandscape.scene.roads import ROAD_WIDTH, grade, ribbon, route, smooth
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(64, 1.0, "piedmont", 4, creek=False)
+        hf.z[:, 28:36] += np.linspace(0, 8, hf.z.shape[0])[:, None]  # a steep ramp the road should not climb straight up
+        gy, gx = np.gradient(hf.z)
+        hf.layers["slope"] = np.degrees(np.arctan(np.hypot(gx, gy)))
+        c = smooth(route(hf, (1, 5), (63, 5)))
+        steps = np.linalg.norm(np.diff(c, axis=0), axis=1)
+        self.assertTrue((steps < 1.01).all())  # continuous, resampled every metre
+        z, zc, dist = grade(hf, c)
+        on = dist <= ROAD_WIDTH / 2 - 0.5
+        gy, gx = np.gradient(z)
+        self.assertLess(np.percentile(np.degrees(np.arctan(np.hypot(gx, gy)))[on], 90), 12)  # drivable
+        ditch = (dist > ROAD_WIDTH / 2 + 0.5) & (dist < ROAD_WIDTH / 2 + 1.5)
+        near = np.isin(np.indices(z.shape)[1], range(5, 25))
+        self.assertLess(np.median((z - hf.z)[ditch & near]), np.median((z - hf.z)[on & near]) + 0.05)
+        m = ribbon(c, zc)
+        self.assertEqual(m.indices.max() + 1, len(m.positions))
+        self.assertTrue(np.isfinite(m.positions).all())
+
+
 class Splat(Base):
     def test_weights_follow_layers(self):
         from plandscape.ground.surface import ground_weights

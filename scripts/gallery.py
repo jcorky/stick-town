@@ -94,8 +94,9 @@ def main(argv=None):
         if not a.reuse or not os.path.exists(os.path.join(d, "preview.png")):
             from plandscape.__main__ import main as run
             run([prompt, "--out", d])
-        for img in ("preview", "closeup", "map"):
-            _jpeg(os.path.join(d, f"{img}.png"), os.path.join(OUT, f"{name}-{img}.jpg"))
+        for img in ("preview", "closeup", "homestead", "map"):
+            if os.path.exists(os.path.join(d, f"{img}.png")):
+                _jpeg(os.path.join(d, f"{img}.png"), os.path.join(OUT, f"{name}-{img}.jpg"))
         s = json.load(open(os.path.join(d, "scene.json")))["stats"]
         stats[name] = {k: s.get(k) for k in ("glb_mb", "trees", "tree_tris", "ground_props", "agents", "signs")}
     _jpeg(terrain_sheet(os.path.join(ROOT, "out", "terrain.png")), os.path.join(OUT, "terrain-erosion.jpg"), 1500)

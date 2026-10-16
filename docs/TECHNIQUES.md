@@ -198,3 +198,31 @@ never taking more than a node's height. Then $v \leftarrow \sqrt{\max(0,\ v^2 + 
 Constants: inertia $\iota = 0.4$, capacity $C = 4$, $k_e = k_d = 0.3$, $\epsilon = 0.01$, gravity 4, brush $r = 5$
 (Lague: $r = 3$, $\iota$ = 0.05–0.3, which carves hair-fine rills at our 1 m cells). Scatter-adds use `np.bincount`.
 Strength 0.25 on floodplains and 0.5 on the coastal plain so flat country doesn't gully.
+
+## 15. County road: least-cost route, smoothing, cut and fill (routing after Fantasy-Map-Generator, MIT)
+`plandscape/scene/roads.py`; placement in `plandscape/scene/compose.py`
+
+**Route.** Dijkstra on the 8-connected 1 m grid from the west edge to the east edge (end heights keyed per scene).
+A step between cells $a$ and $b$ of length $d$ costs
+
+$$w_{ab} = d\cdot\tfrac12\big(k_a + k_b\big),\qquad k = \big(1 + (s/12)^2\big)\,(1 + 8W)\,\big(0.5\ \text{if}\ G > 0.35\big)$$
+
+with slope $s$ in degrees, water $W$ and trail strength $G$, so the road contours around steep ground, avoids
+creeks and reuses old paths.
+
+**Smooth.** Twice, every vertex with interior angle $\alpha$ moves toward its neighbours' midpoint $\mathbf m$:
+$\mathbf p \leftarrow \mathbf p + f(\mathbf m - \mathbf p)$, with $f = \tfrac23$ if $\alpha < 115°$ and $\tfrac12$ if $\alpha < 135°$.
+Then three rounds of Chaikin corner cutting ($\tfrac34\mathbf a + \tfrac14\mathbf b,\ \tfrac14\mathbf a + \tfrac34\mathbf b$) and resampling every 1 m.
+
+**Grade.** Centreline height $z_c$ is the terrain under it, Gaussian-smoothed along the road ($\sigma = 8$ m). With $d$ the
+distance from a cell to the centreline (Euclidean distance transform, nearest centre point by `return_indices`)
+and road width $W_r = 4.5$ m:
+
+$$z = \begin{cases} z_c + 0.08\big(1 - (2d/W_r)^2\big) - 0.12 & d \le W_r/2 \quad\text{(crowned bed)}\\
+z_c - 0.35\sin\!\big(\pi\,(d - W_r/2)/2\big) & W_r/2 < d \le W_r/2 + 2 \quad\text{(ditch)}\\
+z_c\,(1 - \beta) + z_\text{terrain}\,\beta,\ \ \beta = \text{smoothstep}\big((d - W_r/2 - 2)/4\big) & \text{beyond (blend back)}\end{cases}$$
+
+**Surface.** A gravel ribbon 3 cm above the crown (12 cm above the bed so the 1 m terrain never pokes through), five
+vertices across, UV $(u, v) = (\text{across}\cdot W_r/4,\ s/4)$ with $s$ the distance along the road. Buildings sit
+$W_r/2 + 6$ m off the road on its north side, yawed to face it; mailboxes at $W_r/2 + 0.8$ m; the fence runs
+$W_r/2 + 3.2$ m out and leaves a 3 m gate at each mailbox.

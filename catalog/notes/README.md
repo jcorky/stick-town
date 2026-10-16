@@ -11,7 +11,7 @@ numbers refer to the commit in the harvest report.
 | [ocean](ocean.md) | MIT | water ideas queued |
 | [seblague-erosion](seblague-erosion.md) | MIT | droplet erosion adopted (TECHNIQUES §14) |
 | [worldengine](worldengine.md) | MIT | Holdridge lookup queued for real-place mode |
-| [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing, siting, names queued |
+| [fantasy-map-generator](fantasy-map-generator.md) | MIT | road routing + angle relax adopted (TECHNIQUES §15); siting, names queued |
 | [wfc](wfc.md) | MIT | low priority |
 | [ez-tree](ez-tree.md) | MIT | chain tubes + shared rings adopted (TECHNIQUES §4); card normals queued |
 | [mesa](mesa.md) | Apache-2.0 | shuffled order, vectorised neighbours queued |

@@ -30,6 +30,7 @@ from ..rng import rng as make_rng
 from ..terrain.heightfield import generate_tile
 from .buildings import clothesline, fence, generate_building, mailbox
 from .groundcover import scatter
+from .roads import ROAD_WIDTH, grade, ribbon, route, smooth
 from .planner import ScenePlan
 
 GRASS_BUDGET = {"low": 20000, "med": 70000, "high": 250000, "cm": 2_000_000}
@@ -90,16 +91,32 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
 
     # ── buildings, road, props ─────────────────────────────────────────
     footprints, doors, props, bmeshes, info = [], [], [], [], []
-    road_y = 6.0
+    road, road_mesh, road_dist = None, None, None
     if plan.buildings:
+        # county road across the tile: least-cost route, smoothed, cut and filled (TECHNIQUES §15)
+        rr = make_rng("road", plan.seed)
+        y0, y1 = rr.uniform(5, 18, 2)
+        road = smooth(route(hf, (1.0, y0), (S - 1.0, y1)))
+        hf.z, road_z, road_dist = grade(hf, road)
+        gy_, gx_ = np.gradient(hf.z, hf.res)
+        hf.layers["slope"] = np.degrees(np.arctan(np.hypot(gx_, gy_)))
+        road_mesh = ribbon(road, road_z)
+        tan = np.gradient(road, axis=0)
+        tan /= np.maximum(np.linalg.norm(tan, axis=1, keepdims=True), 1e-9)
+        nrm = np.c_[-tan[:, 1], tan[:, 0]] * np.where(tan[:, :1] >= 0, 1, -1)  # the side away from the tile's south edge
+
+        def along(x):
+            k = int(np.argmin(np.abs(road[:, 0] - x)))
+            return road[k], tan[k] * (1 if tan[k, 0] >= 0 else -1), nrm[k]
         xs = np.linspace(S * 0.2, S * 0.8, len(plan.buildings))
         for k, (kind, bx) in enumerate(zip(plan.buildings, xs)):
             bseed = [0, int(make_rng("bpick", plan.seed, k).integers(0, 4))] if library_pool else [plan.seed, k]
             m, meta = store.get_or_build("building", dict(kind=kind, seed=bseed),
                                          lambda: generate_building(kind, seed=tuple(bseed)), *mesh_codec("building"))
-            yaw = -np.pi / 2  # front (+x local) faces the road to the south
+            rp, rt, rn = along(bx)
+            yaw = float(np.arctan2(rt[1], rt[0])) - np.pi / 2  # front (+x local) faces the road
             fx0, fy0, fx1, fy1 = meta["footprint"]
-            by = road_y + 8.0 + (fx1 - 0)  # set back from the road
+            bx, by = rp + rn * (ROAD_WIDTH / 2 + 6.0 + fx1)  # set back from the road edge
             corners = np.array([[fx0, fy0], [fx1, fy0], [fx1, fy1], [fx0, fy1]])
             R2 = np.array([[np.cos(yaw), -np.sin(yaw)], [np.sin(yaw), np.cos(yaw)]])
             wc = corners @ R2.T + [bx, by]
@@ -110,7 +127,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             d = np.array(meta["door"]) @ R2.T + [bx, by]
             doors.append((float(d[0]), float(d[1]), 2.5))
             mb = mailbox(r)
-            mx, my = bx + r.uniform(-4, 4), road_y + 3.0
+            mx, my = rp + rt * r.uniform(-4, 4) + rn * (ROAD_WIDTH / 2 + 0.8)
             props.append(mb.transformed(_rotz(0, (mx, my, float(hf.sample(mx, my)[0])))))
             doors.append((mx, my, 0.8))
             info.append(dict(kind=kind, x=float(bx), y=float(by), mailbox=(float(mx), float(my))))
@@ -118,9 +135,18 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                 cx, cy = bx + 10, by + 4
                 props.append(clothesline(r).transformed(_rotz(np.pi / 2, (cx, cy, float(hf.sample(cx, cy)[0])))))
                 doors.append((cx, cy, 0.6))
-        fx = np.linspace(2, S - 2, 12)
-        fpts = [(x, road_y + 1.6, float(hf.sample(x, road_y + 1.6)[0])) for x in fx]
-        props.append(fence(fpts, r))
+        fl = road[::5] + nrm[::5] * (ROAD_WIDTH / 2 + 3.2)  # fence just beyond the ditch
+        gates = np.array([i_["mailbox"] for i_ in info])  # leave a gap where each walk meets the road
+        span = []
+        for x, y in fl:
+            if np.min(np.hypot(gates[:, 0] - x, gates[:, 1] - y)) < 3.0:
+                if len(span) > 1:
+                    props.append(fence(span, r))
+                span = []
+                continue
+            span.append((float(x), float(y), float(hf.sample(x, y)[0])))
+        if len(span) > 1:
+            props.append(fence(span, r))
     log(f"buildings {plan.buildings}")
 
     # ── trees ──────────────────────────────────────────────────────────
@@ -130,8 +156,12 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     slope = hf.layers["slope"]
 
     def blocked(p):
-        if plan.buildings and p[1] < road_y + 4:
-            return True
+        if road_dist is not None:
+            gx, gy = hf.to_grid(p[0], p[1])
+            i = int(np.clip(round(float(gy)), 0, road_dist.shape[0] - 1))
+            j = int(np.clip(round(float(gx)), 0, road_dist.shape[1] - 1))
+            if road_dist[i, j] < ROAD_WIDTH / 2 + 4:
+                return True
         for (a, b, c, d) in footprints:
             if a - 4 < p[0] < c + 4 and b - 4 < p[1] < d + 4:
                 return True
@@ -205,7 +235,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     cost = obstacle_cost(hf, trunks=[(x, y, rd) for x, y, _, rd in trees_arr], footprints=footprints)
     field = TrailField(np.zeros_like(hf.z), hf.res, hf.origin)
     if plan.buildings:
-        field.G[int(road_y / hf.res) - 2:int(road_y / hf.res) + 2, :] = 1.0  # gravel road
+        field.G[road_dist <= ROAD_WIDTH / 2] = 1.0  # the road bed is bare
     att = list(doors)
     if water.any():
         wy, wx = np.argwhere(water > 0.5)[len(np.argwhere(water > 0.5)) // 2]
@@ -213,7 +243,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     edge = r.uniform(0.15, 0.85, 3) * S
     att += [(edge[0], S - 2, 1.0), (2, edge[1], 0.8), (S - 2, edge[2], 0.8)]
     if plan.buildings:
-        att += [(3, road_y, 1.5), (S - 3, road_y, 1.5)]
+        att += [(float(road[2, 0]), float(road[2, 1]), 1.5), (float(road[-3, 0]), float(road[-3, 1]), 1.5)]
     if len(trees_arr):  # the big shade tree everybody walks to
         i = int(np.argmax(trees_arr[:, 3]))
         att.append((trees_arr[i, 0] + 3, trees_arr[i, 1], 0.8))
@@ -305,6 +335,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     built = Mesh.merge(bmeshes + props)
     if built.n_tris:
         g.node("buildings_props", g.mesh(built, "buildings_props", m_bld))
+    if road_mesh is not None:
+        g.node("road", g.mesh(road_mesh, "road", mat(road_mesh, "road", rough=0.95)))
     vmesh = {}
     for key, tm in variants.items():
         nm = f"{key[0]}_{key[1]}_{int(key[2] * 10)}"
@@ -369,5 +401,5 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     log(f"exported {glb} ({size_mb:.1f} MB) in {time.time() - t0:.1f}s")
     return dict(dir=out_dir, glb=glb, stats=stats, hf=hf, field=field, canopy=canopy, agents=agents,
                 world=world, placements=placements, variants=variants, ter=ter, grass=grass,
-                ground_props=gprops, prop_parts=gparts,
+                ground_props=gprops, prop_parts=gparts, road=road_mesh, buildings=info,
                 built=built, water=water_mesh, light=light)
