@@ -28,7 +28,7 @@ from ..mesh import Mesh
 # Bump a version when its generator's output changes; old entries stay readable
 # but are no longer matched.
 GENERATOR_VERSIONS = {
-    "tree": "tree-0.2.0",
+    "tree": "tree-0.2.1",
     "building": "building-0.1.1",
     "terrain": "terrain-0.1.1",
     "body": "body-0.1.0",
@@ -245,6 +245,8 @@ def store_behavior(store: AssetStore, agent, scene_key: str):
     x0 = L[0, 1:3].copy()
     L[:, 1:3] -= x0  # store relative to start so clips can be re-placed anywhere
     params = dict(species=agent.spec.key, scene=scene_key, agent=agent.id)
+    if store.has("behavior", params):  # deterministic: same scene, same clip; don't rewrite it (git churn)
+        return store.entries[store.key("behavior", params)]
     states, n = np.unique(st, return_counts=True)
     meta = dict(species=agent.spec.key, traits={k: round(float(v), 3) for k, v in agent.trait.items()},
                 duration=float(L[-1, 0]), distance=float(np.hypot(*np.diff(L[:, 1:3], axis=0).T).sum()),

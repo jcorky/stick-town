@@ -37,7 +37,6 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 **Session 2 history note:** session 1's commits were imported from the owner's bundle. Its building/body/terrain/behaviour LFS objects were never pushed and are lost; they were regenerated, and the asset commit was rewritten (owner approved) so the history only references objects that exist.
 
 **Known weaknesses** (look at them, then fix):
-- Leaf cards are flat; seen edge-on they read as streaks. Fold each card along the twig (V-shape) or add a second crossed card.
 - Bark is about half of every scene GLB (live oak skeletons are 85k triangles). Cull more twigs at `low`, or bake branch tips into the leaf cards.
 - Leaf sets are other species chosen by outline; no Southern-specific leaf scans yet (e.g. sweetgum stars are maple-like).
 - Ground detail is one texture per biome over the whole tile; trails, lawn and litter share it. Blend 2–3 detail maps by the existing layers (canopy, trail, grass density).
@@ -45,12 +44,11 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Desire paths are straight-ish and only in high-traffic corridors; there are no road surfaces beyond a colour strip.
 - Squirrels spend a lot of time in `freeze`; deer often rest at golden hour.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
-- Re-running a scene rewrites its behaviour clips (new timestamps); don't commit that churn.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
 
 ## 3. Next priorities, in order
 
-1. **Fidelity near the camera, continued.** Folded leaf cards; layered ground detail driven by the trail, canopy and grass layers; curved multi-segment grass blades with trampling; LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
+1. **Fidelity near the camera, continued.** Layered ground detail driven by the trail, canopy and grass layers; curved multi-segment grass blades with trampling; LOD tiers (impostors far, meshes near, `detail="cm"` within ~5 m).
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals that walk.** Skeletal gaits matched to speed, head/tail motion for alert and feeding states, multi-hour runs, more species (heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds).

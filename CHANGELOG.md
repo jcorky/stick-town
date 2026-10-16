@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+**Changed**
+- Broadleaf leaf cards fold along the twig into a shallow V (4 triangles, two-thirds as many cards, cover held), so crowns no longer show flat streaks edge-on. tree-0.2.1; library trees rebuilt.
+
+**Fixed**
+- Re-running a scene no longer rewrites its stored behaviour clips (they were deterministic but got new timestamps, churning git).
+
 ## 0.2.0 — 2026-10-15 (second session)
 
 **Added**

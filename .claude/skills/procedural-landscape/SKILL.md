@@ -118,4 +118,4 @@ Open `map.png` and `scene.json` and check:
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.
 - Continuous params (moisture 0.4137…, body scale 1.0734…) mean zero cache hits. Bucket them.
 - Bump `GENERATOR_VERSIONS` when output changes, or the library serves stale models; then `assets prune`.
-- Re-running a scene rewrites its behaviour clips with a new `created` timestamp; don't commit that churn (`git restore assets_library/behavior assets_library/index.jsonl`).
+- Re-running a scene used to rewrite its behaviour clips with a new `created` timestamp (git churn); `store_behavior` now skips clips it already has. Any new writer into the library should do the same.

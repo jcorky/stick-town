@@ -131,6 +131,32 @@ class Textures(Base):
         self.assertGreater(green[0], 0)
 
 
+class Library(Base):
+    def test_behaviour_clip_not_rewritten(self):
+        from types import SimpleNamespace
+        from plandscape.assets.store import store_behavior
+        a = SimpleNamespace(spec=SimpleNamespace(key="armadillo"), id=1, trait={"boldness": 0.5}, events=[],
+                            log=[(0.0, 1.0, 2.0, 0.0, 0.0, "travel"), (1.0, 2.0, 2.0, 0.0, 0.0, "eat")])
+        e1 = store_behavior(self.store, a, "scene")
+        path = os.path.join(self.store.root, os.path.splitext(e1.path)[0] + ".json")
+        before = open(path).read()
+        e2 = store_behavior(self.store, a, "scene")
+        self.assertEqual(e1.key, e2.key)
+        self.assertEqual(open(path).read(), before)  # same clip, same file: no git churn
+
+    def test_leaf_cards_are_folded(self):
+        tm = generate_tree("sweetgum", seed=1, detail="low")
+        P = tm.foliage.positions.astype(np.float64)
+        n = (len(P) // 6) * 6
+        card = P[:n].reshape(-1, 6, 3)[:50]  # spine is vertices 1 and 4; the wings leave its plane
+        spine = card[:, 4] - card[:, 1]
+        wing_l, wing_r = card[:, 0] - card[:, 1], card[:, 2] - card[:, 1]
+        nl = np.cross(spine, wing_l)
+        nr = np.cross(wing_r, spine)
+        cosang = (nl * nr).sum(1) / np.linalg.norm(nl, axis=1) / np.linalg.norm(nr, axis=1)
+        self.assertTrue((cosang < 0.97).all())  # every card has a real fold
+
+
 class Models(Base):
     def test_decimate_welds_and_hits_target(self):
         P, UV, I = _sphere()

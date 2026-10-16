@@ -26,6 +26,7 @@ from ..rng import rng as make_rng
 from .species import SPECIES, Species
 
 LEAF_BUDGET = {"low": 2000, "med": 9000, "high": 40000, "cm": 250000}
+FOLD_COVER = 0.92  # a folded card's projected area relative to flat (cos of the mean fold angle)
 TWIG_CULL = {"low": 0.012, "med": 0.006, "high": 0.003, "cm": 0.0}
 
 
@@ -292,31 +293,36 @@ def _foliage_mesh(sp, sk, H, season, detail, r, moisture) -> Mesh:
             # leaf-cluster cards: each quad shows a photographed sprig of ~15 leaves (alpha-masked)
             u0, v0, u1, v1, cov = textures.card_box(mb.texture)
             aspect = (u1 - u0) / max(v1 - v0, 1e-3)
-            per = max(1, budget // 2 // len(cand))
+            per = max(1, budget // 3 // len(cand))  # 4 triangles per folded card
             nl = per * len(cand)
-            L = float(np.clip(np.sqrt(shell * 3.2 / (nl * aspect * max(cov, 0.2))),
+            L = float(np.clip(np.sqrt(shell * 3.2 / (nl * aspect * max(cov, 0.2) * FOLD_COVER)),
                               sp.leaf_size / 0.3, sp.leaf_size * 60))
             anchor = np.repeat(pos[cand], per, 0) + r.normal(0, L * 0.35, (nl, 3))
             outward = _norm(anchor - crown_c + r.normal(0, 0.5, (nl, 3)))
             axis = _norm(outward + [0, 0, 0.15] + r.normal(0, 0.45, (nl, 3)))
             side = _norm(np.cross(axis, _norm([0, 0, 1] + r.normal(0, 0.6, (nl, 3)))))
+            nrm = _norm(np.cross(side, axis))
             Ls = L * r.uniform(0.75, 1.2, (nl, 1))
             left = (u0 - 0.5) / (v1 - v0) * Ls   # the twig enters at the texture's bottom centre
             right = (u1 - 0.5) / (v1 - v0) * Ls
-            v0_ = anchor + side * left
-            v1_ = anchor + side * right
-            v2_ = anchor + side * right + axis * Ls
-            v3_ = anchor + side * left + axis * Ls
-            P = np.stack([v0_, v1_, v2_, v3_], 1).reshape(-1, 3)
+            # fold the card along its twig into a shallow V, so it still has width when seen edge-on
+            th = r.uniform(0.35, 0.65, (nl, 1)) * np.where(r.uniform(0, 1, (nl, 1)) < 0.5, 1, -1)
+            wl = -side * np.cos(th) + nrm * np.sin(np.abs(th))
+            wr = side * np.cos(th) + nrm * np.sin(np.abs(th))
+            tip = anchor + axis * Ls
+            P = np.stack([anchor - wl * left, anchor, anchor + wr * right,
+                          tip - wl * left, tip, tip + wr * right], 1).reshape(-1, 3)
             flip = r.uniform(0, 1, nl) < 0.5  # mirror half the cards so sprigs don't all lean one way
             ul, ur = np.where(flip, u1, u0), np.where(flip, u0, u1)
-            UV = np.stack([np.c_[ul, np.full(nl, v1)], np.c_[ur, np.full(nl, v1)],
-                           np.c_[ur, np.full(nl, v0)], np.c_[ul, np.full(nl, v0)]], 1).reshape(-1, 2)
+            uc = np.full(nl, 0.5)
+            UV = np.stack([np.c_[ul, np.full(nl, v1)], np.c_[uc, np.full(nl, v1)], np.c_[ur, np.full(nl, v1)],
+                           np.c_[ul, np.full(nl, v0)], np.c_[uc, np.full(nl, v0)], np.c_[ur, np.full(nl, v0)]],
+                          1).reshape(-1, 2)
             ao = np.clip(np.linalg.norm(anchor - crown_c, axis=1) / R, 0.55, 1.1)[:, None]
             col = _leaf_colour(sp, season, r, nl) * ao
-            C = np.repeat(col, 4, 0)
-            base = (np.arange(nl) * 4)[:, None]
-            idx = np.concatenate([base + [0, 1, 2], base + [0, 2, 3]])
+            C = np.repeat(col, 6, 0)
+            base = (np.arange(nl) * 6)[:, None]
+            idx = np.concatenate([base + [0, 1, 4], base + [0, 4, 3], base + [1, 2, 5], base + [1, 5, 4]])
             mb.add(P, C, idx, UV)
         elif sp.leaf == "needle":
             # pines carry needles in brush-like tufts along the outer shoots: two crossed needle cards per tuft
