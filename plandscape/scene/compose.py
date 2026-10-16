@@ -411,11 +411,13 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             nm = f"{a.spec.key}_{len(rigs)}"
             rigs[look] = (rg, g.mesh(rg["torso"], nm + "_torso", m_fauna),
                           g.mesh(rg["neck"]["mesh"], nm + "_head", m_fauna) if rg["neck"] else None,
+                          g.mesh(rg["tail"]["mesh"], nm + "_tail", m_fauna) if rg["tail"] else None,
                           [(g.mesh(lg["thigh"], f"{nm}_thigh{i}", m_fauna), g.mesh(lg["shank"], f"{nm}_shank{i}", m_fauna))
                            for i, lg in enumerate(rg["legs"])])
-        rg, torso_mesh, head_mesh, leg_meshes = rigs[look]
+        rg, torso_mesh, head_mesh, tail_mesh, leg_meshes = rigs[look]
         torso = g.node("torso", torso_mesh)
         neck = g.node("neck", head_mesh, translation=rg["neck"]["pivot"]) if head_mesh is not None else None
+        tail = g.node("tail", tail_mesh, translation=rg["tail"]["pivot"]) if tail_mesh is not None else None
         legs, shanks = [], []
         for i, ((tm_, sm_), lg) in enumerate(zip(leg_meshes, rg["legs"])):
             r1, r2 = gait.rest_pose(rg["hip"], lg["l1"], lg["l2"], lg["knee"])
@@ -425,7 +427,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             g.nodes[th]["rotation"] = pitch_quat(r1).tolist()
             legs.append(th)
             shanks.append(sh)
-        trunk = g.node("body", children=[torso] + ([neck] if neck is not None else []) + legs)
+        trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs)
         node = g.node(f"{a.spec.key}_{a.id}", children=[trunk])
         akids.append(node)
         L = a.log[::4]
@@ -437,8 +439,11 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             if legs:  # hip and knee by two-bone IK on planted-foot paths (§26), trunk bob (§28)
                 lg0 = rg["legs"][0]
                 bob = []
+                states = [l[5] for l in a.log]
+                drop = gait.pose_track(t_, states, rg["lie"] * rg["hip"], gait.LIE, gait.LIE_EASE) if rg["lie"] else None
                 tk, ang, _ = gait.leg_ik(t_, xy, rg["hip"], [lg["knee"] for lg in rg["legs"]],
-                                         "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]), bob=bob)
+                                         "quad" if rg["kind"] == "quad" else "biped", seg=(lg0["l1"], lg0["l2"]), bob=bob,
+                                         drop=drop)
                 for i, (ln, sn) in enumerate(zip(legs, shanks)):
                     extra.append((ln, "rotation", tk, pitch_quat(ang[:, i, 0])))
                     extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
@@ -447,6 +452,9 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             if neck is not None:  # head down to graze, up when alert (§28)
                 hk, hv = gait.head_track(t_, [l[5] for l in a.log], rg["neck"]["graze"])
                 extra.append((neck, "rotation", hk, pitch_quat(-hv)))
+            if tail is not None:  # the white flag goes up when a deer flees (§29)
+                fk, fv = gait.pose_track(t_, [l[5] for l in a.log], rg["tail"]["flag"], gait.TAIL, gait.TAIL_EASE)
+                extra.append((tail, "rotation", fk, pitch_quat(-fv)))
             elif rg["kind"] == "hop":
                 tk, zz = gait.hop_heights(t_, xy, rg["hip"], 0.6 * rg["hip"])
                 extra.append((torso, "translation", tk, _to_gltf(np.c_[0 * zz, 0 * zz, zz])))

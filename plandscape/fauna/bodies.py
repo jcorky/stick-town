@@ -28,7 +28,8 @@ def ellipsoid(c, r, rgb, nu=10, nv=6):
 
 def rig(key, rgb, scale=1.0):
     """Body split for gait animation: dict(torso=Mesh, legs=[dict(thigh, shank, hip, knee, l1, l2)],
-    neck=dict(mesh, pivot, graze) or None, hip=hip height h (m), kind='quad'|'biped'|'hop'|'none'). Legs are ordered LF, RF, LH, RH (bipeds L, R).
+    neck=dict(mesh, pivot, graze) or None, tail=dict(mesh, pivot, flag) or None, hip=hip height h (m),
+    kind='quad'|'biped'|'hop'|'none', lie=trunk drop when lying, as a fraction of h). Legs are ordered LF, RF, LH, RH (bipeds L, R).
     Thigh and shank hang straight down from their own origins (hip, knee); together they are h / 0.95 long, so
     the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward (stifle, human knee), −1 backward
     (a deer's carpus, a bird's intertarsal joint)."""
@@ -36,6 +37,7 @@ def rig(key, rgb, scale=1.0):
     rgb = np.asarray(rgb)
     parts, legs, hip, kind = [], [], 0.0, "none"
     neck = None  # dict(mesh relative to the pivot, pivot xyz, graze=head-down pitch in radians)
+    tail = None  # dict(mesh relative to the pivot, pivot xyz, flag=raise angle in radians)
 
     def leg(x, y, h, w, col, knee):
         L = h * REACH
@@ -55,8 +57,12 @@ def rig(key, rgb, scale=1.0):
         for x, knee in ((L * 0.6, -1.0), (-L * 0.6, 1.0)):  # fore (carpus bends back), then hind (stifle forward)
             for y in (0.1, -0.1):                            # left (+y), then right
                 leg(x, y, h, 0.06, rgb * 0.8, knee)
-        tail = (0.95, 0.95, 0.92) if key == "white_tailed_deer" else rgb * 0.8
-        parts.append(ellipsoid((-L * 1.0, 0, h + 0.05), (0.12, 0.05, 0.08), tail))
+        if key == "white_tailed_deer":  # the white flag: raised when fleeing (§29)
+            tp = np.array([-L * 0.9, 0, h + 0.08])
+            tail = dict(mesh=ellipsoid(np.array([-L * 1.0, 0, h + 0.05]) - tp, (0.12, 0.05, 0.08), (0.95, 0.95, 0.92)),
+                        pivot=tuple(tp), flag=np.radians(100))
+        else:
+            parts.append(ellipsoid((-L * 1.0, 0, h + 0.05), (0.12, 0.05, 0.08), rgb * 0.8))
         if key == "coyote":
             parts.append(ellipsoid((-L * 1.2, 0, h - 0.1), (0.25, 0.06, 0.07), rgb * 0.75))
         hip, kind = h, "quad"
@@ -91,16 +97,18 @@ def rig(key, rgb, scale=1.0):
         hip, kind = 0.9, "biped"
     torso = Mesh.merge(parts)
     torso.positions *= scale
-    if neck is not None:
-        neck["mesh"].positions *= scale
-        neck["pivot"] = tuple(c * scale for c in neck["pivot"])
+    for part in (neck, tail):
+        if part is not None:
+            part["mesh"].positions *= scale
+            part["pivot"] = tuple(c * scale for c in part["pivot"])
     for lg in legs:
         lg["thigh"].positions *= scale
         lg["shank"].positions *= scale
         lg["hip"] = tuple(c * scale for c in lg["hip"])
         lg["l1"] *= scale
         lg["l2"] *= scale
-    return dict(torso=torso, legs=legs, neck=neck, hip=hip * scale, kind=kind)
+    drop = {"quad": 0.62, "biped": 0.4}.get(kind, 0.0) if key != "human" else 0.0
+    return dict(torso=torso, legs=legs, neck=neck, tail=tail, hip=hip * scale, kind=kind, lie=drop)
 
 
 def _pitch(P, th):
@@ -126,7 +134,8 @@ def body(key, rgb, scale=1.0):
     """The rig merged into one static mesh in its rest pose (previews, the asset library)."""
     r = rig(key, rgb, scale)
     parts = [r["torso"]] + posed_legs(r)
-    if r["neck"] is not None:
-        n = r["neck"]
-        parts.append(Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors, n["mesh"].indices))
+    for n in (r["neck"], r["tail"]):
+        if n is not None:
+            parts.append(Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors,
+                              n["mesh"].indices))
     return Mesh.merge(parts)

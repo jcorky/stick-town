@@ -88,6 +88,10 @@ BOB = {"walk": 0.015, "trot": 0.03, "gallop": 0.05}  # trunk bob amplitude, frac
 HEAD = {"eat": 1.0, "drink": 1.0, "dig": 0.9, "scratch": 0.8, "groom": 0.4, "rest": 0.3, "idle": 0.1,
         "pause": 0.0, "travel": 0.15, "flee": 0.1, "alert": -0.25, "freeze": -0.2}
 HEAD_EASE = 0.4  # s to move the head to a new pose
+TAIL = {"flee": 1.0, "alert": 0.4}  # deer tail raise, fraction of the flag angle (§29)
+TAIL_EASE = 0.3
+LIE = {"rest": 1.0}  # trunk drop, fraction of the species' lying drop (§29)
+LIE_EASE = 1.0
 REACH = 1 / 0.95  # leg length / hip height
 
 
@@ -115,29 +119,33 @@ def rest_pose(h, l1, l2, knee):
     return two_bone(0.0, -h, l1, l2, knee)
 
 
-def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None):
+def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None, drop=None):
     """(key times (K,), angles (K, n_legs, 2) hip/knee radians, gait names) with feet planted in stance.
     With `bob` a list, it is filled with the trunk lift b(t) = A cos 2φ at each key; feet aim at z = −(h + b)
-    so they stay on the ground while the body rises and falls."""
+    so they stay on the ground while the body rises and falls. `drop` = (key times, metres) lowers the trunk
+    (lying down, §29): its keys join the timeline, and resting feet aim at z = −(h − drop), folding the legs."""
     v, phi = phase_track(times, xy, h)
     tk = key_times(times, v, phi)
+    if drop is not None:
+        tk = np.unique(np.r_[tk, np.clip(drop[0], times[0], times[-1])])
     vk = _interval_speed(times, v, tk)
     pk = np.interp(tk, times, phi)
+    dk = np.interp(tk, drop[0], drop[1]) if drop is not None else np.zeros(len(tk))
     table = QUAD if legs == "quad" else BIPED
     L = h * REACH
     l1, l2 = seg if seg is not None else (L / 2, L / 2)
     names = [gait_name(x) for x in froude(vk, h)]
     n = len(table["walk"][0])
     out = np.zeros((len(tk), n, 2))
+    b = -dk.copy()
     for j in range(n):
-        out[:, j] = rest_pose(h, l1, l2, knees[j])
-    b = np.zeros(len(tk))
+        out[:, j] = np.stack(two_bone(np.zeros(len(tk)), -(h - dk), l1, l2, knees[j]), -1)
     for i, (nm, p, vv) in enumerate(zip(names, pk, vk)):
         if vv <= 0:
             continue
         offs, beta = table[nm]
         S = float(stride(vv, h)) * beta
-        b[i] = BOB[nm] * h * np.cos(2 * p)
+        b[i] = BOB[nm] * h * np.cos(2 * p) - dk[i]
         for j, o in enumerate(offs):
             x, z = foot_path(p / (2 * np.pi) - o, beta, S, h, LIFT[nm])
             out[i, j] = two_bone(x, z - b[i], l1, l2, knees[j])
@@ -147,17 +155,22 @@ def leg_ik(times, xy, h, knees, legs="quad", seg=None, bob=None):
 
 
 def head_track(times, states, graze):
-    """Head pitch keys from behaviour states: each change eases over HEAD_EASE seconds.
-    Returns (times, pitch radians, + = head down)."""
+    """Head pitch keys (+ = down) from behaviour states, as fractions of the grazing angle."""
+    return pose_track(times, states, graze, HEAD, HEAD_EASE)
+
+
+def pose_track(times, states, full, table, ease):
+    """Pose keys from behaviour states: `table` maps state → fraction of `full` (an angle or a distance);
+    each change eases over `ease` seconds. Returns (times, values)."""
     t = np.asarray(times, float)
-    target = np.array([HEAD.get(s, 0.0) * graze for s in states])
+    target = np.array([table.get(s, 0.0) * full for s in states])
     tk, val = [t[0]], [target[0]]
     for i in range(1, len(t)):
         if target[i] != target[i - 1]:
             if t[i] > tk[-1] + 1e-6:
                 tk.append(t[i])
                 val.append(target[i - 1])
-            tk.append(t[i] + HEAD_EASE)
+            tk.append(t[i] + ease)
             val.append(target[i])
     if t[-1] > tk[-1]:
         tk.append(t[-1])
