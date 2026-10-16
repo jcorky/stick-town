@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- House siting along the road by a suitability score (flat, dry, a metre above the road, near the creek; after FMG) and invented Southern place names for road, creek, church and homesteads, keyed per scene, in `scene.json` and on `map.png` (TECHNIQUES §19).
 - Rounded crown normals and twig-attached leaf cards (TECHNIQUES §18, after ez-tree): canopies shade as one volume; cards no longer float off the wood. `Mesh.nrm` carries authored normals through transforms, the library and the GLB. tree-0.3.1.
 - Curved grass blades (two segments, quadratic bend, tapering) that are shorter and bent along the path where trampled (TECHNIQUES §17). Scenes 9.7 / 11.1 / 11.4 MB.
 

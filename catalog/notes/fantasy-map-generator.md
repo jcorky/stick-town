@@ -16,6 +16,8 @@
 `d·(1 + (s/12)²)·(1 + 8W)·(0.5 on existing paths)`, FMG's angle relax (< 135° → ½, < 115° → ⅔), then Chaikin
 instead of Catmull-Rom, cut-and-fill crown 8 cm, ditch 35 cm, 4 m blend, gravel ribbon 4.5 m wide. Bed sits
 12 cm under the ribbon (3 cm let the 1 m terrain poke through).
+Siting (§19): FMG's `hab + flux·250 − (h−50)/5` rewritten for a 1 m tile as slope, water, rise-above-road and a
+creek-distance bonus, greedy with 30 m spacing. Names (§19): Southern patterns, not FMG's Markov syllables.
 **Was queued:** a real road surface — Dijkstra on our grid with cost `d·(1 + slope term)·(0.5 on desire paths)`,
 angle relax, Catmull-Rom, crowned cut-and-fill profile with ditches, gravel ribbon mesh; FMG-style house siting;
 creek width ∝ flux^0.7; Southern name patterns.

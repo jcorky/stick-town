@@ -119,6 +119,24 @@ def map_view(res, path):
         ax.plot(s["x"], s["y"], "x", ms=4, color="purple")
     ax.set_xlim(0, S)
     ax.set_ylim(0, S)
+    nm = res.get("names") or {}
+    if res.get("road_line") is not None and nm.get("road"):
+        rl = res["road_line"]
+        k = len(rl) // 2
+        d = rl[min(k + 3, len(rl) - 1)] - rl[max(k - 3, 0)]
+        below = rl[k, 1] > 12  # keep the label inside the map when the road hugs the south edge
+        ax.text(rl[k, 0], rl[k, 1] + (-3.5 if below else 3.5), nm["road"], fontsize=8, ha="center",
+                va="top" if below else "bottom", color="#5a3a1a",
+                rotation=float(np.degrees(np.arctan2(d[1], d[0]))), style="italic")
+    wy_, wx_ = np.nonzero(hf.layers["water"] > 0.5)
+    if nm.get("creek") and len(wx_):
+        k = len(wx_) // 2
+        ax.text(wx_[k] * hf.res, wy_[k] * hf.res + 3, nm["creek"], fontsize=8, color="#1f4e79", style="italic",
+                ha="center")
+    for b in res.get("buildings") or []:
+        ax.plot(b["x"], b["y"], "s", ms=6, color="#7a4a2a")
+        if b.get("name"):
+            ax.text(b["x"], b["y"] + 3, b["name"], fontsize=7, ha="center", color="#3a2a1a")
     ax.set_title("trails (orange) · canopy (green) · animal tracks · signs (x)", fontsize=9)
     ax.legend(loc="upper right", fontsize=7)
     fig.tight_layout()
