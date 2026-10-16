@@ -8,6 +8,7 @@
 - `docs/gallery/` + `scripts/gallery.py`; `docs/TECHNIQUES.md`.
 
 **Changed**
+- Bark is built as chain tubes with shared rings, parallel-transport frames, per-chain side counts and U wraps, ring resampling and tapered tips (TECHNIQUES §4, after ez-tree). All species at `low`: 174k → 79k bark vertices, 152k → 115k triangles; `TWIG_CULL` now differs by detail. Scenes 11.8 / 12.7 / 13.5 → 9.6 / 9.8 / 10.4 MB; library 37.7 → 27.5 MB. tree-0.3.0.
 - Broadleaf leaf cards fold along the twig into a shallow V (4 triangles, two-thirds as many cards, cover held), so crowns no longer show flat streaks edge-on. tree-0.2.1; library trees rebuilt.
 
 **Fixed**

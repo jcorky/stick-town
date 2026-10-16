@@ -36,8 +36,19 @@ Trunk nodes are then held to an explicit taper from the species DBH,
 $r \ge \tfrac{\text{DBH}}{2}\,(1 - 0.85\,t_z)^{1.4}$ with $t_z$ = relative height, because pure pipe radii make
 excurrent leaders too thick.
 
-## 4. Swept tubes with root flare — bark mesh
-`plandscape/flora/tree.py: _bark_mesh`
+## 4. Chain tubes with shared rings, parallel transport and root flare — bark mesh (after ez-tree, MIT)
+`plandscape/flora/tree.py: _chains, _bark_mesh`
+
+The skeleton is split into **chains**: from each node follow the thickest child; every other child starts a new chain
+at its parent (with a 1.08× collar). One ring per kept node, shared by the segments either side. Rings are resampled
+along each chain: node $k$ keeps a ring when the run since the last ring reaches $\Delta s = 	ext{clip}(8r_k,\,0.3,\,1.5)$ m
+or the chain bends ($\hat{\mathbf s}_k\cdot\hat{\mathbf s}_	ext{last} < 0.978$, about 12°). Frames are carried by
+**parallel transport** so the seam never twists at a node:
+
+$$\mathbf t_k = \widehat{\mathbf p_{k+1}-\mathbf p_{k-1}},\qquad \mathbf u_k = \widehat{\mathbf u_{k-1} - (\mathbf u_{k-1}\cdot\mathbf t_k)\,\mathbf t_k},\qquad \mathbf w_k = \mathbf t_k	imes\mathbf u_k$$
+
+Sides per chain from its base radius: 10 / 8 / 5 / 3 for $r_0 >$ 0.12 / 0.05 / 0.02 m / else; terminal tips taper to
+$0.5\,r$; chains thinner than `TWIG_CULL` (0.03 / 0.015 / 0.006 / 0 m for low / med / high / cm) are dropped.
 
 Ring $k$ of $s$ sides around segment direction $\mathbf{t}$ with frame $(\mathbf{u},\mathbf{w})$:
 
@@ -46,7 +57,7 @@ f = 1 + \text{flare}\;e^{-z/0.45}\,\big(1 + 0.45\cos(n_\text{lobe}\theta_k + \ph
 
 **Bark UVs (cylindrical, arc-length):** the seam vertex is duplicated ($s+1$ per ring) so $u$ never wraps,
 
-$$u = \frac{\theta_k}{2\pi}\,\text{reps},\quad \text{reps} = \max\!\big(1,\ \text{round}(2\pi r/\ell)\big),\qquad
+$$u = \frac{\theta_k}{2\pi}\,\text{reps},\quad \text{reps} = \max\!\big(1,\ \text{round}(2\pi r_0/\ell)\big)\ \text{per chain},\qquad
 v = \frac{s_\text{arc}}{\ell},\quad s_\text{arc}(i) = s_\text{arc}(\text{parent}) + \lVert \mathbf{p}_i - \mathbf{p}_\text{parent}\rVert$$
 
 with tile length $\ell$ = 1 m, so texel size stays roughly constant from trunk to twig.
