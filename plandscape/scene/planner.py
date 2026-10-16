@@ -1,8 +1,9 @@
 """Prompt → ScenePlan.
 
 A deterministic keyword planner so the system works offline and reproducibly.
-`refine` is the hook for an LLM pass (e.g. Claude) that rewrites a free-form
-prompt into the same JSON schema; the planner then validates it. The plan is
+`refine` adds an optional LLM pass (`claude_llm`, Anthropic Messages API over urllib) that fills the same
+schema from a free-form prompt; `validate` keeps only values the generators can honour, with the keyword plan
+as fallback and baseline. See docs/TECHNIQUES.md §27. The plan is
 the single source of truth for composition, so it's saved next to every output.
 """
 
@@ -157,13 +158,144 @@ def plan(prompt: str, seed: int | None = None, size_m: float = 128.0, detail: st
     return p
 
 
-def refine(prompt: str, llm=None) -> ScenePlan:
-    """Optional LLM pass: `llm(prompt, schema_json) -> dict`; falls back to `plan`."""
-    base = plan(prompt)
+SEASON_SET = ("spring", "summer", "fall", "winter")
+BUILDING_KINDS = tuple(sorted(set(BUILDINGS.values())))
+MAX_BUILDINGS, MAX_PER_SPECIES = 4, 12
+
+
+def validate(data: dict, base: ScenePlan) -> ScenePlan:
+    """Merge an LLM's plan into `base`, keeping only values the generators can honour.
+
+    Every field is checked against the real vocabularies (provinces, biomes, species, building kinds, fauna,
+    seasons) and ranges; a rejected value keeps the keyword planner's and is noted in `notes`. The seed, size,
+    resolution and detail never come from the LLM, so a scene stays reproducible from its prompt."""
+    from ..fauna.agents import FAUNA
+    from ..flora.species import SPECIES
+    from ..terrain.heightfield import PROVINCES
+    p = ScenePlan(**asdict(base))
+    p.notes = list(base.notes)
+
+    def reject(k, v):
+        p.notes.append(f"refine: kept planner value for {k} (got {v!r})")
+
+    def num(v):  # a JSON number (bools are ints in Python, not here)
+        return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+    def word(v, allowed):
+        return isinstance(v, str) and v in allowed
+    for k, v in (data or {}).items():
+        if k in ("prompt", "seed", "size_m", "res_m", "detail", "notes"):
+            continue
+        if k == "province":
+            p.province = v if word(v, PROVINCES) else (reject(k, v) or p.province)
+        elif k == "biome":
+            p.biome = v if word(v, BIOMES) else (reject(k, v) or p.biome)
+        elif k == "trees":
+            ok = isinstance(v, dict) and v and all(word(s_, SPECIES) and num(w) and w > 0 for s_, w in v.items())
+            if ok:
+                tot = float(sum(v.values()))
+                p.trees = {s_: round(w / tot, 3) for s_, w in v.items()}
+            else:
+                reject(k, v)
+        elif k == "tree_density":
+            p.tree_density = float(v) if num(v) and 0 <= v <= 1 else (reject(k, v) or p.tree_density)
+        elif k == "buildings":
+            if isinstance(v, list) and all(word(b, BUILDING_KINDS) for b in v) and len(v) <= MAX_BUILDINGS:
+                p.buildings = list(v)
+            else:
+                reject(k, v)
+        elif k in ("paths", "creek"):
+            setattr(p, k, v) if isinstance(v, bool) else reject(k, v)
+        elif k == "fauna":
+            ok = isinstance(v, dict) and all(word(a, FAUNA) and num(n) and int(n) == n and 0 <= n <= MAX_PER_SPECIES
+                                             for a, n in v.items())
+            if ok:
+                p.fauna = {a: int(n) for a, n in v.items() if n > 0}
+            else:
+                reject(k, v)
+        elif k == "hour":
+            p.hour = float(v) % 24 if num(v) and 0 <= v <= 24 else (reject(k, v) or p.hour)
+        elif k == "season":
+            p.season = v if word(v, SEASON_SET) else (reject(k, v) or p.season)
+        else:
+            p.notes.append(f"refine: ignored unknown field {k}")
+    if p.biome != base.biome and set(p.trees) == set(base.trees):  # a new biome with the old mix: use its own
+        p.trees = dict(BIOME_TREES[p.biome])
+    p.notes.append("refined by LLM")
+    return p
+
+
+def refine(prompt: str, llm=None, seed: int | None = None, size_m: float = 128.0, detail: str = "low") -> ScenePlan:
+    """Optional LLM pass: `llm(prompt, schema_json) -> dict`. The keyword plan is the fallback and the
+    validator's baseline; any failure (no key, network, bad JSON) returns it unchanged with a note."""
+    base = plan(prompt, seed=seed, size_m=size_m, detail=detail)
     if llm is None:
         return base
-    data = llm(prompt, base.to_json())
-    for k, v in (data or {}).items():
-        if hasattr(base, k):
-            setattr(base, k, v)
-    return base
+    try:
+        data = llm(prompt, schema_json())
+    except Exception as e:  # noqa: BLE001  (offline must always work)
+        base.notes.append(f"refine: LLM unavailable ({type(e).__name__}); keyword plan used")
+        return base
+    if not isinstance(data, dict):
+        base.notes.append("refine: LLM returned no JSON object; keyword plan used")
+        return base
+    return validate(data, base)
+
+
+def schema_json() -> str:
+    """The fields an LLM may set, with their allowed values (sent as the contract)."""
+    from ..fauna.agents import FAUNA
+    from ..flora.species import SPECIES
+    from ..terrain.heightfield import PROVINCES
+    return json.dumps({
+        "province": sorted(PROVINCES), "biome": sorted(BIOMES),
+        "trees": {"<species>": "relative weight > 0", "species": sorted(SPECIES)},
+        "tree_density": "0..1", "buildings": f"list (≤{MAX_BUILDINGS}) of {list(BUILDING_KINDS)}",
+        "paths": "bool", "creek": "bool",
+        "fauna": {"<animal>": f"count 0..{MAX_PER_SPECIES}", "animals": sorted(FAUNA)},
+        "hour": "0..24 local solar time", "season": list(SEASON_SET)}, indent=1)
+
+
+DEFAULT_MODEL = "claude-opus-5-5"
+
+
+def claude_llm(model: str | None = None, api_key: str | None = None, timeout: float = 60.0):
+    """An `llm` for `refine` that calls the Anthropic Messages API with the standard library only.
+    Key from ANTHROPIC_API_KEY, model from PLANDSCAPE_MODEL (default the newest Claude)."""
+    import os
+    import urllib.request
+    key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    model = model or os.environ.get("PLANDSCAPE_MODEL", DEFAULT_MODEL)
+
+    def call(prompt, schema):
+        if not key:
+            raise RuntimeError("ANTHROPIC_API_KEY not set")
+        system = ("You turn a description of a place in the American South into a JSON scene plan for a "
+                  "procedural landscape generator. Answer with one JSON object only, using only these fields "
+                  "and allowed values:\n" + schema + "\nOmit fields the description does not imply.")
+        body = json.dumps({"model": model, "max_tokens": 800, "system": system,
+                           "messages": [{"role": "user", "content": prompt}]}).encode()
+        req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, method="POST",
+                                     headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                                              "content-type": "application/json"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            msg = json.loads(r.read())
+        text = "".join(c.get("text", "") for c in msg.get("content", []) if c.get("type") == "text")
+        return extract_json(text)
+    return call
+
+
+def extract_json(text: str):
+    """The first balanced {...} object in `text`, parsed; None if there isn't one."""
+    start = text.find("{")
+    while start >= 0:
+        depth = 0
+        for i in range(start, len(text)):
+            depth += {"{": 1, "}": -1}.get(text[i], 0)
+            if depth == 0:
+                try:
+                    return json.loads(text[start:i + 1])
+                except json.JSONDecodeError:
+                    break
+        start = text.find("{", start + 1)
+    return None

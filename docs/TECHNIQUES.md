@@ -563,3 +563,25 @@ at the ends of the stance, and the sheet shows the flight phases a gallop has.
 
 In the GLB each leg is a thigh node at the hip with a shank child at the knee. Both carry pitch keys in the same
 phase-keyed clip as §25, and their rest pose is the node's default rotation. About +0.3 MB per scene.
+
+## 27. LLM plan refinement under a validator (keyword plan as fallback and baseline)
+`plandscape/scene/planner.py: refine, validate, schema_json, claude_llm, extract_json`; CLI `--llm`
+
+The keyword planner understands only its vocabulary. `refine` lets a language model fill the same `ScenePlan` from
+a free-form prompt, but it never trusts the answer. Write $P_0$ for the keyword plan, $D$ for the model's JSON and $\mathcal V_f$ for the
+values field $f$ can honour (provinces, biomes and species from their tables; building kinds; fauna; seasons; ranges such as
+density $\in[0,1]$, hour $\in[0,24]$, at most 12 animals per species and 4 buildings):
+
+$$P_f = \begin{cases} D_f & D_f \in \mathcal V_f \\ P_{0,f} & \text{otherwise (noted in } P.\text{notes)}\end{cases}$$
+
+- Seed, tile size, resolution and detail always come from $P_0$, so a prompt still reproduces its scene.
+- Tree weights are renormalised to sum to 1.
+- If the biome changes but the tree mix doesn't, the new biome's own mix is used.
+
+`schema_json()` is the contract sent as the system prompt: every field with its allowed values.
+
+`claude_llm()` calls the Anthropic Messages API with `urllib`, so the core stays numpy/scipy/Pillow/matplotlib.
+- It reads the key from `ANTHROPIC_API_KEY` and the model from `PLANDSCAPE_MODEL`.
+- It takes the first balanced `{…}` in the reply.
+
+Any failure keeps the keyword plan with a note saying why: no key, network down, no JSON. `python3 -m plandscape "<prompt>" --llm` uses it.

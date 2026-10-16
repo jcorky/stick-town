@@ -60,7 +60,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
    - more species: heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds.
 5. **Species data is verified** (§24, `catalog/species_sources.json`). New species need the same: URL plus quote for height, d.b.h., leaf length and habit before `verified=True`. Silvics PDFs: research.fs.usda.gov/download/treesearch/1547.pdf (conifers) and 1548.pdf (hardwoods); the old srs.fs.usda.gov host fails TLS.
 6. **Real-place mode.** `load_dem()` for USGS 3DEP behind an optional `rasterio` import, NLCD/FIA species weights, OSM buildings (see `docs/DATA_SOURCES.md`).
-7. **Planner.** Wire `refine()` to an LLM that fills the `ScenePlan` schema; keep the keyword planner as the offline fallback and validator.
+7. **Planner.** `refine()` + `validate()` + `claude_llm()` are done (§27, `--llm`), tested with a mocked API; not yet run against the live API (no key in session 3). Next: run it with a key on varied prompts and record failures; widen the keyword vocabulary from what the LLM gets right.
 
 ## 4. Non-negotiables (summary; details in the skill)
 
