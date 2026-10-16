@@ -25,6 +25,7 @@ plan the change → implement → render it → LOOK at the image → fix → te
 - **Render every generator change** with `plandscape.render.render()` (single assets) or `python3 -m plandscape "<prompt>" --out out/x` (scenes), then open `preview.png` and `map.png` with the image viewer. Numbers passing is not evidence; twice in v0.1 the stats looked fine while the picture was broken.
 - Write a contact sheet when changing anything per-species or per-kind (see `references/recipes.md`).
 - Keep `python3 -m unittest discover -s tests` green; add a test for every bug you fix.
+- Owner's standing rule: commit and merge regularly, and each commit message names the technique it uses and writes out its equations. Keep `docs/TECHNIQUES.md` in step with the code.
 
 ## 2. Non-negotiables
 

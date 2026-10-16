@@ -46,6 +46,7 @@ Open `DIR/index.html` through any static server (`python3 -m http.server -d DIR`
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, seeding, LOD, how 1 cm detail works
+- [docs/TECHNIQUES.md](docs/TECHNIQUES.md) — every algorithm by name, with its equations
 - [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) — real-world data for real-place mode
 - [docs/ASSETS.md](docs/ASSETS.md) — the asset library and how to share it
 - [CLAUDE.md](CLAUDE.md) — orientation Claude Code loads automatically
