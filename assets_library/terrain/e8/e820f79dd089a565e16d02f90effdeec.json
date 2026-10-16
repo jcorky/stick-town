@@ -1,7 +1,7 @@
 {
- "key": "c2a8afa205caa718dd58a4f630189fd9",
+ "key": "e820f79dd089a565e16d02f90effdeec",
  "kind": "terrain",
- "version": "terrain-0.1.1",
+ "version": "terrain-0.2.0",
  "params": {
   "creek": true,
   "province": "floodplain",
@@ -10,7 +10,7 @@
   "size": 128.0
  },
  "meta": {
-  "created": "2026-10-15T18:54:19",
+  "created": "2026-10-16T04:40:56",
   "origin": [
    0.0,
    0.0
@@ -22,5 +22,5 @@
    129
   ]
  },
- "path": "terrain/c2/c2a8afa205caa718dd58a4f630189fd9.npz"
+ "path": "terrain/e8/e820f79dd089a565e16d02f90effdeec.npz"
 }

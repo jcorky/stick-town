@@ -15,6 +15,13 @@ equations in [`../TECHNIQUES.md`](../TECHNIQUES.md).
 Space colonisation skeletons (§2) with pipe-model radii (§3), folded leaf-sprig cards (§6) whose
 grey detail textures take each species' season colour through COLOR_0 = c / μ (§5).
 
+## Terrain: droplet erosion (§14)
+
+![terrain erosion](terrain-erosion.jpg)
+
+Same tiles without (top) and with (bottom) batched droplet erosion: gullies on the escarpment and ridge
+slopes, the plateau's sandstone cap left intact, sediment filling the hollows.
+
 ## Monte Sano hardwood cove, fall, golden hour (Cumberland Plateau)
 
 ![monte sano preview](monte-sano-preview.jpg)

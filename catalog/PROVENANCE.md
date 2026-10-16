@@ -4,6 +4,7 @@ Code adapted from third-party sources is recorded here: source repo, commit, fil
 
 | Our file | Source | Commit | Licence | What |
 |---|---|---|---|---|
+| `plandscape/terrain/erosion.py` | [SebLague/Hydraulic-Erosion](https://github.com/SebLague/Hydraulic-Erosion) `Assets/Scripts/Erosion.cs`, `ComputeShaders/Erosion.compute` | f245576 | MIT | Droplet erosion rules and constants (capacity, deposit/erode, brush weights, speed update), re-implemented batched in numpy |
 | `plandscape/flora/tree.py: _chains, _bark_mesh` | [dgreenheck/ez-tree](https://github.com/dgreenheck/ez-tree) `src/lib/tree.js` | dcf309b | MIT | Shared-ring branch tubes, tapered tips, per-branch U wraps (re-implemented on our space-colonisation skeleton; no code copied) |
 | `plandscape/textures.py: height_blend`, `viewer/index.html: addSplat` | [TokisanGames/Terrain3D](https://github.com/TokisanGames/Terrain3D) `src/shaders/main.glsl` | 854a457 | MIT | Height-blend weight form $W = (a + h)^k a$ (re-derived for four per-vertex weights; no code copied) |
 

@@ -3,6 +3,7 @@
 ## Unreleased
 
 **Added**
+- Droplet hydraulic erosion, batched in numpy (TECHNIQUES §14, after Lague): gullies on slopes, filled hollows, creeks follow carved valleys; 0.2 s per tile. terrain-0.2.0. Gallery gains a before/after hillshade sheet.
 - Height-blended ground splatting (TECHNIQUES §13, after Terrain3D): per-vertex litter/soil/grass/mud weights from the trail, canopy, grass, water and slope layers; `W_i = (a_i + h_i)^k a_i`; glTF `_SPLAT` attribute + material `extras.splat`, blended in the viewer's fragment shader and in the preview renderer (Gouraud ground).
 - `catalog/notes/`: what each of eight studied repos does, its equations, and what is queued from it.
 - `docs/gallery/` + `scripts/gallery.py`; `docs/TECHNIQUES.md`.

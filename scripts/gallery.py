@@ -56,6 +56,33 @@ def species_sheet(path, season="summer"):
     return path
 
 
+def terrain_sheet(path, seed=7):
+    """Hillshades of three provinces before and after droplet erosion (TECHNIQUES §14)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LightSource
+    from plandscape.terrain import heightfield as hfm
+    provs = ("piedmont", "cumberland_plateau", "ridge_and_valley")
+    fig, ax = plt.subplots(2, 3, figsize=(15, 10))
+    ls = LightSource(315, 35)
+    real = hfm.droplet_erosion
+    for col, prov in enumerate(provs):
+        for row, erode in enumerate((False, True)):
+            hfm.droplet_erosion = real if erode else (lambda z, **k: z)
+            try:
+                z = hfm.generate_tile(128, 1.0, prov, seed, creek=False).z
+            finally:
+                hfm.droplet_erosion = real
+            ax[row, col].imshow(ls.hillshade(z, vert_exag=3), cmap="gray", origin="lower")
+            ax[row, col].set_title(f"{prov.replace('_', ' ')} — {'with' if erode else 'without'} droplet erosion")
+            ax[row, col].axis("off")
+    fig.tight_layout()
+    fig.savefig(path, dpi=80)
+    plt.close(fig)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -71,6 +98,7 @@ def main(argv=None):
             _jpeg(os.path.join(d, f"{img}.png"), os.path.join(OUT, f"{name}-{img}.jpg"))
         s = json.load(open(os.path.join(d, "scene.json")))["stats"]
         stats[name] = {k: s.get(k) for k in ("glb_mb", "trees", "tree_tris", "ground_props", "agents", "signs")}
+    _jpeg(terrain_sheet(os.path.join(ROOT, "out", "terrain.png")), os.path.join(OUT, "terrain-erosion.jpg"), 1500)
     for season in ("summer", "fall"):
         p = species_sheet(os.path.join(ROOT, "out", f"species_{season}.png"), season)
         _jpeg(p, os.path.join(OUT, f"species-{season}.jpg"), width=1500)

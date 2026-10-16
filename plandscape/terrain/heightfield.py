@@ -17,6 +17,7 @@ from scipy import ndimage
 
 from .. import noise
 from ..rng import derive_seed
+from .erosion import droplet_erosion
 
 # Relief and character per province. Numbers are design targets meant to *feel*
 # right at tile scale, not survey statistics.
@@ -67,6 +68,9 @@ class Heightfield:
         dzdy = (self.sample(x, y + e) - self.sample(x, y - e)) / (2 * e)
         n = np.stack([-dzdx, -dzdy, np.ones_like(dzdx)], -1)
         return n / np.linalg.norm(n, axis=-1, keepdims=True)
+
+
+EROSION_STRENGTH = {"floodplain": 0.25, "coastal_plain": 0.5}
 
 
 def _thermal_erosion(z, res, iters=30, talus_deg=34.0, rate=0.35):
@@ -135,6 +139,8 @@ def generate_tile(size_m=192.0, res_m=1.0, province="piedmont", seed=0,
     # fine micro-relief (roots, rills, ant mounds) — sub-metre detail starts here
     z += 0.08 * noise.fbm(X / 3.0, Y / 3.0, s + 17, octaves=3)
     z = _thermal_erosion(z, res_m, iters=20)
+    # rain: gullies on slopes, filled hollows (flat country barely gullies)
+    z = droplet_erosion(z, seed=s, strength=EROSION_STRENGTH.get(province, 1.0))
 
     if creek and province in ("floodplain", "coastal_plain"):
         # flat country: a meandering bayou/branch, since flow routing alone finds no channel

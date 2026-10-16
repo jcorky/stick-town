@@ -1,7 +1,7 @@
 {
- "key": "b954201f0d8ed3f3787a9f79e78d7ea2",
+ "key": "09ef9545fac1d77e4869bd1ea405c080",
  "kind": "terrain",
- "version": "terrain-0.1.1",
+ "version": "terrain-0.2.0",
  "params": {
   "creek": true,
   "province": "coastal_plain",
@@ -10,7 +10,7 @@
   "size": 128.0
  },
  "meta": {
-  "created": "2026-10-15T18:54:19",
+  "created": "2026-10-16T04:39:37",
   "origin": [
    0.0,
    0.0
@@ -22,5 +22,5 @@
    129
   ]
  },
- "path": "terrain/b9/b954201f0d8ed3f3787a9f79e78d7ea2.npz"
+ "path": "terrain/09/09ef9545fac1d77e4869bd1ea405c080.npz"
 }
