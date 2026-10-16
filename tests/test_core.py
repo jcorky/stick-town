@@ -17,6 +17,26 @@ from plandscape.sources.harvest import detect_license
 from plandscape.terrain.heightfield import PROVINCES, generate_tile
 
 
+class SpeciesSources(unittest.TestCase):
+    def test_verified_species_agree_with_their_sources(self):
+        import json
+        root = os.path.join(os.path.dirname(__file__), "..")
+        src = json.load(open(os.path.join(root, "catalog", "species_sources.json"), encoding="utf-8"))["species"]
+        for k, sp in SPECIES.items():
+            if not sp.verified:
+                continue
+            s = src[k]
+            for f in ("height", "dbh", "leaf_size", "habit"):
+                self.assertTrue(s[f]["url"].startswith("https://") and s[f]["quote"], (k, f))
+            for f in ("height", "dbh"):
+                lo, hi = s[f]["value"]
+                v = getattr(sp, f)
+                self.assertTrue(lo - 1e-6 <= v[0] <= v[1] <= hi + 1e-6, (k, f, v, (lo, hi)))
+            lo, hi = s["leaf_size"]["value"]
+            self.assertTrue(lo - 1e-6 <= sp.leaf_size <= hi + 1e-6, (k, sp.leaf_size, (lo, hi)))
+            self.assertEqual(sp.deciduous, "deciduous" in s["habit"]["value"], k)
+
+
 class Determinism(unittest.TestCase):
     def test_terrain_same_seed_same_world(self):
         a = generate_tile(64, 1.0, "piedmont", 7)

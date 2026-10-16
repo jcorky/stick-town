@@ -48,4 +48,4 @@ Licences were read from the sites' licence pages by `python3 -m plandscape.sourc
 | Leaf sprigs | LeafSet001, 003, 004, 010, 016, 018, 022, 024, 029 (photographs of other species, chosen for leaf outline; stand-ins, not botanical records) |
 | Pine needles | PineNeedles001 |
 | Bark | Bark001, 002, 004, 006, 007, 012, 014 |
-| Ground | ScatteredLeaves009, Ground078, Ground048, Grass004 |
+| Ground | ScatteredLeaves009, Ground026, Ground036 (Delta alluvium), Ground048, Ground077 (pine straw), Ground080 (Coastal Plain sand), Grass004, Gravel023; Ground078 (session 2, superseded) |

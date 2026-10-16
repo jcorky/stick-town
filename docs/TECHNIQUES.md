@@ -450,3 +450,46 @@ impostor mesh in `extras.lod_far` but does not instance it, so viewers without L
 The viewer swaps each such node for a `THREE.LOD`: the full tree from 0 m, the cards beyond `LOD_FAR` = 110 m
 (`?lod=0` turns impostors off). The cards cast alpha-tested shadows. Cost: about 25 KB per tree model (+0.4 MB per scene); 4 triangles
 replace a tree.
+
+## 24. Sourced species data, and versioned derived assets
+`catalog/species_sources.json`; `plandscape/flora/species.py`; `tests/test_core.py: SpeciesSources`; `assets prune`
+
+**Species.** Mature height $h$, trunk diameter $D$ (d.b.h.) and leaf or needle length $\ell$ for all twelve species now come
+from sources, never memory:
+- USFS *Silvics of North America* (Burns & Honkala 1990, Agriculture Handbook 654);
+- FEIS;
+- USDA PLANTS;
+- UF/IFAS EDIS fact sheets;
+- for redbud's d.b.h. only, the UNC Plant Information Center.
+
+Each value is stored with its URL and a verbatim quote, in metres. A species is `verified` when
+
+$$[h_\text{lo}, h_\text{hi}]_\text{code} \subseteq [h_\text{lo}, h_\text{hi}]_\text{source}, \quad [D_\text{lo}, D_\text{hi}]_\text{code} \subseteq [D_\text{lo}, D_\text{hi}]_\text{source}, \quad \ell_\text{code} \in [\ell_\text{lo}, \ell_\text{hi}]_\text{source},$$
+
+and the leaf habit matches. The test enforces this. Where a source gives a single typical value $V$, the range is
+$[0.8V, V]$, and the file says the lower bound is ours.
+
+The biggest corrections:
+- longleaf and bald cypress grow 30.5–36.6 m (was 24–36);
+- tulip poplar 30.5–45.7 m (was 27–38);
+- flowering dogwood on good sites 9–12 m, d.b.h. 20–40 cm (was 5–9 m);
+- sweetgum d.b.h. 0.9–1.5 m (was 0.4–0.9).
+
+The generator draws $h \sim \mathcal U(h_\text{lo}, h_\text{hi})$ and
+$D \sim \mathcal U(D_\text{lo}, D_\text{hi})\,(0.6 + 0.4\,h/h_\text{hi})$, so scenes change accordingly. tree-0.3.2.
+
+**Derived assets.** A library entry derived from another generator's output records that generator's version in its
+params:
+- behaviour clips carry `terrain = "terrain-…"`;
+- impostors carry `tree = "tree-…"`.
+
+`prune` drops an entry when any param named after a kind holds a version string of that kind that is no longer current. Bumping the tree generator therefore retires its impostors, and bumping terrain retires the clips lived on it.
+
+**Branchlet radius.** Sourced d.b.h. made a flaw in the pipe model (§3) visible. A skeleton has about $10^2$ tips where a
+real tree has about $10^4$ twigs, so radii distributed down from the trunk leave the tips at $r_0 N^{-1/n}$, which is 8–12 % of
+the trunk radius: 4–6 cm on a 1.2 m sweetgum, thick enough that no twig was culled. The pipe radii are now remapped
+linearly, keeping their order:
+
+$$r' = r_\text{tip} + (r - r_\text{min})\,\frac{r_0 - r_\text{tip}}{r_0 - r_\text{min}}, \qquad r_\text{tip} = 1.2\ \text{cm}.$$
+
+The trunk keeps d.b.h./2, and the branchlets the foliage hangs on are the same size on every species.

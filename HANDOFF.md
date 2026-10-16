@@ -45,6 +45,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 - Deer rest ~23 % of the time in fall daytime scenes; check activity curves against a source before tuning.
 - The planner is keyword-only; prompts outside its vocabulary fall back to province defaults.
 - Preview rendering of a full scene takes ~60 s (pure-Python rasteriser).
+- Bare winter dogwoods show boxy, right-angled twig runs in their tiered crown (visible since branchlets became 1.2 cm, §24). Probably the layered-crown attraction points; look at `grow_skeleton` for `crown="layered"`.
 - Creeks are re-cut at 25 cm inside the near windows (§22) but stay 1 m-faceted elsewhere. No creek rocks, riffles or exposed roots yet; the water is one flat colour.
 
 ## 3. Next priorities, in order
@@ -54,7 +55,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 2. **More imported assets, Southern first.** Search Poly Haven and ambientCG for pine-straw, red-clay, sand and moss textures; look for CC0 photoscans of Southern species' leaves. Only from sites whose licence probe is permissive. Render every variant and check GLB sizes.
 3. **Grow the asset library.** All species × 4 seasons × ≥4 variants at `low` and `med`; all building kinds × 4; behaviour clips from ≥20 scenes. Ask the owner where large binaries should live before going past ~100 MB.
 4. **Animals that walk.** Skeletal gaits matched to speed, head/tail motion for alert and feeding states, multi-hour runs, more species (heron, cardinal, box turtle, raccoon, red-tailed hawk, fire-ant mounds).
-5. **Verify species data** against USFS *Silvics of North America* (Ag. Handbook 654) and USDA PLANTS; flip `verified=True` only with a citation in `notes`.
+5. **Species data is verified** (§24, `catalog/species_sources.json`). New species need the same: URL plus quote for height, d.b.h., leaf length and habit before `verified=True`. Silvics PDFs: research.fs.usda.gov/download/treesearch/1547.pdf (conifers) and 1548.pdf (hardwoods); the old srs.fs.usda.gov host fails TLS.
 6. **Real-place mode.** `load_dem()` for USGS 3DEP behind an optional `rasterio` import, NLCD/FIA species weights, OSM buildings (see `docs/DATA_SOURCES.md`).
 7. **Planner.** Wire `refine()` to an LLM that fills the `ScenePlan` schema; keep the keyword planner as the offline fallback and validator.
 

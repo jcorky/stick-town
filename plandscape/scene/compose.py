@@ -17,7 +17,7 @@ import numpy as np
 from scipy import ndimage
 
 from .. import textures
-from ..assets.store import AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
+from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_behavior, terrain_codec, tree_codec
 from ..export.gltf import GLB
 from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna.bodies import body
@@ -234,9 +234,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                                                       detail=plan.detail, moisture=params["moisture"]), tenc, tdec)
     impostors = {}
     for key, tm in variants.items():  # far-LOD cross billboards, baked once per tree model (TECHNIQUES §23)
-        rgba = store.get_or_build("impostor", vparams[key], lambda: impostor.bake(tm),
+        ip = dict(vparams[key], tree=GENERATOR_VERSIONS["tree"])  # a new tree generator makes new impostors
+        rgba = store.get_or_build("impostor", ip, lambda: impostor.bake(tm),
                                   lambda a: ({"rgba": a}, {}, None), lambda a, meta: a["rgba"])
-        tex = textures.register(textures.Texture.from_rgba(f"impostor/{AssetStore.key('impostor', vparams[key])}", rgba))
+        tex = textures.register(textures.Texture.from_rgba(f"impostor/{AssetStore.key('impostor', ip)}", rgba))
         impostors[key] = impostor.mesh(tm, tex.key, tex.mean)
     log(f"trees {len(placements)} placed, {len(variants)} unique models + impostors ({time.time() - t0:.1f}s)")
 
@@ -305,7 +306,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
     ter.texture = textures.ground_key(plan.biome)
     litter_amt = 0.6 if plan.biome in ("pine_savanna", "pine_plantation") else 0.2
     ter.weights = ground_weights(hf, dens, field.G, canopy, litter=litter_amt, seed=plan.seed)
-    ter.splat = textures.splat_keys(plan.biome)
+    ter.splat = textures.splat_keys(plan.biome, plan.province)
     # near-camera refinement: fine windows on the focus and the creek (TECHNIQUES §22)
     _, h_near = refine.WINDOW[plan.detail]
     protect = None if road_dist is None else (road_dist <= ROAD_WIDTH / 2 + 2.5).astype(float)
