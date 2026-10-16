@@ -501,3 +501,43 @@ Points are now accepted with probability
 $$p(v) = 0.3 + 0.7\,\cos^2\!\big(\pi\,(\operatorname{frac}(3v) - \tfrac12)\big),$$
 
 where $v$ is relative height in the crown. Branches arrive at each layer obliquely, and the crown still reads as tiered. tree-0.3.3.
+
+## 25. Gaits matched to speed: dynamic similarity, Froude-number gait choice, phase-keyed legs (Alexander 1976; Alexander & Jayes 1983)
+`plandscape/fauna/gait.py`; `plandscape/fauna/bodies.py: rig`; `export/gltf.py: animate(extra), pitch_quat`; `scene/compose.py`
+
+Bodies were static shapes that slid along their paths. Each body is now a rig: a torso plus legs whose local origin
+is the hip. The legs are ordered LF, RF, LH, RH for quadrupeds (deer, coyote, armadillo) and L, R for bipeds (turkey, person).
+Squirrels, with no legs drawn, bound.
+
+**Dynamic similarity.** Animals of any size move alike at equal Froude number, with $h$ the hip height:
+
+$$\mathrm{Fr} = \frac{v^2}{g\,h}, \qquad \frac{\lambda}{h} = 2.3\,\mathrm{Fr}^{0.3} \quad\text{(relative stride, Alexander 1976)}.$$
+
+The gait follows Fr (Alexander & Jayes 1983): walk below 0.5, trot to 2.5, gallop above. Each gait sets footfall
+offsets $o$ (fractions of a stride, legs LF, RF, LH, RH) and a duty factor $\beta$:
+
+| gait | offsets $o$ | $\beta$ |
+|---|---|---|
+| walk (lateral sequence) | 0.25, 0.75, 0, 0.5 | 0.65 |
+| trot (diagonal pairs) | 0, 0.5, 0.5, 0 | 0.45 |
+| gallop (transverse) | 0.5, 0.6, 0, 0.1 | 0.35 |
+
+For bipeds the offsets are 0 and 0.5.
+
+**Leg swing.** Over a logged interval of constant speed $v_i$, the phase advances by $2\pi f_i \Delta t_i$ with $f = v/\lambda(v)$. A rectangle rule
+is used, not a trapezoid, which would keep legs moving for half a step after an animal stops. Each leg pitches about the
+lateral axis:
+
+$$\theta_\text{leg}(t) = \theta_\text{max}\,\sin\!\big(\varphi(t) - 2\pi o_\text{leg}\big), \qquad \theta_\text{max} = \arcsin\!\Big(\min\!\Big(\frac{\lambda\beta}{2h},\ 0.7\Big)\Big),$$
+
+so the foot sweeps the distance the body covers while that foot is on the ground. A squirrel's torso rises by
+$0.6\,h\,|\sin(\varphi/2)|$ instead.
+
+**Keys by phase.** Keyframes sit at fixed phase steps (8 per stride), placed by inverting $\varphi(t)$, plus the samples
+where motion starts or stops. A resting animal costs no keys, and a 2 Hz gallop is sampled as finely as a 1 Hz walk.
+For a deer: walking at 1 m/s gives Fr 0.11, stride 1.12 m, swing 22°; trotting at 3 m/s gives Fr 0.97, stride 2.16 m, swing 31°;
+galloping at 8 m/s gives Fr 6.9, stride 3.89 m, swing 44°.
+
+The leg rotations ride in the scene's single animation clip as extra channels (local to each animal's node), so the
+viewer's mixer plays them with no viewer change. Rigs are shared per look (species, scale, colour). About 0.3 MB per
+scene.

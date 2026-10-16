@@ -21,6 +21,13 @@ that space colonisation bridged with vertical stems, giving boxy right angles. S
 
 ![dogwood tiers](dogwood-tiers.jpg)
 
+## Gaits (§25)
+
+![gaits](gaits.jpg)
+
+The deer rig through one stride at 1, 3 and 8 m/s. The Froude number picks walk, trot or gallop, and stride follows
+λ = 2.3 h Fr^0.3. The same leg angles are keyed into the GLB by stride phase.
+
 ## Terrain: droplet erosion (§14)
 
 ![terrain erosion](terrain-erosion.jpg)

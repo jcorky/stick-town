@@ -37,6 +37,38 @@ class SpeciesSources(unittest.TestCase):
             self.assertEqual(sp.deciduous, "deciduous" in s["habit"]["value"], k)
 
 
+class Gaits(unittest.TestCase):
+    def test_stride_gait_and_phase_keys(self):
+        from plandscape.fauna import gait
+        h = 0.95  # deer hip height
+        self.assertAlmostEqual(float(gait.stride(1.0, h)), 2.3 * h * (1.0 / (9.81 * h)) ** 0.3, places=6)
+        self.assertEqual([gait.gait_name(float(gait.froude(v, h))) for v in (1.0, 3.0, 8.0)], ["walk", "trot", "gallop"])
+        # 20 s at rest, then 20 s walking east at 1 m/s, then rest again
+        t = np.arange(0, 60, 0.25)
+        x = np.clip(t - 20, 0, 20)
+        tk, ang, names = gait.leg_angles(t, np.c_[x, 0 * x], h, "quad")
+        lam = float(gait.stride(1.0, h))
+        strides = 20 / lam
+        self.assertLess(abs(len(tk) - gait.KEYS_PER_STRIDE * strides), 12)  # keys follow distance, not time
+        rest = (tk < 19.9) | (tk > 40.1)
+        self.assertTrue(np.allclose(ang[rest], 0))  # legs hang still at rest
+        moving = ang[(tk > 21) & (tk < 39)]
+        self.assertGreater(np.abs(moving).max(), np.radians(10))
+        # lateral-sequence walk: left fore leads left hind by a quarter stride
+        self.assertLess(np.corrcoef(moving[:, 0], moving[:, 2])[0, 1], 0.5)
+
+    def test_rig_matches_body(self):
+        from plandscape.fauna.bodies import body, rig
+        for k in ("white_tailed_deer", "wild_turkey", "human", "gray_squirrel"):
+            r = rig(k, (0.5, 0.4, 0.3))
+            b = body(k, (0.5, 0.4, 0.3))
+            self.assertEqual(b.n_tris, r["torso"].n_tris + sum(m.n_tris for m, _ in r["legs"]))
+            self.assertAlmostEqual(float(b.positions[:, 2].min()), 0.0 if r["legs"] else float(b.positions[:, 2].min()))
+            for m, hip in r["legs"]:  # hip at the leg's origin, foot on the ground
+                self.assertAlmostEqual(float(m.positions[:, 2].max()), 0.0, places=5)
+                self.assertAlmostEqual(float(m.positions[:, 2].min()) + hip[2], 0.0, places=5)
+
+
 class Determinism(unittest.TestCase):
     def test_terrain_same_seed_same_world(self):
         a = generate_tile(64, 1.0, "piedmont", 7)

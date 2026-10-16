@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+**Added**
+- Animals walk (TECHNIQUES §25). Bodies are rigs with legs pivoting at the hips. Stride is λ = 2.3 h Fr^0.3 (Alexander 1976), and the gait (walk, trot or gallop) is chosen by Froude number (Alexander & Jayes 1983), with footfall offsets and duty factors per gait. Leg swing θ = θmax sin(φ − 2π o) is keyed by stride phase, 8 keys per stride. Squirrels bound. Gallery adds `gaits.jpg`. body-0.1.1.
+
 **Fixed**
 - Bare dogwoods grew boxy, right-angled twig runs. The layered crown kept attraction points only in three thin tiers, and space colonisation bridged the empty gaps with vertical stems. Tiers are now soft: point density is p(v) = 0.3 + 0.7 cos²(π(frac(3v) − ½)). tree-0.3.3.
 
