@@ -234,6 +234,41 @@ class Creeks(unittest.TestCase):
         self.assertGreater(bay.channels[:, 3].min(), 3.5)
 
 
+class NearTerrain(unittest.TestCase):
+    def test_patches_meet_the_coarse_mesh_and_stitch(self):
+        from plandscape.ground.surface import terrain_mesh
+        from plandscape.terrain import refine
+        from plandscape.terrain.heightfield import generate_tile
+        hf = generate_tile(96, 1.0, "piedmont", 11)
+        z0 = hf.z.copy()
+        wins = refine.windows(hf, (48, 48), "low")
+        self.assertTrue(all(float(v).is_integer() for w in wins for v in w))  # windows on whole metres
+        patches = refine.build(hf, wins, 0.25, seed=3)
+        for p in patches:
+            n = p.z.shape[0]
+            xs = p.x0 + np.arange(n) * p.h
+            for row, y in ((p.z[0], p.y0), (p.z[-1], p.y1)):  # border = what the 1 m mesh draws there
+                np.testing.assert_allclose(row, hf.sample(xs, np.full(n, y)), atol=1e-6)
+            X, Y = np.meshgrid(xs, p.y0 + np.arange(n) * p.h)
+            self.assertGreater(np.abs(p.z - hf.sample(X.ravel(), Y.ravel()).reshape(n, n)).max(), 0.02)  # detail inside
+        if len(patches) > 1:  # the creek window re-cut a wetted channel at 25 cm
+            self.assertGreater(patches[1].water.sum(), 20)
+        ones = np.ones_like(hf.z)
+        ter = terrain_mesh(hf, ones * 0.5, ones * 0, ones * 0)
+        ter.uvs = (ter.positions[:, :2] / 2.0).astype(np.float32)
+        ter.weights = np.full((len(ter.positions), 4), 0.25, np.float32)
+        m = refine.stitch(ter, hf, patches, tile=2.0)
+        self.assertEqual(len(m.weights), len(m.positions))
+        self.assertEqual(len(m.uvs), len(m.positions))
+        cen = m.positions[m.indices[: m.n_tris - sum(2 * (p.z.shape[0] - 1) ** 2 for p in patches)]].mean(1)
+        for p in patches:
+            self.assertFalse(p.inside(cen[:, 0], cen[:, 1]).any())  # no coarse triangle left under a patch
+        hf.near = patches
+        cx = (wins[0][0] + wins[0][2]) / 2 + 0.1
+        self.assertAlmostEqual(float(hf.sample(cx, cx)[0]), float(patches[0].sample(np.array([cx]), np.array([cx]))[0]))
+        np.testing.assert_array_equal(hf.z, z0)  # refinement never edits the coarse grid
+
+
 class Road(unittest.TestCase):
     def test_route_grade_ribbon(self):
         from plandscape.scene.roads import ROAD_WIDTH, grade, ribbon, route, smooth

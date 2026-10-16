@@ -20,3 +20,11 @@ Godot terrain plugin. Shaders in `src/shaders/`.
 height-blend weight `(b+s)^8 b` (TECHNIQUES §20; GLSL `detile` in the viewer, `textures.detile_sample` in numpy).
 **Queued:** macro tint; snapped side projection on
 slopes > 45°; baked depth-tinted water (we know depth on the CPU).
+
+**Clipmap (studied session 3):** `src/terrain_3d_mesher.cpp:17-36` builds the camera-following clipmap from block
+meshes: `mesh_size²` tiles, 2-wide EDGE strips that bridge LOD rings, 4-wide FILL strips, TRIM strips for LOD 0;
+rings double in spacing outward and snap to the target (`terrain_3d.h:72-74`, `_clipmap_target`).
+**Adopted (§22), our way:** a static scene needs no moving rings, so two levels only: the 1 m tile plus fine windows
+(25 cm at `low`) placed on the focus and the creek. Instead of edge/trim strips we fade the fine detail to the
+coarse bilinear surface over a 2 m border (τ), so fine border vertices lie on coarse edges and need no bridge mesh.
+

@@ -382,3 +382,34 @@ $z_w = z_b - 0.4\,d$, which wets $r < w\sqrt{0.6}/2$. That gives the `water` and
 
 The surface itself is a ribbon along each reach at $z_w$, 1.15 × the wetted width (the excess tucks under the banks).
 Stage is monotone downstream, so water never climbs.
+
+## 22. Near-camera terrain: a two-level clipmap with micro-relief (clipmaps after Losasso & Hoppe 2004, as in Terrain3D, MIT)
+`plandscape/terrain/refine.py: windows, build, stitch`; `Heightfield.sample` (patch-aware); `scene/compose.py`
+
+The 1 m tile draws a 1.5 m creek in one or two cells and every bank as a facet. Geometry clipmaps keep resolution
+where the eye is. A scene here is static, so the eye is chosen: a window on the focus (grass, props, closeup) and,
+unless it overlaps, one on the creek where it is widest. Window size and spacing $h$ come from `detail`: low
+24 m at 25 cm, med 32 m at 25 cm, high 48 m at 20 cm, cm 32 m at 10 cm. Windows sit on whole metres.
+
+Inside a window,
+
+$$z_f = B(z) + \tau\,\big(C(z) - B(z) + m\big), \qquad m = 0.04\ \text{m}\cdot \operatorname{fbm}\!\Big(\frac{x}{0.9}, \frac{y}{0.9}\Big)\,(1 - W),$$
+$$\tau = \operatorname{smoothstep}\!\Big(\min\!\Big(\frac{d_\text{edge}}{2\ \text{m}},\ 1\Big)\Big).$$
+
+- $B$ is bilinear interpolation of the 1 m grid, which is exactly what the coarse mesh draws along its grid lines.
+- $C$ is cubic B-spline interpolation, so hills are round, not faceted.
+- $m$ is micro-relief (clods, roots, ant hills), damped in water $W$.
+- $\tau$ is 0 on the window border. The fine border vertices therefore lie on the coarse triangles' edges: no crack, no skirt, no T-junction gap wider than float error.
+
+Creeks are then cut again on the fine grid, with the same bed and bank equations as §21, from `hf.channels` (which now
+also stores depth) resampled every 5 cm, and blended by $\tau$:
+
+$$z \leftarrow z + \tau\,(1 - P)\,\big(\mathrm{carve}_h(z) - z\big).$$
+
+$P$ protects the graded road bed where the road fords. Banks become smooth curves instead of 1 m steps.
+
+**Stitch.** Coarse triangles whose centroid falls inside a window are dropped. The fine grid is appended with
+colours and splat weights bilinearly interpolated from the coarse vertices, and UVs $= xy/\text{tile}$ as on the coarse mesh.
+The result is still one terrain mesh, one splat material. `Heightfield.sample` reads heights from the fine patch inside a window,
+so grass, ground props and tree trunks placed afterwards sit on the refined ground. At `low` the terrain grows
+from 33k to 67k triangles (+0.7 MB per scene).
