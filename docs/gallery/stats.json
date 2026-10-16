@@ -16,11 +16,11 @@
   "signs": 0
  },
  "bayou": {
-  "glb_mb": 9.79,
+  "glb_mb": 10.36,
   "trees": 35,
-  "tree_tris": 101044,
+  "tree_tris": 109380,
   "ground_props": 209,
-  "agents": 1,
-  "signs": 1
+  "agents": 4,
+  "signs": 3
  }
 }

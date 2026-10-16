@@ -1,0 +1,173 @@
+{
+ "_about": "Sourced reference values for new species in plandscape.fauna (session 3). Fields with a url carry a verbatim quote from the fetched page; fields marked design=true are our choices where no source was found, with the reason. Metres and m/s converted from the source's units.",
+ "species": {
+  "raccoon": {
+   "shoulder": {
+    "value": [
+     0.23,
+     0.3
+    ],
+    "url": "https://dnr.sc.gov/wildlife/species/raccoon.html",
+    "quote": "The raccoon stands 9 to 10 inches at the shoulder and weighs 6 to 12 lbs.",
+    "note": "NCpedia: 'Height: 12 in. at the shoulder'"
+   },
+   "length": {
+    "value": [
+     0.603,
+     0.95
+    ],
+    "url": "https://animaldiversity.org/accounts/Procyon_lotor/",
+    "quote": "Body length ranges from 603 to 950 mm. Their tails comprise about 42% to 52% of their length, from 192 to 405 mm.",
+    "note": "total length, tail included"
+   },
+   "mass": {
+    "value": [
+     1.8,
+     10.4
+    ],
+    "url": "https://animaldiversity.org/accounts/Procyon_lotor/",
+    "quote": "generally weigh from six to seven kilograms. Weight varies with habitat and region, though, and can range from 1.8 to 10.4kg."
+   },
+   "run": {
+    "value": 6.7,
+    "url": "https://animaldiversity.org/accounts/Procyon_lotor/",
+    "quote": "Their common gait is a shuffle like walk, however, they are able to reach speeds of 15 miles per hour on the ground."
+   },
+   "walk": {
+    "value": 0.5,
+    "design": true,
+    "why": "no sourced walking speed; GPS hourly displacement 0.18–0.35 km/h (Hill et al. 2023, PMC10300129) is a lower bound"
+   },
+   "active": {
+    "value": "nocturnal",
+    "url": "https://animaldiversity.org/accounts/Procyon_lotor/",
+    "quote": "Raccoons are nocturnal and seldom active in the daytime."
+   },
+   "group": {
+    "value": "solitary",
+    "url": "https://animaldiversity.org/accounts/Procyon_lotor/",
+    "quote": "Primarily a solitary animal, the only real social groups raccoons form are that of mother and young."
+   },
+   "habitat": {
+    "value": "water's edge",
+    "url": "https://ncpedia.org/wildlife/raccoon",
+    "quote": "they in fact locate and capture food by dabbling at the water's edge."
+   }
+  },
+  "box_turtle": {
+   "length": {
+    "value": [
+     0.13,
+     0.18
+    ],
+    "url": "https://animaldiversity.org/accounts/Terrapene_carolina/",
+    "quote": "Terrapene c. carolina is about 15 cm x 10 cm in size",
+    "note": "Virginia means 132.4 (m) and 130.1 mm (f) CL (virginiaherpetologicalsociety.com); T. c. major ~18 cm"
+   },
+   "shell_height": {
+    "value": 0.0527,
+    "url": "https://www.maryvillecollege.edu/wp-content/uploads/Faculty/NaturalSciences/dcrain/undergraduate-research/Whitehead2017.pdf",
+    "quote": "average shell height 52.69 mm"
+   },
+   "mass": {
+    "value": [
+     0.25,
+     0.62
+    ],
+    "url": "https://www.virginiaherpetologicalsociety.com/reptiles/turtles/woodland-box-turtle/index.php",
+    "quote": "383.4 ± 80.5 gbody mass (250-603, n - 41)",
+    "note": "females 421.5 g (258–621)"
+   },
+   "run": {
+    "value": 0.49,
+    "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_085_carolina_v1_2015.pdf",
+    "quote": "reaching a maximum velocity of 0.49 m/sec at 31.9°C"
+   },
+   "walk": {
+    "value": 0.05,
+    "url": "https://sicb.org/?p=36139",
+    "quote": "Turtle speeds in the field averaged 0.05 m/s",
+    "note": "proxy: ornate box turtle (T. ornata); daily travel ~32–50 m (Carnegie MNH; Smithsonian)"
+   },
+   "active": {
+    "value": "diurnal, mornings and after rain",
+    "url": "https://nationalzoo.si.edu/node/10462",
+    "quote": "In the summer, they are most active early in the morning or after it rains."
+   },
+   "group": {
+    "value": "solitary, tolerant",
+    "url": "https://animaldiversity.org/accounts/Terrapene_carolina/",
+    "quote": "The turtles are often found together and show no agression towards each other."
+   }
+  },
+  "great_blue_heron": {
+   "height": {
+    "value": 1.17,
+    "url": "https://www.tn.gov/content/tn/twra/wildlife/birds/waterbirds/great-blue-heron.html",
+    "quote": "Length: 46\" (height) Wingspan: 72\" Weight: 5.3 lbs.",
+    "note": "ADW gives ~60 cm standing, an outlier against 0.97–1.37 m length"
+   },
+   "length": {
+    "value": [
+     0.97,
+     1.37
+    ],
+    "url": "https://animaldiversity.org/accounts/Ardea_herodias/",
+    "quote": "They stand approximately 60 cm tall and are 97 to 137 cm long."
+   },
+   "mass": {
+    "value": [
+     2.1,
+     2.5
+    ],
+    "url": "https://animaldiversity.org/accounts/Ardea_herodias/",
+    "quote": "They weigh 2.1 to 2.5 kg."
+   },
+   "steps": {
+    "value": [
+     20,
+     30
+    ],
+    "url": "https://heronconservation.org/media/resources/Heron-Behavior-Terminology.pdf",
+    "quote": "Typical Walking rates in water are 20-30 steps per minute but can be faster in very shallow water or on land.",
+    "note": "herons in general (Kushlan 2011)"
+   },
+   "walk": {
+    "value": 0.15,
+    "design": true,
+    "why": "25 steps/min (Kushlan) × 0.35 m step (design: no sourced step length)"
+   },
+   "flight": {
+    "value": 10.7,
+    "url": "https://www.maine.gov/ifw/blogs/maine-heron-observation-network/harper-wows-us-again",
+    "quote": "Typical flight speed for herons (not during migration) = average is 24 mph, but ranges from 9-60 mph",
+    "note": "the simulation walks it away instead; run = 3 m/s is a design value"
+   },
+   "run": {
+    "value": 3.0,
+    "design": true,
+    "why": "ground escape stand-in; real herons flush by flying (~10.7 m/s)"
+   },
+   "hip": {
+    "value": 0.55,
+    "design": true,
+    "why": "no sourced hip height; about half the standing height"
+   },
+   "active": {
+    "value": "crepuscular",
+    "url": "https://animaldiversity.org/accounts/Ardea_herodias/",
+    "quote": "most of their activity occurs around dawn and dusk."
+   },
+   "group": {
+    "value": "forages alone",
+    "url": "https://www.nationalgeographic.com/animals/birds/facts/great-blue-heron",
+    "quote": "Though great blue herons hunt alone, they typically nest in colonies."
+   },
+   "habitat": {
+    "value": "shallow water",
+    "url": "https://www.tn.gov/content/tn/twra/wildlife/birds/waterbirds/great-blue-heron.html",
+    "quote": "the Great Blue Heron is found along lakeshores, rivers, ponds, streams, and occasionally grassy fields near water."
+   }
+  }
+ }
+}

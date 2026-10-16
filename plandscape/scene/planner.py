@@ -54,7 +54,8 @@ BUILDINGS = {"shotgun": "shotgun", "dogtrot": "dogtrot", "barn": "barn", "church
 
 FAUNA_WORDS = {"deer": "white_tailed_deer", "squirrel": "gray_squirrel", "turkey": "wild_turkey",
                "armadillo": "armadillo", "coyote": "coyote", "people": "human", "person": "human",
-               "kids": "human", "walker": "human", "hiker": "human"}
+               "kids": "human", "walker": "human", "hiker": "human", "raccoon": "raccoon",
+               "box turtle": "box_turtle", "turtle": "box_turtle", "heron": "great_blue_heron"}
 
 TIMES = {"dawn": 6.3, "sunrise": 6.5, "morning": 8.5, "noon": 12.5, "midday": 12.5, "afternoon": 15.5,
          "golden hour": 18.6, "dusk": 19.2, "sunset": 19.0, "evening": 19.5, "twilight": 19.6, "night": 22.5,
@@ -133,15 +134,20 @@ def plan(prompt: str, seed: int | None = None, size_m: float = 128.0, detail: st
         p.buildings.append("farmhouse")
     p.paths = not _has(t, ("pristine", "untouched", "no path"))
     p.creek = not _has(t, ("dry", "no creek", "drought"))
-    for w, k in FAUNA_WORDS.items():
-        m = re.search(r"(\d+|a few|several|a|an|one|two|three|four|five|six)?\s*" + w + r"(\s+(?:flock|herd|family|group|pack))?", t)
+    tf = t  # matched phrases are blanked out so "box turtle" is not counted again as "turtle"
+    for w in sorted(FAUNA_WORDS, key=len, reverse=True):
+        k = FAUNA_WORDS[w]
+        m = re.search(r"(\d+|a few|several|a|an|one|two|three|four|five|six)?\s*" + w + r"(\s+(?:flock|herd|family|group|pack))?", tf)
         if m:
+            tf = tf[:m.start()] + " " * (m.end() - m.start()) + tf[m.end():]
             q = m.group(1) or "a few"
             if m.group(2):  # "a turkey flock" is a group, not one bird
                 q = "several"
             n = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
                  "a few": 3, "several": 5}.get(q, None) or int(q)
             p.fauna[k] = p.fauna.get(k, 0) + n
+    order = list(dict.fromkeys(FAUNA_WORDS.values()))  # keep the table's species order (agent ids stay stable)
+    p.fauna = {k: p.fauna[k] for k in order if k in p.fauna}
     if not p.fauna and not _has(t, ("empty", "no animals", "lifeless")):
         p.fauna = {"gray_squirrel": 3, "white_tailed_deer": 2}
         if p.buildings or p.paths:
