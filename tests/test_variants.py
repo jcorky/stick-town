@@ -71,7 +71,7 @@ class Variants(unittest.TestCase):
         g, h = rig("wild_turkey", tk, sex="m"), rig("wild_turkey", tk, sex="f")
         self.assertLess(h["size"], g["size"])
         self.assertLess(h["torso"].n_tris, g["torso"].n_tris)   # no beard
-        top = lambda r: r["neck"]["mesh"].colors[r["neck"]["mesh"].positions[:, 2] > 0.28]
+        top = lambda r: r["neck"]["mesh"].colors[r["neck"]["mesh"].positions[:, 2] > 0.2]
         self.assertLess(sat(top(h)).mean(), sat(top(g)).mean())    # grey head, not red and blue
         irid = lambda r: r["torso"].attrs["_COAT"][:, 3].mean()
         self.assertGreater(irid(g), 2 * irid(h))
@@ -96,6 +96,27 @@ class Variants(unittest.TestCase):
         e = np.sort(np.concatenate([I[:, [0, 1]], I[:, [1, 2]], I[:, [2, 0]]]), 1)
         self.assertTrue((np.unique(e, axis=0, return_counts=True)[1] == 2).all())
         self.assertGreater(float((np.sum(m.geometric_normals() * m.nrm, 1) > 0).mean()), 0.95)
+
+    def test_bird_legs_come_out_of_the_body(self):
+        for k in ("wild_turkey", "great_blue_heron"):
+            r = rig(k, FAUNA[k].rgb, sex="m")
+            P = r["torso"].positions
+            for lg in r["legs"]:   # the belly reaches below the hip joint, so the thigh's top is buried
+                x, y, z = lg["hip"]
+                near = (np.abs(P[:, 0] - x) < 0.04) & (np.abs(P[:, 1] - y) < 0.04)
+                self.assertLess(float(P[near, 2].min()), z, k)
+
+    def test_ears_are_closed_shells_hollow_forward(self):
+        from plandscape.fauna.sculpt import leaf
+        for shape in ("oval", "pointed"):
+            m = leaf(0.16, 0.09, 0.012, shape=shape)
+            I = m.indices
+            e = np.sort(np.concatenate([I[:, [0, 1]], I[:, [1, 2]], I[:, [2, 0]]]), 1)
+            self.assertTrue((np.unique(e, axis=0, return_counts=True)[1] % 2 == 0).all())
+            mid = (np.abs(m.positions[:, 1]) < 0.01) & (m.positions[:, 2] > 0.04) & (m.positions[:, 2] < 0.12)
+            front = mid & (m.positions[:, 0] > np.median(m.positions[mid, 0]))
+            self.assertGreater(float(m.nrm[front, 0].mean()), 0.5)       # the hollow faces +x
+            self.assertLess(float(m.positions[:, 0].max()), 1e-6)         # cupped: no part bulges forward
 
     def test_every_body_has_a_complete_coat(self):
         for k, sp in FAUNA.items():

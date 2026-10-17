@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .coat import coat as surface
-from .sculpt import Sculpt, merge, rot, tube
+from .sculpt import Sculpt, leaf, merge, place, rot, tube
 
 BUDGET = dict(torso=2600, head=1400, ear=160, eye=160, tail=420, thigh=380, shank=320, hoof=70)
 
@@ -96,8 +96,9 @@ def _quad_torso(q: Quad, coat, paint):
     if q.neck_pivot is not None:   # neck root: the head part overlaps it, so the join is buried, not a collar
         pv = np.asarray(q.neck_pivot, float)
         lift = q.extras.get("neck_root_lift", 0.05)
-        s.cone((q.shoulder_x - 0.1 * L, 0, zc), pv + np.array([0.04, 0, lift]), q.neck_r[0] * 1.45, q.neck_r[0] * 1.02,
-               coat, k=0.2 * d)
+        # ends inside the head's own neck (0.85 r), so the head's surface is the one seen at the join: no collar
+        s.cone((q.shoulder_x - 0.1 * L, 0, zc), pv + np.array([0.02, 0, lift * 0.5]), q.neck_r[0] * 1.45,
+               q.neck_r[0] * 0.85, coat, k=0.2 * d)
     for f in q.extras.get("torso", ()):
         f(s, coat)
     return s.mesh(target=BUDGET["torso"], colour_fn=paint)
@@ -160,19 +161,18 @@ def _quad_head(q: Quad, coat, paint, eye_col=DARK, nose_col=DARK, ear_col=None, 
         f(n, coat)
     parts = [n.mesh(target=BUDGET["head"], colour_fn=paint)]
     ec, er, roll, epitch = q.ears[:4]
-    pointed = len(q.ears) > 4 and q.ears[4] == "pointed"
-    for sgn in (1, -1):   # ears and eyes are thin or small: their own sculptures, on their own fine grids
+    shape = q.ears[4] if len(q.ears) > 4 else "oval"
+    yaw = q.extras.get("ear_yaw", 0.35)
+    for sgn in (1, -1):   # ears are thin shells facing forward (sculpt.leaf); eyes small sculptures of their own
         ecol = coat * 0.9 if ear_col is None else ear_col
-        if pointed:       # a triangle: a flattened cone, broad at the base, to a point
-            R = rot(roll=-roll * sgn, pitch=epitch)
-            base = np.array([ec[0], ec[1] * sgn, ec[2] - er[2]])
-            tip = base + R @ np.array([0, 0, 2 * er[2]])
-            ear = Sculpt()
-            for w in (-1, 0, 1):
-                ear.cone(base + R @ np.array([w * er[0] * 0.6, 0, 0]), tip, er[1] * 1.3, er[1] * 0.25, ecol, k=er[0] * 0.6)
-        else:
-            ear = Sculpt().ellipsoid((ec[0], ec[1] * sgn, ec[2]), er, ecol, k=er[1], R=rot(roll=-roll * sgn, pitch=epitch))
-        parts.append(ear.mesh(target=BUDGET["ear"], colour_fn=ear_paint))
+        R = rot(yaw=yaw * sgn, pitch=epitch, roll=-roll * sgn)
+        c = np.array([ec[0], ec[1] * sgn, ec[2]])
+        base = c - R @ np.array([0, 0, er[2]])
+        ear = leaf(2 * er[2], 2 * er[0], 2 * er[1], cup=q.extras.get("ear_cup", 0.35), shape=shape, rgb=ecol)
+        ear = place(ear, R, base)
+        if ear_paint is not None:
+            ear.colors = np.clip(ear_paint(ear.positions, ear.nrm, ear.colors), 0, 1).astype(np.float32)
+        parts.append(ear)
         eye = Sculpt().ellipsoid((q.eye[0][0], q.eye[0][1] * sgn, q.eye[0][2]), (q.eye[1],) * 3, eye_col)
         parts.append(eye.mesh(target=BUDGET["eye"]))
     return merge(parts)
@@ -252,7 +252,7 @@ def deer(rgb, sex="f", season="summer"):
              neck=[(-0.10, 0, -0.10), (0.08, 0, 0.16), (0.16, 0, 0.36)], neck_r=[0.088, 0.08, 0.065],
              skull=((0.24, 0, 0.42), (0.10, 0.065, 0.075), 0.35),
              muzzle=((0.26, 0, 0.40), (0.43, 0, 0.31), 0.055, 0.03), nose_r=0.022,
-             ears=((0.19, 0.075, 0.54), (0.035, 0.016, 0.08), 0.7, -0.25),
+             ears=((0.19, 0.08, 0.54), (0.045, 0.006, 0.08), 0.8, -0.25),
              eye=((0.30, 0.056, 0.43), 0.016),
              tail=[(0, 0, 0), (-0.06, 0, -0.08), (-0.08, 0, -0.17)], tail_r=[0.04, 0.055, 0.045],
              neck_pivot=(0.45, 0, 0.81), tail_pivot=(-0.56, 0, 0.81))
@@ -262,7 +262,8 @@ def deer(rgb, sex="f", season="summer"):
         C = C * mottle(P, 0.05, 0.05)[:, None]
         belly = smooth(h + 0.02, h - 0.1, P[:, 2]) * smooth(0.0, -0.5, N[:, 2])
         rump = smooth(-0.48, -0.56, P[:, 0]) * smooth(top - 0.12, top - 0.22, P[:, 2])
-        C = mix(C, coat * 0.72, smooth(top - 0.08, top, P[:, 2]) * 0.4)               # darker along the spine
+        C = mix(C, coat * 0.72, smooth(top - 0.08, top, P[:, 2]) * 0.4 *
+                smooth(q.shoulder_x, q.shoulder_x - 0.12, P[:, 0]))                       # darker along the spine
         return mix(C, WHITE, np.maximum(belly, rump * 0.9))
 
     def head_paint(P, N, C):
@@ -304,7 +305,7 @@ def coyote(rgb):
              neck=[(-0.07, 0, -0.06), (0.05, 0, 0.06), (0.12, 0, 0.13)], neck_r=[0.065, 0.06, 0.055],
              skull=((0.17, 0, 0.16), (0.08, 0.06, 0.06), 0.1),
              muzzle=((0.2, 0, 0.14), (0.34, 0, 0.10), 0.04, 0.02), nose_r=0.016,
-             ears=((0.15, 0.045, 0.25), (0.03, 0.012, 0.055), 0.25, -0.15, "pointed"),
+             ears=((0.15, 0.045, 0.25), (0.034, 0.005, 0.05), 0.3, -0.15, "pointed"),
              eye=((0.225, 0.04, 0.175), 0.011),
              tail=[(0, 0, 0), (-0.12, 0, -0.12), (-0.24, 0, -0.26), (-0.28, 0, -0.33)], tail_r=[0.03, 0.06, 0.055, 0.03],
              foot="paw", neck_pivot=(0.30, 0, 0.49), tail_pivot=(-0.36, 0, 0.51))
@@ -355,7 +356,7 @@ def raccoon(rgb):
              neck=[(-0.05, 0, -0.03), (0.04, 0, 0.02)], neck_r=[0.06, 0.065],
              skull=((0.09, 0, 0.04), (0.075, 0.07, 0.06), 0.0),
              muzzle=((0.12, 0, 0.02), (0.20, 0, 0.0), 0.035, 0.015), nose_r=0.012,
-             ears=((0.07, 0.05, 0.11), (0.022, 0.01, 0.027), 0.35, -0.2, "pointed"),
+             ears=((0.07, 0.05, 0.11), (0.024, 0.004, 0.024), 0.4, -0.2),
              eye=((0.135, 0.032, 0.05), 0.009),
              tail=[(0, 0, 0), (-0.12, 0, -0.05), (-0.25, 0, -0.10)], tail_r=[0.035, 0.05, 0.04],
              foot="paw", neck_pivot=(0.21, 0, 0.22), tail_pivot=(-0.24, 0, 0.29))
@@ -449,23 +450,44 @@ def armadillo(rgb):
 # ── eastern gray squirrel ───────────────────────────────────────────────────
 
 def squirrel(rgb):
-    """Hops (rig kind 'hop'): one sculpture with its legs tucked; the tail is the S-curved plume."""
+    """Hops (rig kind 'hop'): one sculpture with its legs tucked, sitting up a little; white eye rings and belly,
+    rusty flanks. The tail is a plume curled up over the back: flattened lobes along a spline, fluffed by a
+    displacement, each hair dark-banded with a frosted tip, so the silhouette is pale and soft."""
+    from .sculpt import catmull
     coat = np.asarray(rgb, float)
     s = Sculpt()
-    s.ellipsoid((0.0, 0, 0.09), (0.11, 0.045, 0.055), coat, k=0.03, R=rot(pitch=-0.35))      # body, sitting up a little
-    s.ellipsoid((-0.06, 0, 0.065), (0.06, 0.05, 0.055), coat, k=0.03)                       # haunches
-    s.ellipsoid((0.11, 0, 0.14), (0.045, 0.034, 0.036), coat, k=0.02)                       # head
-    s.cone((0.12, 0, 0.135), (0.165, 0, 0.125), 0.025, 0.012, coat, k=0.015)               # muzzle
+    s.ellipsoid((0.0, 0, 0.085), (0.105, 0.045, 0.055), coat, k=0.03, R=rot(pitch=-0.4))     # body, sitting up a little
+    s.ellipsoid((-0.055, 0, 0.06), (0.055, 0.052, 0.05), coat, k=0.03)                       # haunches
+    s.ellipsoid((0.06, 0, 0.11), (0.04, 0.04, 0.045), coat, k=0.03)                          # chest
+    s.ellipsoid((0.11, 0, 0.145), (0.042, 0.033, 0.036), coat, k=0.02)                       # head, round
+    s.cone((0.125, 0, 0.14), (0.162, 0, 0.13), 0.024, 0.013, coat, k=0.015)                 # blunt muzzle
+    s.ellipsoid((0.165, 0, 0.132), (0.006, 0.008, 0.006), DARK * 3, k=0.004)                 # nose
     for y in (0.03, -0.03):
-        s.ellipsoid((-0.05, y * 1.2, 0.03), (0.055, 0.016, 0.025), coat, k=0.015)           # hind feet, long
-        s.cone((0.05, y, 0.07), (0.08, y * 0.8, 0.02), 0.012, 0.008, coat, k=0.01)          # fore legs
+        s.ellipsoid((-0.05, y * 1.25, 0.03), (0.055, 0.016, 0.022), coat, k=0.015)          # hind feet, long
+        s.ellipsoid((-0.04, y * 1.45, 0.06), (0.04, 0.02, 0.035), coat, k=0.02)             # thighs
+        s.cone((0.06, y, 0.08), (0.085, y * 0.8, 0.02), 0.012, 0.008, coat, k=0.01)         # fore legs
     bits = []
-    for sgn in (1, -1):
-        bits.append(Sculpt().ellipsoid((0.10, 0.022 * sgn, 0.178), (0.012, 0.005, 0.017), coat * 0.9, k=0.005,
-                                       R=rot(roll=-0.3 * sgn)))
-        bits.append(Sculpt().ellipsoid((0.135, 0.026 * sgn, 0.15), (0.0075,) * 3, DARK))
-    t = Sculpt().chain([(-0.09, 0, 0.07), (-0.16, 0, 0.13), (-0.15, 0, 0.24), (-0.09, 0, 0.30)],
-                       [0.025, 0.04, 0.045, 0.03], coat * 0.95, k=0.03)                       # the plume, an S up the back
+    ears = []
+    for sgn in (1, -1):   # small rounded ears, hollow forward (sculpt.leaf)
+        R = rot(yaw=0.3 * sgn, pitch=-0.2, roll=-0.3 * sgn)
+        ears.append(place(leaf(0.026, 0.02, 0.004, cup=0.4, rgb=coat * 0.9), R, (0.098, 0.018 * sgn, 0.168)))
+        bits.append(Sculpt().ellipsoid((0.137, 0.026 * sgn, 0.153), (0.0085,) * 3, DARK))
+    path = [(-0.075, 0, 0.055), (-0.135, 0, 0.075), (-0.18, 0, 0.15), (-0.17, 0, 0.245), (-0.115, 0, 0.30),
+            (-0.055, 0, 0.305)]
+    radii = [0.014, 0.04, 0.05, 0.052, 0.045, 0.028]
+    C, rad = catmull(path, radii, 4)
+    t = Sculpt()
+    for i in range(len(C) - 1):   # lobes along the curve, flattened: broad side to side, thinner front to back
+        d = C[i + 1] - C[i]
+        L = float(np.linalg.norm(d))
+        yaw, pitch = 0.0, -np.arctan2(d[2], d[0])
+        t.ellipsoid((C[i] + C[i + 1]) / 2, (L * 0.9, (rad[i] + rad[i + 1]) / 2, (rad[i] + rad[i + 1]) / 2 * 0.7),
+                    coat * 0.95, k=0.02, R=rot(pitch=pitch))
+
+    def fluff(P):   # tufts of hair; amplitude × frequency < 0.5 keeps the field monotone (no Newton spikes)
+        return -0.003 * (np.sin(P[:, 0] * 150 + P[:, 2] * 60) * np.sin(P[:, 1] * 140 + P[:, 2] * 110) +
+                         0.4 * np.sin(P[:, 2] * 160 + P[:, 0] * 90))
+    t.displace(fluff)
 
     def paint(P, N, C):
         C = C * mottle(P, 0.008, 0.1)[:, None] * np.array([1.0, 0.93, 0.85])      # agouti: brownish-grey back
@@ -473,12 +495,20 @@ def squirrel(rgb):
             smooth(0.13, 0.09, P[:, 2]) * smooth(0.07, 0.10, P[:, 2]) * smooth(0.02, 0.06, P[:, 0])
         flank = smooth(0.0, 0.5, np.abs(N[:, 1])) * smooth(0.05, 0.1, P[:, 2]) * 0.3
         C = mix(C, np.array([0.62, 0.45, 0.3]), flank)                                   # the rusty wash on the flanks
-        return mix(C, WHITE, _not_dark(C, np.clip(belly, 0, 1)))
+        de = np.linalg.norm(P - np.c_[0.137 + 0 * P[:, 0], 0.026 * np.sign(P[:, 1]), 0.153 + 0 * P[:, 0]], axis=1)
+        ring = smooth(0.0085, 0.010, de) * smooth(0.0145, 0.012, de)                    # white eye ring
+        return mix(C, WHITE, _not_dark(C, np.clip(belly + ring, 0, 1)))
 
-    def tail_paint(P, N, C):                                                        # frosted: pale-tipped hairs
-        return mix(C * mottle(P, 0.006, 0.18)[:, None], WHITE * 0.95, smooth(0.6, 0.95, np.abs(N[:, 1])) * 0.3)
-    body = merge([s.mesh(target=2200, colour_fn=paint), t.mesh(target=900, colour_fn=tail_paint)] +
-                 [b.mesh(target=BUDGET["eye"]) for b in bits])
+    def tail_paint(P, N, C):   # banded hairs: a dark band, then frosted white tips along the curl's outline
+        k = np.argmin(np.linalg.norm(P[:, None, :] - C_[None], axis=2), axis=1)
+        v = P - C_[k]
+        rim = np.hypot(v[:, 0], v[:, 2]) / np.maximum(np.linalg.norm(v, axis=1), 1e-9)   # in the curl's plane
+        C = C * mottle(P, 0.006, 0.18)[:, None]
+        C = mix(C, DARK * 3, smooth(0.45, 0.7, rim) * smooth(0.92, 0.8, rim) * 0.5)
+        return mix(C, WHITE * 0.95, smooth(0.85, 0.97, rim) * 0.75)
+    C_, rad_ = C, rad
+    body = merge([s.mesh(target=3200, colour_fn=paint), t.mesh(target=1600, colour_fn=tail_paint)] +
+                 [b.mesh(target=BUDGET["eye"]) for b in bits] + ears)
     return dict(body=body)
 
 
@@ -493,7 +523,7 @@ def _bird_leg(h, col, toes_col=None, spur=False, thigh_feather=None, thigh_r=0.1
     l = l1
     toes_col = col if toes_col is None else toes_col
     a = Sculpt()
-    feathered = 0.55 if thigh_r >= 0.12 else 0.3       # waders show bare tibia below a short feathered thigh
+    feathered = 0.55 if thigh_r >= 0.12 else 0.18      # waders show bare tibia below a short feathered thigh
     a.cone((0, 0, 0.02 * l), (0, 0, -l * feathered), thigh_r * l, 0.07 * l,
            thigh_feather if thigh_feather is not None else col, k=0.06 * l)
     a.cone((0, 0, -l * feathered), (0, 0, -l), 0.06 * l, 0.045 * l, col, k=0.03 * l)
@@ -523,52 +553,64 @@ def turkey(rgb, sex="m"):
         plum = mix(plum[None], np.array([0.40, 0.31, 0.22]), np.array([0.8]))[0]
         bronze = np.array([0.72, 0.60, 0.42])        # buff feather tips
     h = 0.36
-    s = Sculpt()
-    s.ellipsoid((0.0, 0, h + 0.20), (0.27, 0.17, 0.19), plum, k=0.08, R=rot(pitch=0.15))     # body
-    s.ellipsoid((0.17, 0, h + 0.22), (0.13, 0.13, 0.15), plum, k=0.08)                      # breast
-    s.ellipsoid((-0.2, 0, h + 0.17), (0.16, 0.14, 0.13), plum, k=0.08)                      # rump
+    s = Sculpt()   # held level, the breast forward and high; the belly hangs below the hips, so legs come out of it
+    s.ellipsoid((0.0, 0, h + 0.15), (0.28, 0.165, 0.19), plum, k=0.08, R=rot(pitch=0.12))   # body
+    s.ellipsoid((0.17, 0, h + 0.20), (0.14, 0.14, 0.16), plum, k=0.08)                      # breast
+    s.ellipsoid((-0.19, 0, h + 0.14), (0.16, 0.14, 0.13), plum, k=0.08)                     # back and rump
     for sgn in (1, -1):                                                                      # folded wings
-        s.ellipsoid((-0.03, 0.14 * sgn, h + 0.22), (0.24, 0.04, 0.12), plum, k=0.04, R=rot(pitch=0.12, yaw=0.08 * sgn))
-    fan = Sculpt()                                                                           # tail, folded and drooping
-    fan.ellipsoid((-0.42, 0, h + 0.14), (0.2, 0.11, 0.025), plum, k=0.03, R=rot(pitch=-0.55))
-    beard = Sculpt().cone((0.25, 0, h + 0.26), (0.28, 0, h + 0.03), 0.016, 0.007, DARK * 1.5, k=0.01)   # ~23 cm
+        s.ellipsoid((-0.05, 0.135 * sgn, h + 0.19), (0.25, 0.045, 0.115), plum, k=0.04,
+                    R=rot(pitch=0.15, yaw=0.06 * sgn))
+    fan = Sculpt()   # the folded fan, drooping and widening to its rounded end
+    fan.ellipsoid((-0.36, 0, h + 0.11), (0.15, 0.07, 0.022), plum, k=0.03, R=rot(pitch=-0.35))
+    fan.ellipsoid((-0.50, 0, h + 0.05), (0.10, 0.11, 0.016), plum, k=0.04, R=rot(pitch=-0.35))
+    beard = tube([(0.295, 0, h + 0.27), (0.31, 0, h + 0.16), (0.315, 0, h + 0.05)], [0.012, 0.011, 0.007],
+                 DARK * 1.5, sides=6, per=3, tip=0.8)                         # ~23 cm (ODWC), from the breast
 
     def body_paint(P, N, C):
         # bronze-tipped contour feathers: rows of scallops, iridescent where they face the light
         scal = smooth(0.55, 0.95, np.sin(P[:, 0] * 95 + 3 * np.sin(P[:, 2] * 60)) * np.sin(P[:, 2] * 95 + P[:, 1] * 40))
         C = mix(C, bronze, scal * 0.55 + 0.15 * smooth(0.3, 1.0, N[:, 2]))
-        wing = smooth(0.1, 0.14, np.abs(P[:, 1])) * smooth(h + 0.12, h + 0.2, P[:, 2]) * smooth(0.05, -0.15, P[:, 0])
-        bars = 0.5 + 0.5 * np.sign(np.sin(P[:, 0] * 160))
-        return mix(C, mix(DARK * 2, WHITE * 0.9, bars), wing * 0.8)        # barred primaries and secondaries
+        wing = smooth(0.13, 0.16, np.abs(P[:, 1])) * smooth(h + 0.07, h + 0.11, P[:, 2]) * \
+            smooth(h + 0.2, h + 0.16, P[:, 2]) * smooth(-0.04, -0.12, P[:, 0]) * smooth(-0.32, -0.26, P[:, 0])
+        bars = smooth(0.2, 0.5, np.sin(P[:, 0] * 230 + 20 * P[:, 2]))      # narrow white bars across the quills
+        return mix(C, mix(DARK * 2, WHITE * 0.85, bars), wing * 0.4)       # barred primaries and secondaries
 
-    def fan_paint(P, N, C):   # chestnut-tipped tail with a dark subterminal band
-        r = np.hypot(P[:, 0] + 0.42, P[:, 2] - h - 0.14)
-        return mix(mix(C, bronze * 0.8, 0.3 * np.ones(len(P))), np.array([0.62, 0.42, 0.22]), smooth(0.14, 0.18, r))
-    torso = merge([s.mesh(target=3000, colour_fn=body_paint), fan.mesh(target=700, colour_fn=fan_paint)] +
-                  ([] if hen else [beard.mesh(target=120)]))
-    pv = np.array([0.25, 0, h + 0.30])
+    def fan_paint(P, N, C):   # chestnut (hen: buff) tips beyond a dark subterminal band
+        r = np.hypot(P[:, 0] + 0.30, P[:, 2] - h - 0.12)
+        tip = np.array([0.72, 0.6, 0.42]) if hen else np.array([0.62, 0.42, 0.22])
+        C = mix(mix(C, bronze * 0.8, 0.3 * np.ones(len(P))), DARK * 1.5, smooth(0.20, 0.23, r) * smooth(0.27, 0.25, r))
+        return mix(C, tip, smooth(0.25, 0.28, r))
+    torso = merge([s.mesh(target=3000, colour_fn=body_paint), fan.mesh(target=900, colour_fn=fan_paint)] +
+                  ([] if hen else [beard]))
+    pv = np.array([0.24, 0, h + 0.27])
     skin_blue = np.array([0.62, 0.66, 0.74]) if hen else np.array([0.55, 0.68, 0.85])
     red = np.array([0.70, 0.45, 0.45]) if hen else np.array([0.78, 0.12, 0.12])
     n = Sculpt()
-    n.chain([(-0.04, 0, -0.04), (0.03, 0, 0.12), (0.06, 0, 0.26)], [0.055, 0.03, 0.026], plum, k=0.03)   # neck
-    n.ellipsoid((0.08, 0, 0.30), (0.045, 0.03, 0.033), skin_blue, k=0.02)                                # bare head
-    n.cone((0.10, 0, 0.30), (0.14, 0, 0.285), 0.012, 0.005, np.array([0.75, 0.7, 0.55]), k=0.006)        # bill
+    n.spline([(-0.05, 0, -0.06), (0.02, 0, 0.06), (0.05, 0, 0.15), (0.05, 0, 0.22)], [0.075, 0.042, 0.03, 0.026],
+             plum, k=0.03)                                                                        # neck, a gentle S
+    n.ellipsoid((0.075, 0, 0.245), (0.038, 0.025, 0.028), skin_blue, k=0.015)                      # bare head
+    n.cone((0.10, 0, 0.245), (0.13, 0, 0.235), 0.01, 0.004, np.array([0.75, 0.7, 0.55]), k=0.005)  # bill
     if hen:   # a small wattle, a nub of snood
-        n.ellipsoid((0.07, 0, 0.255), (0.01, 0.012, 0.02), red, k=0.01)
-        n.ellipsoid((0.11, 0, 0.325), (0.006, 0.005, 0.006), red, k=0.004)
+        n.ellipsoid((0.07, 0, 0.215), (0.009, 0.011, 0.016), red, k=0.008)
+        n.ellipsoid((0.095, 0, 0.27), (0.005, 0.004, 0.005), red, k=0.003)
     else:
-        n.ellipsoid((0.065, 0, 0.21), (0.018, 0.022, 0.05), red, k=0.02)                                # wattle
-        n.cone((0.11, 0, 0.33), (0.135, 0, 0.26), 0.008, 0.005, red, k=0.006)                            # snood
-    bare_lo = 0.27 if hen else 0.18     # the hen's neck is feathered up to the head
+        n.ellipsoid((0.09, 0, 0.195), (0.016, 0.018, 0.045), red, k=0.006)                         # wattle
+        n.cone((0.098, 0, 0.274), (0.128, 0, 0.212), 0.0075, 0.005, red, k=0.004)                  # snood
+        for i, z in enumerate((0.13, 0.15, 0.17)):                                                # caruncles
+            for sg in (1, -1):
+                n.ellipsoid((0.078 + 0.003 * i, 0.02 * sg, z), (0.01,) * 3, red * 0.9, k=0.003)
+    bare_lo = 0.21 if hen else 0.13     # the hen's neck is feathered up to the head
 
     def head_paint(P, N, C):
-        bare = smooth(bare_lo, bare_lo + 0.06, P[:, 2])
-        C = mix(C, skin_blue, bare * smooth(0.12, 0.3, lum(C)) * (1 - smooth(0.6, 0.7, C[:, 0] - C[:, 2])))
+        bare = smooth(bare_lo, bare_lo + 0.05, P[:, 2])
+        redness = C[:, 0] - np.maximum(C[:, 1], C[:, 2])      # wattle, snood and caruncles keep their red
+        C = mix(C, skin_blue, bare * smooth(0.25, 0.1, redness))
         if hen:   # fine grey-brown feathering over the neck and crown
             C = mix(C, np.array([0.48, 0.44, 0.40]), smooth(bare_lo + 0.02, bare_lo - 0.04, P[:, 2]) *
-                    smooth(0.12, 0.2, P[:, 2]) * 0.7)
+                    smooth(0.08, 0.15, P[:, 2]) * 0.7)
         return C
-    eyes = [Sculpt().ellipsoid((0.10, 0.026 * sg, 0.31), (0.007,) * 3, DARK).mesh(target=BUDGET["eye"]) for sg in (1, -1)]
+    eyes = [Sculpt().ellipsoid((0.092, 0.022 * sg, 0.255), (0.006,) * 3, DARK).mesh(target=BUDGET["eye"])
+            for sg in (1, -1)]
     hm = n.mesh(target=1300, colour_fn=head_paint)    # feathered neck, bare head (coat.py)
     surface(hm, "feather", 0.008, 0.2, 0.25 if hen else 0.9, mask=hm.positions[:, 2] < bare_lo + 0.03)
     head = merge([hm] + eyes)
@@ -577,43 +619,63 @@ def turkey(rgb, sex="m"):
 
 
 def heron(rgb):
+    """Standing great blue heron: the body tilted up at the breast with the hips inside it (birds' thighs are
+    within the body; the visible leg is the tibia, bare below a rufous feathered top, and the 19 cm tarsus);
+    folded wings to the tail, grey scapular plumes over the back, pale breast plumes, an S-curved neck (a spline,
+    not a polyline) to the white face, black crown stripe and plume, and the 14 cm yellow bill."""
     blue = np.asarray(rgb, float)
+    pale = np.array([0.78, 0.80, 0.82])
+    rufous = np.array([0.45, 0.28, 0.2])
+    plume_col = mix(blue[None], pale, np.array([0.45]))[0]
     h = 0.55
     s = Sculpt()
-    s.ellipsoid((0.0, 0, h + 0.20), (0.25, 0.11, 0.13), blue, k=0.05, R=rot(pitch=0.25))                 # body
-    s.ellipsoid((0.12, 0, h + 0.25), (0.09, 0.09, 0.10), blue, k=0.05)                                   # chest
-    for sg in (1, -1):                                                                                   # folded wings
-        s.ellipsoid((-0.05, 0.085 * sg, h + 0.22), (0.25, 0.035, 0.1), blue * 0.95, k=0.03, R=rot(pitch=0.2))
-    s.ellipsoid((-0.23, 0, h + 0.13), (0.12, 0.07, 0.03), blue * 0.8, k=0.03, R=rot(pitch=0.35))        # tail
-    s.cone((0.1, 0, h + 0.2), (0.22, 0, h + 0.05), 0.04, 0.012, np.array([0.8, 0.8, 0.78]), k=0.03)    # breast plumes
+    s.ellipsoid((0.03, 0, h + 0.09), (0.24, 0.085, 0.11), blue, k=0.05, R=rot(pitch=-0.35))          # body
+    s.ellipsoid((0.15, 0, h + 0.17), (0.09, 0.075, 0.10), blue, k=0.05)                               # breast
+    for sg in (1, -1):                                                                                # folded wings
+        s.ellipsoid((-0.03, 0.07 * sg, h + 0.12), (0.27, 0.03, 0.095), blue * 0.95, k=0.03, R=rot(pitch=-0.22))
+    s.ellipsoid((-0.25, 0, h + 0.03), (0.10, 0.055, 0.02), blue * 0.85, k=0.03, R=rot(pitch=-0.15))   # tail
 
     def body_paint(P, N, C):
-        thigh = smooth(h + 0.12, h + 0.06, P[:, 2]) * smooth(0.04, 0.0, np.abs(P[:, 0]))
-        streak = smooth(0.0, -0.6, N[:, 2]) * smooth(0.0, 0.15, P[:, 0])
-        C = mix(C, np.array([0.55, 0.32, 0.2]), thigh)                    # rufous thighs
-        return mix(C, mix(WHITE, DARK * 3, smooth(0.6, 0.9, np.sin(P[:, 1] * 300) ** 2)), streak * 0.6)
-    torso = s.mesh(target=2400, colour_fn=body_paint)
-    pv = np.array([0.14, 0, h + 0.27])
+        thigh = smooth(h + 0.03, h - 0.02, P[:, 2]) * smooth(0.08, 0.02, np.abs(P[:, 0] - 0.02))
+        C = mix(C, rufous, thigh)                                                   # rufous thighs
+        bend = np.exp(-((P[:, 0] - 0.16) ** 2 + (P[:, 2] - h - 0.19) ** 2) / 0.0005) * smooth(0.05, 0.08, np.abs(P[:, 1]))
+        C = mix(C, 0.6 * DARK * 2 + 0.4 * rufous, bend * 0.6)                        # dark-and-chestnut shoulder
+        under = smooth(-0.1, -0.6, N[:, 2]) * smooth(0.05, 0.2, P[:, 0])
+        stripes = smooth(0.6, 0.9, np.sin(P[:, 1] * 260) ** 2)
+        return mix(C, mix(WHITE * 0.9, DARK * 2.5, stripes), under * 0.6)           # streaked underparts
+    torso_parts = [s.mesh(target=2400, colour_fn=body_paint)]
+    for sg in (1, -1):   # scapular plumes: long pale-grey strands draped over the folded wings
+        for i, dy in enumerate((0.012, 0.03)):
+            torso_parts.append(tube([(0.06, dy * sg, h + 0.2), (-0.08, (dy + 0.01) * sg, h + 0.19),
+                                     (-0.24, (dy + 0.015) * sg, h + 0.10), (-0.33 + 0.02 * i, (dy + 0.02) * sg, h + 0.03)],
+                                    [0.012, 0.011, 0.007, 0.002], plume_col, sides=5, per=3, tip=1.5))
+    for dy in (-0.012, 0.012):   # breast plumes hanging from the base of the neck
+        torso_parts.append(tube([(0.21, dy, h + 0.24), (0.25, dy * 1.5, h + 0.16), (0.24, dy * 2, h + 0.07)],
+                                [0.016, 0.011, 0.002], pale, sides=5, per=3, tip=1.5))
+    torso = merge(torso_parts)
+    pv = np.array([0.20, 0, h + 0.24])
     yellow = np.array([0.88, 0.72, 0.25])
-    n = Sculpt()   # the S-neck: back, forward, up
-    n.chain([(-0.02, 0, -0.03), (0.07, 0, 0.1), (0.02, 0, 0.22), (0.08, 0, 0.33)], [0.04, 0.028, 0.026, 0.024],
-            blue * 1.05, k=0.02)
-    n.ellipsoid((0.11, 0, 0.35), (0.04, 0.025, 0.028), WHITE, k=0.015)                                 # head
-    n.cone((0.13, 0, 0.35), (0.27, 0, 0.335), 0.014, 0.002, yellow, k=0.006)                             # dagger bill
-    n.cone((0.09, 0, 0.37), (-0.04, 0, 0.36), 0.008, 0.002, DARK, k=0.005)                               # black plume
+    n = Sculpt()   # the S-neck: forward, back, up to the head
+    n.spline([(-0.05, 0, -0.04), (0.03, 0, 0.06), (0.09, 0, 0.15), (0.04, 0, 0.25), (0.03, 0, 0.33), (0.07, 0, 0.40)],
+             [0.048, 0.034, 0.027, 0.025, 0.024, 0.022], blue * 1.05, k=0.015)
+    n.ellipsoid((0.10, 0, 0.41), (0.045, 0.022, 0.026), WHITE, k=0.012, R=rot(pitch=0.1))           # head
+    n.cone((0.13, 0, 0.405), (0.27, 0, 0.39), 0.012, 0.002, yellow, k=0.006)                        # dagger bill
 
     def head_paint(P, N, C):
-        crown = smooth(0.365, 0.375, P[:, 2]) * smooth(0.07, 0.09, P[:, 0]) * smooth(0.14, 0.12, P[:, 0])
-        stripe = smooth(0.012, 0.02, np.abs(P[:, 1])) * crown
-        foreneck = smooth(0.0, 0.7, N[:, 0]) * smooth(0.3, 0.05, P[:, 2]) * \
-            smooth(0.6, 0.9, np.sin(P[:, 2] * 220) ** 2)          # streaked foreneck
-        C = mix(C, mix(WHITE * 0.9, DARK * 2, smooth(0.4, 0.9, np.sin(P[:, 2] * 220) ** 2)), foreneck * 0.5)
-        return mix(C, DARK, np.maximum(stripe, crown * 0.0))
-    eyes = [Sculpt().ellipsoid((0.125, 0.02 * sg, 0.355), (0.006,) * 3, yellow * 0.9).mesh(target=BUDGET["eye"])
+        crown = smooth(0.418, 0.43, P[:, 2]) * smooth(0.06, 0.08, P[:, 0]) * smooth(0.145, 0.125, P[:, 0])
+        stripe = crown * smooth(0.006, 0.014, np.abs(P[:, 1]))              # black stripe each side of a white crown
+        front = smooth(0.0, 0.7, N[:, 0]) * smooth(0.36, 0.05, P[:, 2])
+        streak = smooth(0.6, 0.9, np.sin(P[:, 2] * 220) ** 2) * smooth(0.012, 0.0, np.abs(P[:, 1]))
+        C = mix(C, mix(WHITE * 0.9, DARK * 2, streak), front * 0.7)          # white foreneck, streaked down the front
+        return mix(C, DARK, stripe)
+    hm = n.mesh(target=1600, colour_fn=head_paint)
+    plume = [tube([(0.085, sg * 0.008, 0.428), (0.0, sg * 0.01, 0.43), (-0.08, sg * 0.012, 0.40)], [0.005, 0.004, 0.001],
+                  DARK, sides=5, per=3, tip=2) for sg in (1, -1)]                      # the black occipital plume
+    eyes = [Sculpt().ellipsoid((0.125, 0.019 * sg, 0.415), (0.006,) * 3, yellow * 0.9).mesh(target=BUDGET["eye"])
             for sg in (1, -1)]
-    head = merge([n.mesh(target=1400, colour_fn=head_paint)] + eyes)
-    legcol = np.array([0.32, 0.28, 0.22])
-    thigh, shank, ls = _bird_leg(h, legcol, thigh_feather=np.array([0.55, 0.32, 0.2]), thigh_r=0.08, tarsus=0.19)
+    head = merge([hm] + plume + eyes)
+    legcol = np.array([0.32, 0.30, 0.22])
+    thigh, shank, ls = _bird_leg(h, legcol, thigh_feather=rufous, thigh_r=0.08, tarsus=0.19)
     wings = []
     for side in (1.0, -1.0):   # broad wings along ±y from the shoulder: arm, hand, fingered primaries
         w = Sculpt()
@@ -630,7 +692,7 @@ def heron(rgb):
             wrist = smooth(0.03, 0.06, P[:, 0]) * smooth(0.25, 0.4, P[:, 1] * side) * smooth(0.6, 0.45, P[:, 1] * side)
             return mix(mix(C, DARK * 2, tip * 0.85), np.array([0.6, 0.38, 0.25]), wrist * 0.5)
         wings.append(dict(mesh=w.mesh(target=2400, colour_fn=wing_paint), side=side,
-                          pivot=(0.02, 0.08 * side, h + 0.24)))
+                          pivot=(0.10, 0.06 * side, h + 0.17)))
     return dict(torso=torso, head=head, neck_pivot=pv, thigh=thigh, shank=shank, ls=ls, hip=h, wings=wings,
                 graze=np.radians(105))
 

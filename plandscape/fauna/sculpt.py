@@ -64,6 +64,12 @@ class Sculpt:
             self.cone(pts[i], pts[i + 1], radii[i], radii[i + 1], rgb, k)
         return self
 
+    def spline(self, pts, radii, rgb, k=0.02, per=3):
+        """A chain along the Catmull–Rom spline through `pts`: a smooth curve (an S-neck, a plume) instead of
+        a polyline's kinks."""
+        C, rad = catmull(pts, radii, per)
+        return self.chain(C, rad, rgb, k)
+
     # ── evaluation ──
     @staticmethod
     def _d_ellipsoid(P, c, r, R):
@@ -256,11 +262,9 @@ def merge(meshes):
     return out
 
 
-def tube(pts, radii, rgb, sides=8, per=4, tip=0.5, colour_fn=None):
-    """A swept tube for parts thinner than any grid can afford (antler tines, quills): a Catmull–Rom spline
-    through `pts`, rings of `sides` vertices carried along it by parallel transport (no twist), radius linear
-    in arc parameter. The far end closes in a cone `tip`·r long (0 = flat, larger = rounder or sharper); the base
-    in a flat fan. Normals are the ring's radial directions, tilted by the taper dr/ds."""
+def catmull(pts, radii, per=4):
+    """Points and radii sampled `per` times per span along the Catmull–Rom spline through `pts` (ends mirrored);
+    radius linear in the spline parameter."""
     P = np.asarray(pts, float)
     R = np.asarray(radii, float)
     Q = np.r_[[2 * P[0] - P[1]], P, [2 * P[-1] - P[-2]]]
@@ -272,7 +276,15 @@ def tube(pts, radii, rgb, sides=8, per=4, tip=0.5, colour_fn=None):
         C.append(0.5 * (2 * p1 + (p2 - p0) * T + (2 * p0 - 5 * p1 + 4 * p2 - p3) * T ** 2 +
                         (3 * p1 - p0 - 3 * p2 + p3) * T ** 3))
         rad.append(R[i] + (R[i + 1] - R[i]) * t)
-    C, rad = np.concatenate(C + [P[-1:]]), np.r_[np.concatenate(rad), R[-1]]
+    return np.concatenate(C + [P[-1:]]), np.r_[np.concatenate(rad), R[-1]]
+
+
+def tube(pts, radii, rgb, sides=8, per=4, tip=0.5, colour_fn=None):
+    """A swept tube for parts thinner than any grid can afford (antler tines, quills): a Catmull–Rom spline
+    through `pts`, rings of `sides` vertices carried along it by parallel transport (no twist), radius linear
+    in arc parameter. The far end closes in a cone `tip`·r long (0 = flat, larger = rounder or sharper); the base
+    in a flat fan. Normals are the ring's radial directions, tilted by the taper dr/ds."""
+    C, rad = catmull(pts, radii, per)
     tang = np.gradient(C, axis=0)
     tang /= np.linalg.norm(tang, axis=1, keepdims=True)
     a = np.cross(tang[0], [0, 0, 1.0] if abs(tang[0][2]) < 0.9 else [1.0, 0, 0])
@@ -311,3 +323,57 @@ def tube(pts, radii, rgb, sides=8, per=4, tip=0.5, colour_fn=None):
     m = Mesh(pos.astype(np.float32), col.astype(np.float32), np.asarray(idx, np.uint32))
     m.nrm = nrm.astype(np.float32)
     return m
+
+
+def leaf(length, width, thick, cup=0.35, shape="oval", nu=10, nv=5, rgb=(1, 1, 1), colour_fn=None):
+    """A cupped ear (or any thin blade) as an explicit closed shell, for parts thinner than a grid can resolve.
+    Local frame: base at the origin, length along +z, width along y, the hollow facing +x. Half-width
+    w(u) = W (1 − u)^0.35 (0.6 + 0.4 sin πu) for an oval ear, W (1 − u)^0.9 (1 + 0.25 sin πu) for a pointed one;
+    the front sheet is hollowed by x = −cup·W (1 − v²) sin πu and the back sheet lies thick·(1 − 0.7u)·√(1 − v²)
+    behind it, so the two meet along the rim."""
+    W = width / 2
+    u = np.linspace(0, 1, nu + 1)[:, None]
+    v = np.linspace(-1, 1, 2 * nv + 1)[None, :]
+    if shape == "pointed":
+        w = W * (1 - u) ** 0.9 * (1 + 0.25 * np.sin(np.pi * u))
+    else:
+        w = W * (1 - u) ** 0.35 * (0.6 + 0.4 * np.sin(np.pi * u))
+    xf = -cup * W * (1 - v ** 2) * np.sin(np.pi * np.minimum(u, 0.95))
+    xb = xf - thick * (1 - 0.7 * u) * np.sqrt(np.clip(1 - v ** 2, 0, 1))
+    y = v * w
+    z = u * length + 0 * v
+    F = np.stack([xf, y, z], -1).reshape(-1, 3)
+    B = np.stack([xb, y, z], -1).reshape(-1, 3)
+    n, m = nu + 1, 2 * nv + 1
+    inner = [(i, j) for i in range(nu) for j in range(1, m - 1)]   # the back sheet shares rim and tip with the front
+    bidx = {ij: n * m + k for k, ij in enumerate(inner)}
+    P = np.r_[F, B[[i * m + j for i, j in inner]]]
+
+    def fi(i, j):
+        return i * m + j
+
+    def bi(i, j):
+        return bidx.get((i, j), fi(i, j))
+    idx = []
+    for i in range(nu):
+        for j in range(m - 1):
+            idx += [(fi(i, j), fi(i + 1, j), fi(i, j + 1)), (fi(i, j + 1), fi(i + 1, j), fi(i + 1, j + 1))]   # front
+            idx += [(bi(i, j), bi(i, j + 1), bi(i + 1, j)), (bi(i, j + 1), bi(i + 1, j + 1), bi(i + 1, j))]   # back
+    for j in range(m - 1):   # close the base between the sheets (it sits inside the head)
+        idx += [(fi(0, j), fi(0, j + 1), bi(0, j)), (fi(0, j + 1), bi(0, j + 1), bi(0, j))]
+    idx = np.asarray(idx, np.uint32)[:, [0, 2, 1]]
+    idx = idx[(idx[:, 0] != idx[:, 1]) & (idx[:, 1] != idx[:, 2]) & (idx[:, 0] != idx[:, 2])]   # shared rim corners
+    m_ = Mesh(P.astype(np.float32), np.tile(np.asarray(rgb, np.float32), (len(P), 1)), idx)
+    m_.nrm = m_.geometric_normals()
+    if colour_fn is not None:
+        m_.colors = np.clip(colour_fn(m_.positions, m_.nrm, m_.colors), 0, 1).astype(np.float32)
+    return m_
+
+
+def place(m, R, t):
+    """m rotated by R then moved to t, normals carried along."""
+    out = Mesh((m.positions @ np.asarray(R, np.float32).T + np.asarray(t, np.float32)).astype(np.float32), m.colors,
+               m.indices)
+    out.nrm = None if m.nrm is None else (m.nrm @ np.asarray(R, np.float32).T).astype(np.float32)
+    out.attrs = m.attrs
+    return out
