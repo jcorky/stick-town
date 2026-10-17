@@ -199,6 +199,18 @@ Open `map.png` and `scene.json` and check:
   `material.extensions.derivatives`.
 - GLTFLoader may suffix duplicate node names (leg0 → leg0_3); match parts by name with the suffix stripped.
 
+### Better models (§38)
+- An ear's broad face must face the viewer: an ellipsoid ear with width on x and thickness on y faces sideways
+  and reads as a spike or horn from the front. Use `sculpt.leaf`; thin blades are explicit shells, not SDFs.
+- A displacement whose amplitude × frequency exceeds ~0.5 makes the field non-monotone, and Newton projection
+  throws spikes. Keep fluff gentle.
+- Birds' hips belong inside the body (the femur is hidden). Put the belly below the hip joint, or the legs hang
+  under a floating body.
+- Paint gates on colour brightness fail on dark animals (the gobbler's neck stayed feathered). Gate on hue for
+  coloured parts, or mask by position.
+- Islands of a few vertices appear where tips thin below the grid; `Sculpt.mesh` drops them, so keep deliberate
+  tiny parts (eyes, claws) as their own sculptures.
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.

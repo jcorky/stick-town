@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+**Changed**
+- Better models (TECHNIQUES §38):
+  - **Ears** are cupped, forward-facing shells. Deer and coyotes no longer show spikes or horns from the front.
+  - **Heron:** stands on its legs, with the hips inside a body tilted up at the breast. It has an S-neck, back and breast plumes, and a crown stripe and plume.
+  - **Turkey:** has a level body over its legs and a widening fan. The gobbler has a red wattle, snood, caruncles and a visible beard.
+  - **Squirrel:** carries a fluffy plume curled over its back, with frosted edges, eye rings and rounded ears.
+  - **Armadillo:** has a narrower carapace with raised shields, a banded waist with dark seams, and scute rosettes.
+  - **Neck joins** no longer show a collar.
+  - **Heron plumage** in the viewer is soft (coat kind 5).
+- The fauna sheet shows the gobbler. Bodies are body-0.4.0; the walk scene is 14.77 MB.
+
+**Fixed**
+- Few-vertex islands from surface nets at thin tips (a speck off the armadillo's tail) are dropped.
+- The turkey's bare head skin is painted by hue; the dark plumage used to keep the neck feathered.
+
+## Earlier (session 5)
+
 **Added**
 - Sex and season in the bodies (TECHNIQUES §37). Each deer, turkey and hiker draws a sex.
   - **Bucks** grow antlers on the Missouri Department of Conservation calendar: buds in spring, velvet in summer, hard antler in fall and winter. The rack is an eight-pointer drawn as swept tubes, because the tines are finer than any sculpting grid. Deer turn grayish brown in winter.

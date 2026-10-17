@@ -52,6 +52,10 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 
 ## 3. Next priorities, in order
 
+**Session 5, later:** "work on models to improve them" (done, §38: ears, standing birds, plume, carapace).
+Weakest models now: the box turtle (legs stubby, head small), the raccoon's hunched outline, coyote and deer legs
+(uniform tubes, no knee or hock shape), the hiker's face and hands.
+
 **Session 5 asked for:** better animal models (done, §36: sculpted bodies) and then more enhancement (done, §37:
 sexes, seasons, arms, coat shader). Gaps: fawns and poults; a gobbler's strut (tail fan, dropped wings); antlers
 are one typical rack (no spikes or 10-pointers by age); hikers have no faces or hands beyond simple forms, and no

@@ -1037,3 +1037,68 @@ data: `GLB.variant` copies the primitive with another material and shares its ac
 
 Rigs are keyed by (species, sex, pack). This round adds sexes, packs and the 4-byte coat attribute, and the walk
 scene still stays under 15 MB.
+
+## 38. Better models: ears, birds that stand, plumes and shells
+
+**Ears as cupped shells.** The sculpted ears were too thin for any grid the triangle budget allows. Worse, their
+broad face pointed sideways, so from the front a deer's ears read as spikes and a coyote's as horns. An ear is now
+an explicit closed shell, `sculpt.leaf`, with its hollow facing forward:
+- **Coordinates.** Base at the origin, length along +z, width along y. The parameters are $u \in [0,1]$ up the
+  ear and $v \in [-1,1]$ across it.
+- **Half-width.** $w(u) = W(1-u)^{0.35}(0.6 + 0.4\sin\pi u)$ for an oval ear (deer, raccoon, squirrel), or
+  $W(1-u)^{0.9}(1 + 0.25\sin\pi u)$ for a pointed one (coyote, armadillo).
+- **Hollow.** The front sheet is hollowed by $x_f = -c\,W(1-v^2)\sin\pi u$.
+- **Back.** The back sheet lies $t(1-0.7u)\sqrt{1-v^2}$ behind it. The two share their rim and tip vertices, so
+  the shell is closed, and degenerate triangles at the rim corners are dropped.
+- **Placement.** The ear is rotated by yaw 0.35·side (toward forward-out), its pitch, and roll outward, then
+  placed so its centre sits where the old ear's did. Inner-ear paint follows the front sheet's normal.
+
+**Neck joins.** The torso's neck root now ends inside the head's neck, at 0.85 r instead of 1.02 r. The head's
+own surface is what shows at the join: a crease where neck meets chest, not a ring around it. The torso's darker
+spine stops at the withers, so it no longer paints a band across the neck root.
+
+**Splines.** `catmull()` samples a Catmull–Rom spline. It is shared by the swept tubes (§37) and
+`Sculpt.spline`, which chains round cones along the curve, so S-necks are smooth instead of kinked polylines.
+
+**Herons and turkeys stand on their legs.** A bird's femur is inside its body; what shows is the tibia and the
+tarsus.
+- **Heron.** The body is tilted up 20° at the breast, with its belly below the hip joint, and the folded wings
+  run to the tail. It has:
+  - grey scapular plumes (swept tubes) over the back, and pale breast plumes;
+  - a spline S-neck to a white face, with a black stripe either side of a white crown and two black occipital plumes;
+  - the 14 cm bill (sourced);
+  - rufous feathering on only the top 18 % of the tibia; the rest is bare.
+- **Turkey.** The body is held level and lowered over the legs, so its belly buries the drumsticks' tops. It has:
+  - a prominent breast;
+  - a folded fan that widens to a rounded, chestnut-tipped (hen: buff) end beyond a dark band;
+  - a shorter, thicker spline neck and a smaller head;
+  - for the gobbler, a wattle, snood and neck caruncles, and a 23 cm beard rooted on the breast surface, where it shows;
+  - narrow white bars across the folded primaries.
+
+  The bare-skin paint is now gated on hue: $r = R - \max(G, B)$ keeps the red parts red. Before, it was gated on
+  the coat's brightness, which the near-black plumage failed.
+- **Test.** The belly reaches below each hip joint.
+
+**Squirrel plume.** The tail curls up over the back along a spline. It is made of flattened lobes, broad side to
+side and 0.7 as thick, each aligned with the curve's tangent.
+- **Fluff.** A displacement, $-0.003(\sin 150x \ldots)$, roughens the outline.
+- **Banding.** Hairs are banded: a dark band, then frosted white tips. The paint is chosen by how far a vertex's
+  offset from the curve lies in the curl's plane, so the outline in side view is pale.
+- **Head.** White eye rings are measured as 3D distance from the eye. The ears are small cupped shells.
+
+**Armadillo.** The carapace is narrower (half-width 0.098 m). The scapular and pelvic shields rise slightly above
+a lower banded waist. Between them:
+- the 9 bands have pale crowns and dark seams where $\cos(\pi(x+0.099)/0.022) \to 0$;
+- rosette scutes (Worley borders on a jittered 16 mm grid) mark the shields;
+- the skirt edge is paler.
+
+The soft torso was slimmed so it stays under the shell.
+
+**Mesh specks.** Where a tip thins below the grid, surface nets can leave an island of a few vertices: a dot
+floating off the armadillo's tail. `Sculpt.mesh` drops components under 16 vertices that are also under a tenth
+of the sculpture's largest piece.
+
+**Feather contrast.** `_COAT` kind 5 is smooth plumage: feathers at 40 % contrast. A heron's coat shows as fine
+texture rather than a turkey's bold scallops, which on a heron read as a printed lattice.
+
+**Budget.** Bodies are body-0.4.0. The walk scene is 14.77 MB.
