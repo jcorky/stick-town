@@ -37,8 +37,16 @@ class Variants(unittest.TestCase):
         for season, kind in (("summer", 1), ("fall", 0)):
             h = rig("white_tailed_deer", DEER, sex="m", season=season)["neck"]["mesh"]
             top = h.positions[:, 2] > 0.62                    # above the ears: antler only
-            k = h.attrs["_COAT"][top, 0] // 64
+            k = h.attrs["_COAT"][top, 0] // 32
             self.assertTrue((k == kind).all(), (season, np.bincount(k)))
+
+    def test_leg_fur_runs_down_the_limb(self):
+        r = rig("white_tailed_deer", DEER)
+        self.assertTrue((r["torso"].attrs["_COAT"][:, 0] // 32 <= 1).all())
+        for part in ("thigh", "shank"):
+            k = r["legs"][0][part].attrs["_COAT"][:, 0] // 32
+            self.assertTrue((k[k > 0] == coat.KIND["fur_z"]).all(), part)   # hooves stay bare
+            self.assertGreater(float((k == coat.KIND["fur_z"]).mean()), 0.5, part)
 
     def test_winter_coat_is_greyer(self):
         def mean_sat(season):

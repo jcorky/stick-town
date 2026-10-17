@@ -1,7 +1,8 @@
 // Coat detail (TECHNIQUES §37): fur strands, feather scallops, shell scutes and a gobbler's iridescence, drawn per
 // fragment from the _COAT vertex attribute (plandscape/fauna/coat.py) on the sculpted bodies' standard material.
 //
-//   _COAT = (kind/4, size/S_MAX, sheen, iridescence), u8 normalised; kind 0 bare, 1 fur, 2 feather, 3 shell
+//   _COAT = (kind/8, size/S_MAX, sheen, iridescence), u8 normalised; kind 0 bare, 1 fur, 2 feather, 3 shell,
+//   4 fur lying along the part's z (legs)
 //   fur      albedo × (0.74 + 0.52 n₆)(0.72 + 0.56 S(n)),  n value noise stretched 8× along the hair (object −x), n₆ tufts 6× larger
 //   feather  staggered rows of discs: d = |frac(q) − (0, ½)|, pale band where 0.32 < d < 0.47, dark rim at d → ½
 //   shell    Worley cells: seam where F2 − F1 → 0, a tone per cell
@@ -28,7 +29,7 @@
     return vec2(smoothstep(0.30, 0.40, d) * (1.0 - smoothstep(0.44, 0.48, d)), smoothstep(0.44, 0.5, d));
   }
   void coatSurface(inout vec4 dc, inout float rough, vec3 n, vec3 v) {
-    float kind = floor(vCoat.x * 4.0 + 0.5);
+    float kind = floor(vCoat.x * 8.0 + 0.5);
     if (kind < 0.5 || uCoat <= 0.0) return;
     float s = max(vCoat.y * 0.05, 1e-4);
     vec3 p = vObj / s;
@@ -36,7 +37,8 @@
     float fade = uCoat * (1.0 - smoothstep(0.35, 1.2, px));
     float ndv = clamp(dot(n, v), 0.0, 1.0), rim = pow(1.0 - ndv, 3.0);
     vec3 c = dc.rgb;
-    if (kind < 1.5) {          // fur: strands, and tufts 6× larger that still read at a distance
+    if (kind < 1.5 || kind > 3.5) {   // fur: strands, and tufts 6× larger that still read at a distance
+      if (kind > 3.5) p = p.zyx;      // legs: the hair lies along the limb
       float st = 0.65 * cNoise(vec3(p.x * 0.125, p.y, p.z)) + 0.35 * cNoise(vec3(p.x * 0.25, p.y * 2.0, p.z * 2.0) + 7.0);
       float tuft = cNoise(vec3(p.x * 0.042, p.y * 0.167, p.z * 0.167) + 3.0);
       float fadeT = uCoat * (1.0 - smoothstep(0.35, 1.2, px / 6.0));

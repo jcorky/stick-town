@@ -55,8 +55,8 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 **Session 5 asked for:** better animal models (done, §36: sculpted bodies) and then more enhancement (done, §37:
 sexes, seasons, arms, coat shader). Gaps: fawns and poults; a gobbler's strut (tail fan, dropped wings); antlers
 are one typical rack (no spikes or 10-pointers by age); hikers have no faces or hands beyond simple forms, and no
-elbow or wrist joints; fur direction follows object −x everywhere, so legs and tails stream the wrong way; the
-coat shader is viewer-only (the Python previews show vertex colour). Next: age classes, hair-flow from the sculpt
+elbow or wrist joints; fur lies along object −x on bodies and z on legs, but tails and necks are not combed; the
+coat shader is viewer-only (the Python previews show vertex colour). Next: age classes, hair flow from the sculpt
 gradient, and a strutting display when the player is near in spring.
 
 **Session 4 asked for:** wind through the foliage (done, §34) and player actions that change how animals and NPCs

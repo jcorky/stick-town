@@ -1008,7 +1008,8 @@ tubes instead:
 A rack costs about 1.2k triangles.
 
 **Coat detail.** Each vertex carries `_COAT` (normalised u8 vec4):
-- the kind / 4, where kind is bare, fur, feather or shell;
+- the kind / 8, where kind is bare, fur, feather, shell, or fur lying along the part's z (legs, so hair runs
+  down the limb instead of back along the body);
 - the feature size $s/S_{max}$, with $S_{max}$ = 5 cm;
 - sheen;
 - iridescence.
@@ -1018,7 +1019,7 @@ surface. With object-space position $p/s$, view vector $v$ and normal $n$:
 
 | kind | albedo |
 |---|---|
-| fur | $\times(0.78 + 0.44\,N)$, $N$ value noise stretched 8× along the hair (object −x) |
+| fur | $\times(0.74 + 0.52\,N_6)(0.72 + 0.56\,S(N))$: $N$ value noise stretched 8× along the hair (object −x, or z on legs), $N_6$ tufts 6× larger that still read at a distance, $S$ a smoothstep |
 | feather | staggered rows of discs, $d = \lvert\mathrm{frac}(q) - (0,\tfrac12)\rvert$, $q$ tri-planar with rows pointing back; pale band for $0.32<d<0.47$, dark rim as $d\to\tfrac12$ |
 | shell | Worley cells, seam where $F_2 - F_1 \to 0$, a tone per cell |
 

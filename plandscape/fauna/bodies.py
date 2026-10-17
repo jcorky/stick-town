@@ -81,9 +81,10 @@ def rig(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     surf = SURFACE.get((key, sex), SURFACE.get(key, ("bare", 0.0, 0.0, 0.0)))
     for part in (torso, *(p_["mesh"] for p_ in (neck, tail, *wings, *arms) if p_ is not None)):
         fill(part, *surf)
+    limb = ("fur_z",) + tuple(surf[1:]) if surf[0] == "fur" else surf   # hair runs down a leg
     for lg in legs:   # thighs and shanks are shared left/right: fill is idempotent
-        fill(lg["thigh"], *surf)
-        fill(lg["shank"], *(BIRD_LEG if kind == "biped" and key != "human" else surf))
+        fill(lg["thigh"], *limb)
+        fill(lg["shank"], *(BIRD_LEG if kind == "biped" and key != "human" else limb))
     S = np.float32(scale)
 
     def sc(m):

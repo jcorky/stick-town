@@ -2,7 +2,8 @@
 
 Each sculpted part carries a glTF attribute _COAT (normalised u8 vec4):
 
-    x = kind / 4        kind ∈ {0 bare (skin, eye, hoof, cloth), 1 fur, 2 feather, 3 shell / scales}
+    x = kind / 8        kind ∈ {0 bare (skin, eye, hoof, cloth), 1 fur, 2 feather, 3 shell / scales,
+                                4 fur lying along the part's z (legs: hair runs down the limb, not back)}
     y = s / S_MAX       feature size s (m): hair-strand spacing, feather length, scute or scale size
     z = sheen           rim brightening of fur and feather at grazing view, 0..1
     w = iridescence     view-dependent structural colour (a gobbler's bronze-green-copper), 0..1
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 import numpy as np
 
-KIND = {"bare": 0, "fur": 1, "feather": 2, "shell": 3}
+KIND = {"bare": 0, "fur": 1, "feather": 2, "shell": 3, "fur_z": 4}
 S_MAX = 0.05
 DARK_LUM = 0.1
 
@@ -37,7 +38,7 @@ BIRD_LEG = ("shell", 0.004, 0.1, 0.0)    # the scutes of a bird's tarsus
 
 def encode(n, kind, size=0.004, sheen=0.0, irid=0.0):
     k = KIND[kind]
-    row = [k * 64, 255 if k == 0 else int(np.clip(size / S_MAX * 255, 1, 255)), int(sheen * 255), int(irid * 255)]
+    row = [k * 32, 255 if k == 0 else int(np.clip(size / S_MAX * 255, 1, 255)), int(sheen * 255), int(irid * 255)]
     return np.tile(np.array(row, np.uint8), (n, 1))
 
 
