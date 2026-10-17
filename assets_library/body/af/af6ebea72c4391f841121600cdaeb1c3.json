@@ -1,0 +1,15 @@
+{
+ "key": "af6ebea72c4391f841121600cdaeb1c3",
+ "kind": "body",
+ "version": "body-0.4.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "coyote"
+ },
+ "meta": {
+  "created": "2026-10-17T18:12:59",
+  "tris": 6804
+ },
+ "path": "body/af/af6ebea72c4391f841121600cdaeb1c3.npz"
+}

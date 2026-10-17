@@ -1,0 +1,15 @@
+{
+ "key": "0d0c824cc6614fa29dc26441bd459a11",
+ "kind": "body",
+ "version": "body-0.4.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "box_turtle"
+ },
+ "meta": {
+  "created": "2026-10-17T18:13:00",
+  "tris": 3020
+ },
+ "path": "body/0d/0d0c824cc6614fa29dc26441bd459a11.npz"
+}

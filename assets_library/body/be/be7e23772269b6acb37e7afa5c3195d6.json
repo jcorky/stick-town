@@ -1,0 +1,15 @@
+{
+ "key": "be7e23772269b6acb37e7afa5c3195d6",
+ "kind": "body",
+ "version": "body-0.4.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "human"
+ },
+ "meta": {
+  "created": "2026-10-17T18:12:59",
+  "tris": 5544
+ },
+ "path": "body/be/be7e23772269b6acb37e7afa5c3195d6.npz"
+}
