@@ -63,6 +63,20 @@ sources: the deer's white throat, eye ring, muzzle band and flag; the coyote's b
 the raccoon's mask and ringed tail; the armadillo's nine bands; the turkey's bare blue head, snood and beard; the
 heron's dagger bill and black plume; the box turtle's rayed scutes.
 
+## Sex and season (§37)
+
+![variants](variants.jpg)
+
+A buck through the antler year on the Missouri Department of Conservation calendar: buds in April, velvet in
+summer, hard antler in fall. Then a doe in her grayish winter coat, and a gobbler and a hen (grey feathered head, no
+beard, 0.9 the size). Last, two hikers at the NHANES mean statures, one carrying a pack. Each row shares one frame,
+so the sizes are to scale.
+
+![coat](coat.jpg)
+
+The viewer's coat shader (`viewer/coat.js`), off (left) and on (right): fur strands and tufts on a velvet buck,
+feather scallops and bronze-green iridescence on a gobbler, and a hen's duller buff-tipped feathers.
+
 ## Heron flight (§33)
 
 ![flight](flight.jpg)

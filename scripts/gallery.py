@@ -668,6 +668,91 @@ def play_sheet(path, scene="walk"):
     return path
 
 
+def variants_sheet(path):
+    """Sex and season (§37): a buck through the antler year, a doe in winter coat, gobbler and hen, two hikers.
+    Each row shares one frame, at each animal's size by sex, so the size differences are real."""
+    import numpy as np
+    from plandscape.fauna.agents import FAUNA
+    from plandscape.fauna.bodies import body, rig
+    from plandscape.render import render
+    try:
+        from PIL import ImageFont
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 19)
+        small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+    except OSError:
+        font = small = None
+    rows = [
+        [("white_tailed_deer", "m", "spring", None, "Buck, April: antler buds"),
+         ("white_tailed_deer", "m", "summer", None, "Buck, summer: in velvet"),
+         ("white_tailed_deer", "m", "fall", None, "Buck, fall: hard antler"),
+         ("white_tailed_deer", "f", "winter", None, "Doe, winter: grayish coat")],
+        [("wild_turkey", "m", "summer", None, "Gobbler: bare red-blue head, beard"),
+         ("wild_turkey", "f", "summer", None, "Hen: grey head, brown, no beard"),
+         ("human", "m", "summer", 0, "Hiker 1.75 m, summer, pack"),
+         ("human", "f", "fall", None, "Hiker 1.61 m, fall")],
+    ]
+    shirts = {("human", "m"): (0.30, 0.42, 0.28), ("human", "f"): (0.55, 0.22, 0.18)}
+    W, H = 440, 400
+    sheet = Image.new("RGB", (4 * W, len(rows) * H), (247, 248, 242))
+    for j, row in enumerate(rows):
+        bodies = []
+        for key, sex, season, pack, label in row:
+            rgb = shirts.get((key, sex), FAUNA[key].rgb)
+            size = rig(key, rgb, 1.0, sex, season, pack)["size"]
+            bodies.append((body(key, rgb, size, sex, season, pack), label))
+        hi_ = max(float(b.positions[:, 2].max()) for b, _ in bodies)
+        for i, (b, label) in enumerate(bodies):
+            lo, hi = b.positions.min(0), b.positions.max(0)
+            c = (lo + hi) / 2
+            r = max(float(np.max(hi[:2] - lo[:2])), hi_) * 0.55
+            im = render([b], None, size=(W, H), azimuth=-40, elevation=10,
+                        fit=((c[0] - r, c[1] - r, -0.05 * r), (c[0] + r, c[1] + r, 1.75 * r)))
+            tile = Image.fromarray(im)
+            d = ImageDraw.Draw(tile)
+            d.text((10, 8), label, fill=(20, 26, 22), font=font)
+            d.text((10, 32), f"{float(hi[2]):.2f} m tall · {b.n_tris:,} triangles", fill=(70, 80, 72), font=small)
+            sheet.paste(tile, (i * W, j * H))
+    sheet.save(path)
+    return path
+
+
+def coat_sheet(path, scene="walk"):
+    """Coat detail in the viewer (§37): the same animals with the coat shader off and on (fur tufts and strands,
+    feather scallops and a gobbler's iridescence)."""
+    import subprocess
+    d = os.path.join(ROOT, "out", scene)
+    info = json.load(open(os.path.join(d, "scene.json")))
+    pick = []
+    for sp, sex in (("wild_turkey", "m"), ("white_tailed_deer", "m"), ("wild_turkey", "f")):
+        a = next((a for a in info["agents"] if a["species"] == sp and a.get("sex") == sex), None)
+        if a:
+            pick.append(f"{sp}_{a['id']}")
+    tiles = []
+    for name in pick:
+        pair = []
+        for q in ("coat=0", "coat=1"):
+            shot = os.path.join(d, f"coat-{name}-{q[-1]}.png")
+            subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "viewer_shot.py"), d, shot, "--focus", name,
+                            "--at", "8", "--dist", "1.2", "--size", "900x640", "--query", q], capture_output=True,
+                           timeout=900)
+            pair.append(Image.open(shot).convert("RGB").crop((180, 60, 720, 600)).resize((480, 480)))
+        tiles.append(pair)
+    sheet = Image.new("RGB", (960, 480 * len(tiles) + 30), (247, 248, 242))
+    dr = ImageDraw.Draw(sheet)
+    try:
+        from PIL import ImageFont
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
+    except OSError:
+        font = None
+    dr.text((10, 5), "vertex colour only", fill=(20, 26, 22), font=font)
+    dr.text((490, 5), "with coat detail (viewer/coat.js)", fill=(20, 26, 22), font=font)
+    for j, (a, b) in enumerate(tiles):
+        sheet.paste(a, (0, 30 + 480 * j))
+        sheet.paste(b, (480, 30 + 480 * j))
+    sheet.save(path)
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true")
@@ -690,6 +775,8 @@ def main(argv=None):
     _jpeg(pose_sheet(os.path.join(ROOT, "out", "poses.png")), os.path.join(OUT, "poses.jpg"), 1100)
     _jpeg(motion_sheet(os.path.join(ROOT, "out", "motion.png")), os.path.join(OUT, "motion.jpg"), 1200)
     _jpeg(fauna_sheet(os.path.join(ROOT, "out", "fauna.png")), os.path.join(OUT, "fauna.jpg"), 1500)
+    _jpeg(variants_sheet(os.path.join(ROOT, "out", "variants.png")), os.path.join(OUT, "variants.jpg"), 1600)
+    _jpeg(coat_sheet(os.path.join(ROOT, "out", "coat.png")), os.path.join(OUT, "coat.jpg"), 960)
     _jpeg(flight_sheet(os.path.join(ROOT, "out", "flight.png")), os.path.join(OUT, "flight.jpg"), 1200)
     _jpeg(wind_sheet(os.path.join(ROOT, "out", "wind.png")), os.path.join(OUT, "wind.jpg"), 1600)
     wind_specimen(os.path.join(OUT, "wind-oak.gif"))

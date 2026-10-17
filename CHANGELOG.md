@@ -3,6 +3,23 @@
 ## Unreleased
 
 **Added**
+- Sex and season in the bodies (TECHNIQUES §37). Each deer, turkey and hiker draws a sex.
+  - **Bucks** grow antlers on the Missouri Department of Conservation calendar: buds in spring, velvet in summer, hard antler in fall and winter. The rack is an eight-pointer drawn as swept tubes, because the tines are finer than any sculpting grid. Deer turn grayish brown in winter.
+  - **Hens** are brown and tan with buff feather tips and a grey feathered head, no beard and no spurs, at 0.9 of a gobbler's size (Maryland DNR, ADW, ODWC).
+  - **Hikers** come in two builds at the NHANES mean statures, 1.750 m and 1.613 m. Women have narrower shoulders, broader hips and a ponytail. Sleeves follow the season, 60 % carry a pack, and their arms swing against their legs.
+  - **Sizes by sex** are node scale. Bucks are 1.11× does, from MDC weights, with both withers kept inside the sourced range.
+- **Coat detail** in the viewer (`viewer/coat.js`). A per-vertex `_COAT` attribute (kind, feature size, sheen, iridescence) draws fur strands and tufts, feather scallops, shell scutes, and a gobbler's bronze-green iridescence that shifts with viewing angle. Detail fades below a pixel. `?coat=0` turns it off.
+- **The player** walks in as the scene's sculpted hiker instead of a box figure: IK legs, swinging arms, crouch, a clap and a wave. People who wave back raise an arm.
+- **Gallery:** `variants.jpg` (antler year, winter doe, gobbler and hen, hikers to scale) and `coat.jpg` (viewer close-ups with the coat shader off and on). Library bodies are now per sex, at body-0.3.0.
+
+**Changed**
+- Coat shades are three materials sharing one copy of each body's vertex data (`GLB.variant`), instead of a mesh per shade. With the extra variants and the coat attribute, the walk scene stays at 14.7 MB.
+- Hikers stand with 1.5 % leg slack instead of 5 %, so they no longer look half-seated.
+
+**Fixed**
+- Sex and coat draws keyed only by agent id were the same in every scene; sex is now keyed by the scene seed too.
+
+**Added**
 - Sculpted animals (TECHNIQUES §36). Every species is rebuilt from blended anatomical forms (signed distance functions, smooth minimum), meshed by surface nets, projected onto the true surface, and lit by gradient normals.
   - **Anatomy:** real heads, ears, eyes, muzzles, hooves and paws, sourced proportions, and painted markings (the deer's flag and eye ring, the raccoon's mask and rings, the armadillo's nine bands, the turkey's bare blue head, the heron's dagger bill and plume).
   - **Sizes:** checked against new sourced dimensions in `catalog/fauna_sources.json` (deer withers 0.80–1.05 m, coyote ≤ 0.61 m, raccoon 0.23–0.30 m). Legs have unequal segments where sourced: the deer's hock-to-hoof is 0.45 m.

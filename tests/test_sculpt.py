@@ -55,7 +55,7 @@ class Bodies(unittest.TestCase):
             want = {"hop": 0, "biped": 2, "quad": 4}[r["kind"]]
             self.assertEqual(len(r["legs"]), want, k)
             for lg in r["legs"]:
-                self.assertAlmostEqual(lg["l1"] + lg["l2"], r["hip"] / 0.95, places=5)
+                self.assertAlmostEqual(lg["l1"] + lg["l2"], r["hip"] / (0.985 if k == "human" else 0.95), places=5)
             self.assertTrue(np.all(edge_counts(r["torso"]) % 2 == 0), k)   # closed parts, no boundary edges
             b = body(k, spec.rgb)
             self.assertLess(b.n_tris, 12000, k)

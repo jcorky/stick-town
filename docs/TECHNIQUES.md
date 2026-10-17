@@ -958,3 +958,82 @@ chunks under 65,536 vertices, so its indices fit in 16 bits. Together these keep
 
 **Colour.** Vertex colours are converted to linear (c^2.2) at export, because glTF COLOR_0 is linear and the
 viewer encodes to sRGB. Without the conversion the deer read pale tan.
+
+## 37. Bucks, hens and hikers: sex, season, arms and coat detail
+
+**Sex and season.** Deer, turkeys and people are built per sex, in the scene's season. Each agent draws its sex
+from `rng("sex", id)`, 1:1. Sources are in `catalog/fauna_sources.json`.
+
+- **Antlers** follow the Missouri Department of Conservation calendar: "antler growth typically starts in April
+  and is completed in August. Antlers are shed mostly in February and March."
+  - Spring gives buds, summer a full rack in velvet, fall and winter hard antler.
+  - The rack is a typical eight-pointer: main beam, brow tine, G2 and G3.
+  - Velvet is 20 % thicker, round-tipped and coat-coloured, with fur coat detail.
+  - Hard antler is dark and ridged at the burr and fades to polished pale tips.
+- **Winter coat.** Deer are "reddish-brown to tan above; in winter … grayish to grayish brown". The winter coat
+  mixes 75 % toward a design grey-brown.
+- **Size by sex** is node scale, so both sexes share one size of mesh.
+  - Deer: MDC weights (does 110–145 lb, bucks 155–195 lb) give a mass ratio of 1.37, so a length ratio of
+    1.37^(1/3) = 1.11. The sexes are placed at 0.92 and 1.02, keeping both withers inside the sourced 0.8–1.0 m.
+  - Turkeys: hens weigh half as much (ADW: 3.6–5.4 kg against 6.8–11 kg) but are "almost as tall as the male"
+    (ODWC), so they are 0.9.
+  - People: NHANES via CDC, 68.9 in and 63.5 in, give 1.750 m and 1.613 m. The model stands 1.745 m to the crown.
+- **Hens** follow Maryland DNR's survey guide: "Body brown and tan; duller than gobblers … Head gray or pale blue
+  … typically beardless". They have buff feather tips, a feathered grey neck up to a small grey-blue head, a nub
+  of wattle and snood, and no spurs.
+
+**Hikers.**
+- **Build.** Women have 0.88× the shoulder breadth and 1.06× the hips, plus a bust and long hair tied back in a
+  ponytail. Men have short hair. Both are design proportions.
+- **Clothes.** Summer gives short sleeves. 60 % of hikers carry a pack, with straps and a hip belt painted on.
+- **Shirts** are chosen by build and pack, so a scene's people differ without more meshes.
+- **Arms** are separate rig parts hanging from the shoulder joints. Each swings with the opposite leg:
+
+$$\theta_{arm,L} = 0.7\,(\theta_{hip,R} - \theta_{rest}),\qquad \theta_{arm,R} = 0.7\,(\theta_{hip,L} - \theta_{rest})$$
+
+  The gain 0.7 is a design value. The animation is baked in `compose` and computed live in `viewer/player.js`.
+- **Gestures.** A person who waves back raises the right arm and rocks it.
+- **The player** walks as the scene's own sculpted hiker, preferring a man so they differ from the nearest NPC.
+  - The legs use the same stride law and IK as everyone else.
+  - Crouching lowers the hips by 0.3 h and re-solves the legs.
+  - Clap brings both arms forward and in; wave raises the right arm.
+
+**Swept tubes.** Tines taper to a few millimetres, finer than any grid the triangle budget allows (§36). They are
+tubes instead:
+- a Catmull–Rom spline through the control points;
+- rings carried along it by parallel transport, $u_{k} \leftarrow \mathrm{normalise}(u_{k-1} - t_k (u_{k-1}\cdot t_k))$, so they do not twist;
+- radius linear in the spline parameter, and normals tilted by the taper, $n = \hat r - (dr/ds)\,t$;
+- a closed cone tip and a flat fan at the base.
+
+A rack costs about 1.2k triangles.
+
+**Coat detail.** Each vertex carries `_COAT` (normalised u8 vec4):
+- the kind / 8, where kind is bare, fur, feather, shell, or fur lying along the part's z (legs, so hair runs
+  down the limb instead of back along the body);
+- the feature size $s/S_{max}$, with $S_{max}$ = 5 cm;
+- sheen;
+- iridescence.
+
+`viewer/coat.js` patches the shared fauna materials before lighting, so the detail is lit like the rest of the
+surface. With object-space position $p/s$, view vector $v$ and normal $n$:
+
+| kind | albedo |
+|---|---|
+| fur | $\times(0.74 + 0.52\,N_6)(0.72 + 0.56\,S(N))$: $N$ value noise stretched 8× along the hair (object −x, or z on legs), $N_6$ tufts 6× larger that still read at a distance, $S$ a smoothstep |
+| feather | staggered rows of discs, $d = \lvert\mathrm{frac}(q) - (0,\tfrac12)\rvert$, $q$ tri-planar with rows pointing back; pale band for $0.32<d<0.47$, dark rim as $d\to\tfrac12$ |
+| shell | Worley cells, seam where $F_2 - F_1 \to 0$, a tone per cell |
+
+- **Sheen** multiplies fur and feathers by $1 + s(1-n\cdot v)^3$.
+- **Iridescence** mixes the feathers toward a thin-film-like hue, $\tfrac12 + \tfrac12\cos 2\pi(\phi + 1.6\,n\cdot v)$,
+  tinted bronze-green. Gobblers carry 0.9 ("In sunlight, metallic iridescence is noticeable"), hens 0.25.
+- **Fading.** Detail fades out as a feature shrinks below a pixel (`fwidth`), so it never shimmers.
+- **Bare vertices.** Vertices darker than luminance 0.1 stay bare: eyes, noses, hooves, claws, hard antler.
+- **Bird legs** are shell (tarsal scutes) under feathered thighs.
+- **Parts left unset** get the species default in `rig()`: a zero row means "not yet set".
+
+**Sharing geometry.** Individual coat shades (0.92, 1.0, 1.08 of the coat) used to be separate meshes. They are
+now three materials, `fauna_0..2`, whose base-colour factor is $(t/1.08)^{2.2}$. Each points at the same vertex
+data: `GLB.variant` copies the primitive with another material and shares its accessors.
+
+Rigs are keyed by (species, sex, pack). This round adds sexes, packs and the 4-byte coat attribute, and the walk
+scene still stays under 15 MB.

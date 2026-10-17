@@ -184,6 +184,21 @@ Open `map.png` and `scene.json` and check:
 - Budget by measuring the GLB by category before cutting detail; the walk scene's surplus was grass index width,
   not the animals.
 
+### Sex, season and coat (§37)
+- `str.replace` on a code pattern shared by several species builders edits all of them: the antler call landed
+  in the coyote and raccoon too. Anchor edits on the function's own text.
+- Purpose keys without the scene seed (`rng("sex", id)`) give every scene the same draws: two does everywhere.
+- Parts finer than ~2 grid cells (antler tines) are swept tubes, not sculptures; budgets cannot buy the grid.
+- Per-individual colour as a material factor over shared accessors (`GLB.variant`) instead of a mesh per shade.
+  baseColorFactor must stay ≤ 1, so build the geometry at the brightest shade.
+- A custom attribute must survive every mesh hop: `sculpt.merge`, rig scaling, `posed_legs`/`body`, compose's
+  linear-colour copy. Use a zero row as "not yet set" so defaults fill only gaps.
+- Detail that fades below a pixel vanishes at viewing distance; give fur a coarser octave (tufts) that survives.
+- three r128 standard material: hook albedo/roughness edits before `#include <lights_physical_fragment>` (after
+  `normal` exists); custom glTF attributes arrive lowercased (`_COAT` → `_coat`); `fwidth` needs
+  `material.extensions.derivatives`.
+- GLTFLoader may suffix duplicate node names (leg0 → leg0_3); match parts by name with the suffix stripped.
+
 ### Asset library
 - A codec that drops UVs makes every *cache hit* untextured while fresh builds look fine. Render a scene twice (second run all hits) after any codec change.
 - Never cache a fallback (offline stand-in); a networked run must replace it. Tests must block the network *and* point `assets.store.DEFAULT_ROOT` at a temp dir, or generators that call `AssetStore()` write into the real library.

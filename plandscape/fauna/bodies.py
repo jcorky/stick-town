@@ -26,20 +26,22 @@ def ellipsoid(c, r, rgb, nu=10, nv=6):
     return mb.build()
 
 
-def rig(key, rgb, scale=1.0):
+def rig(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     """Body split for gait animation: dict(torso=Mesh, legs=[dict(thigh, shank, hip, knee, l1, l2)],
     neck=dict(mesh, pivot, graze) or None, tail=dict(mesh, pivot, flag) or None, wings=[dict(mesh, pivot, side)],
-    hip=hip height h (m), kind='quad'|'biped'|'hop'|'none', lie=trunk drop when lying, as a fraction of h).
+    arms=[dict(mesh, pivot, side)] (people: hanging from the shoulders), hip=hip height h (m),
+    kind='quad'|'biped'|'hop'|'none', lie=trunk drop when lying, as a fraction of h, size=linear size by sex
+    (applied by the caller as node scale)). `sex` 'm'|'f' and `season` pick antlers, coats, plumage and sleeves.
     Legs are ordered LF, RF, LH, RH (bipeds L, R). Thigh and shank hang straight down from their own origins (hip,
-    knee); l1 + l2 = h / 0.95, so the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward
+    knee); l1 + l2 = h / 0.95 (people h / 0.985), so the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward
     (stifle, human knee), −1 backward (a deer's carpus, a bird's intertarsal joint).
     Every part is a sculpture of blended anatomical forms (anatomy.py, sculpt.py; TECHNIQUES §36)."""
     from . import anatomy as A
     rgb = np.asarray(rgb, float)
-    legs, neck, tail, wings = [], None, None, []
+    legs, neck, tail, wings, arms = [], None, None, [], []
     build = {"white_tailed_deer": A.deer, "coyote": A.coyote, "raccoon": A.raccoon, "armadillo": A.armadillo}
     if key in build:
-        d = build[key](rgb)
+        d = build[key](rgb, sex, season) if key == "white_tailed_deer" else build[key](rgb)
         q = d["q"]
         for x, fore, knee in ((q.shoulder_x, True, -1.0), (q.hip_x, False, 1.0)):
             l1, l2 = d["splits"][fore]
@@ -53,7 +55,8 @@ def rig(key, rgb, scale=1.0):
     elif key == "gray_squirrel":
         torso, hip, kind = A.squirrel(rgb)["body"], 0.1, "hop"
     elif key in ("wild_turkey", "great_blue_heron", "box_turtle", "human"):
-        d = {"wild_turkey": A.turkey, "great_blue_heron": A.heron, "box_turtle": A.box_turtle, "human": A.human}[key](rgb)
+        d = {"wild_turkey": lambda c: A.turkey(c, sex), "great_blue_heron": A.heron, "box_turtle": A.box_turtle,
+             "human": lambda c: A.human(c, sex, season, pack)}[key](rgb)
         torso, hip = d["torso"], d["hip"]
         l1, l2 = d["ls"]
         if key == "box_turtle":
@@ -70,16 +73,27 @@ def rig(key, rgb, scale=1.0):
         if d.get("head") is not None:
             neck = dict(mesh=d["head"], pivot=tuple(d["neck_pivot"]), graze=d["graze"])
         wings = [dict(w) for w in d.get("wings", [])]
+        arms = [dict(a) for a in d.get("arms", [])]
     else:
         raise KeyError(key)
+    size = d.get("size", A.SEX_SIZE.get(key, {}).get(sex, 1.0)) if key != "gray_squirrel" else 1.0
+    from .coat import BIRD_LEG, SURFACE, fill
+    surf = SURFACE.get((key, sex), SURFACE.get(key, ("bare", 0.0, 0.0, 0.0)))
+    for part in (torso, *(p_["mesh"] for p_ in (neck, tail, *wings, *arms) if p_ is not None)):
+        fill(part, *surf)
+    limb = ("fur_z",) + tuple(surf[1:]) if surf[0] == "fur" else surf   # hair runs down a leg
+    for lg in legs:   # thighs and shanks are shared left/right: fill is idempotent
+        fill(lg["thigh"], *limb)
+        fill(lg["shank"], *(BIRD_LEG if kind == "biped" and key != "human" else limb))
     S = np.float32(scale)
 
     def sc(m):
         out = Mesh(m.positions * S, m.colors, m.indices)
         out.nrm = m.nrm
+        out.attrs = m.attrs
         return out
     torso = sc(torso)
-    for part in (neck, tail, *wings):
+    for part in (neck, tail, *wings, *arms):
         if part is not None:
             part["mesh"] = sc(part["mesh"])
             part["pivot"] = tuple(float(c) * scale for c in part["pivot"])
@@ -89,7 +103,8 @@ def rig(key, rgb, scale=1.0):
         lg["l1"] *= scale
         lg["l2"] *= scale
     drop = {"quad": 0.62, "biped": 0.4}.get(kind, 0.0) if key not in ("human", "great_blue_heron", "box_turtle") else 0.0
-    return dict(torso=torso, legs=legs, neck=neck, tail=tail, wings=wings, hip=hip * scale, kind=kind, lie=drop)
+    return dict(torso=torso, legs=legs, neck=neck, tail=tail, wings=wings, arms=arms, hip=hip * scale, kind=kind,
+                lie=drop, size=float(size))
 
 
 def _pitch(P, th):
@@ -109,24 +124,29 @@ def posed_legs(r, angles=None):
         for m, th, at in ((lg["thigh"], th1, hip), (lg["shank"], th1 + th2, knee)):
             M = Mesh(_pitch(m.positions, th) + at, m.colors, m.indices)
             M.nrm = None if m.nrm is None else _pitch(m.nrm, th)
+            M.attrs = m.attrs
             out.append(M)
     return out
 
 
-def body(key, rgb, scale=1.0):
+def body(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     """The rig merged into one static mesh in its rest pose (previews, the asset library)."""
-    r = rig(key, rgb, scale)
+    r = rig(key, rgb, scale, sex, season, pack)
     from .sculpt import merge
     parts = [r["torso"]] + posed_legs(r)
     for n in (r["neck"], r["tail"]):
         if n is not None:
             M = Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors, n["mesh"].indices)
-            M.nrm = n["mesh"].nrm
+            M.nrm, M.attrs = n["mesh"].nrm, n["mesh"].attrs
             parts.append(M)
+    for a in r["arms"]:
+        M = Mesh(a["mesh"].positions + np.asarray(a["pivot"], np.float32), a["mesh"].colors, a["mesh"].indices)
+        M.nrm, M.attrs = a["mesh"].nrm, a["mesh"].attrs
+        parts.append(M)
     from .gait import WING_FOLD
     for w in r["wings"]:  # folded: span squeezed toward the body
         P = w["mesh"].positions * np.array([1, WING_FOLD, 1], np.float32)
         M = Mesh(P + np.asarray(w["pivot"], np.float32), w["mesh"].colors, w["mesh"].indices)
-        M.nrm = w["mesh"].nrm
+        M.nrm, M.attrs = w["mesh"].nrm, w["mesh"].attrs
         parts.append(M)
     return merge(parts)

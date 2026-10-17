@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .sculpt import Sculpt, merge, rot
+from .coat import coat as surface
+from .sculpt import Sculpt, merge, rot, tube
 
 BUDGET = dict(torso=2600, head=1400, ear=160, eye=160, tail=420, thigh=380, shank=320, hoof=70)
 
@@ -190,8 +191,62 @@ def _not_dark(C, t):
 
 # ── white-tailed deer ───────────────────────────────────────────────────────
 
-def deer(rgb):
+# MDC field guide (catalog/fauna_sources.json): antlers grow April–August in velvet, are hard through the rut and
+# are shed in February–March; the coat is reddish-brown to tan in summer, grayish to grayish brown in winter.
+ANTLER = {"spring": "buds", "summer": "velvet", "fall": "hard", "winter": "hard"}
+WINTER_COAT = np.array([0.45, 0.41, 0.36])   # design: a grayish brown, read off winter photographs
+BONE = np.array([0.80, 0.72, 0.56])
+
+
+# Linear size by sex, relative to the built model (node scale, so both sexes share one size of mesh). Deer: MDC
+# weights 110–145 lb (does), 155–195 lb (bucks) give a mass ratio 1.37, so a length ratio 1.37^(1/3) = 1.11,
+# placed so both withers stay inside the sourced 0.8–1.0 m. Turkeys: hens weigh about half as much (ADW) but are
+# "almost as tall as the male" (ODWC), so 0.9, between isometric (0.8) and equal height: design.
+SEX_SIZE = {"white_tailed_deer": {"f": 0.92, "m": 1.02}, "wild_turkey": {"m": 1.0, "f": 0.9}}
+
+
+def _antlers(state, coat):
+    """A typical 8-point rack: main beam up, out, back, then sweeping forward, with a brow tine and two tines rising
+    from its top (G2, G3). Head frame (relative to the neck pivot); the pedicles sit on the skull behind the eyes,
+    in front of the ears. Swept tubes, not sculptures: tines taper to a few millimetres, finer than any grid the
+    triangle budget allows. Velvet is thicker, round-tipped and coat-coloured; `buds` is the April stub."""
+    beam = [(0.235, 0.035, 0.47), (0.205, 0.07, 0.60), (0.20, 0.15, 0.67), (0.28, 0.20, 0.705), (0.40, 0.15, 0.70),
+            (0.47, 0.075, 0.665)]
+    br = [0.017, 0.016, 0.014, 0.012, 0.009, 0.004]
+    tines = [((0.222, 0.05, 0.52), (0.25, 0.06, 0.57), (0.27, 0.065, 0.62), 0.009, 0.003),     # brow tine
+             ((0.235, 0.185, 0.69), (0.245, 0.195, 0.77), (0.265, 0.20, 0.845), 0.011, 0.003),  # G2
+             ((0.345, 0.18, 0.70), (0.36, 0.175, 0.77), (0.385, 0.165, 0.83), 0.010, 0.003)]   # G3
+    velvet = state != "hard"
+    fat, tip = (1.2, 1.0) if velvet else (1.0, 2.5)
+    col = coat * 0.78 if velvet else BONE
+    if state == "buds":
+        beam, br, tines = [beam[0], (0.22, 0.05, 0.53), (0.21, 0.06, 0.565)], [0.018, 0.017, 0.015], []
+    parts = []
+    for sg in (1, -1):
+        base = np.array([beam[0][0], beam[0][1] * sg, beam[0][2]])
+
+        def paint(P, N, C, base=base):   # hard antler: dark and ridged at the base, polished pale tips
+            if velvet:
+                return C * mottle(P, 0.004, 0.08)[:, None]
+            d = np.linalg.norm(P - base, axis=1)
+            C = mix(C, np.array([0.42, 0.33, 0.22]), smooth(0.14, 0.0, d) * 0.8)
+            return mix(C, WHITE, smooth(0.11, 0.2, P[:, 2] - base[2]) * 0.6)
+        S = lambda pts: [(x, y * sg, z) for x, y, z in pts]
+        rack = [tube(S(beam), [r * fat for r in br], col, sides=8, per=4, tip=tip, colour_fn=paint)]
+        for p0, p1, p2, r0, r1 in tines:
+            rack.append(tube(S([p0, p1, p2]), [r0 * fat, (r0 + r1) / 2 * fat, r1 * fat], col, sides=6, per=3,
+                             tip=tip, colour_fn=paint))
+        if not velvet:  # the burr: a rough ring where the antler meets the pedicle
+            ring = Sculpt().ellipsoid(base + np.array([0, 0, 0.018]), (0.024, 0.024, 0.007), BONE * 0.55, k=0.004)
+            rack.append(ring.mesh(target=60))
+        parts += [surface(m, "fur", 0.002, 0.5) if velvet else surface(m, "bare") for m in rack]
+    return merge(parts)
+
+
+def deer(rgb, sex="f", season="summer"):
     coat = np.asarray(rgb, float)
+    if season == "winter":
+        coat = mix(coat[None], WINTER_COAT, np.array([0.75]))[0]
     q = Quad(h=0.62, back=0.29, shoulder_x=0.43, hip_x=-0.42, half_w=0.12, depth=0.38, leg_y=0.07,
              leg_r=(0.055, 0.03, 0.02), hind_shank=0.62,
              neck=[(-0.10, 0, -0.10), (0.08, 0, 0.16), (0.16, 0, 0.36)], neck_r=[0.088, 0.08, 0.065],
@@ -231,8 +286,11 @@ def deer(rgb):
 
     def ear_paint(P, N, C):  # pale inside the ear, dark rim
         return mix(C, WHITE * 0.95, smooth(0.0, 0.7, N[:, 0]) * 0.7)
-    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=_quad_head(q, coat, head_paint, ear_paint=ear_paint),
-                neck_pivot=q.neck_pivot, tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
+    head = _quad_head(q, coat, head_paint, ear_paint=ear_paint)
+    if sex == "m":
+        head = merge([head, _antlers(ANTLER[season], coat)])
+    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=head, neck_pivot=q.neck_pivot,
+                tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
                 thigh_fore=tf, thigh_hind=th, shank_fore=sf, shank_hind=shh, splits=sp,
                 graze=np.radians(110), flag=np.radians(100))
 
@@ -282,8 +340,9 @@ def coyote(rgb):
     def sock(P, N, C, l):
         return mix(C, pale, smooth(0.0, 0.8, N[:, 0]) * 0.25)
     tf, th, sf, shh, sp = _quad_legs(q, coat, coat * 0.95, DARK, sock)
-    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=_quad_head(q, coat, head_paint, ear_paint=ear_paint),
-                neck_pivot=q.neck_pivot, tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
+    head = _quad_head(q, coat, head_paint, ear_paint=ear_paint)
+    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=head, neck_pivot=q.neck_pivot,
+                tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
                 thigh_fore=tf, thigh_hind=th, shank_fore=sf, shank_hind=shh, splits=sp, graze=np.radians(110), flag=0.0)
 
 
@@ -327,8 +386,9 @@ def raccoon(rgb):
     def ear_paint(P, N, C):
         return mix(C, WHITE, smooth(0.11, 0.13, P[:, 2]) * 0.8)                     # white-rimmed ears
     tf, th, sf, shh, sp = _quad_legs(q, coat, coat * 0.45, DARK)
-    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=_quad_head(q, coat, head_paint, ear_paint=ear_paint),
-                neck_pivot=q.neck_pivot, tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
+    head = _quad_head(q, coat, head_paint, ear_paint=ear_paint)
+    return dict(q=q, torso=_quad_torso(q, coat, torso_paint), head=head, neck_pivot=q.neck_pivot,
+                tail=_quad_tail(q, coat, tail_paint), tail_pivot=q.tail_pivot,
                 thigh_fore=tf, thigh_hind=th, shank_fore=sf, shank_hind=shh, splits=sp, graze=np.radians(70), flag=0.0)
 
 
@@ -453,9 +513,15 @@ def _bird_leg(h, col, toes_col=None, spur=False, thigh_feather=None, thigh_r=0.1
                                                   toes.mesh(target=260)]), (l1, l2)
 
 
-def turkey(rgb):
+def turkey(rgb, sex="m"):
+    """Gobbler ("m") or hen ("f"). Hens (Maryland DNR, ADW; catalog/fauna_sources.json): body brown and tan, duller;
+    head gray or pale blue on a feathered neck; typically beardless; no spurs; about half the gobbler's mass."""
+    hen = sex == "f"
     plum = np.asarray(rgb, float)
     bronze = np.array([0.55, 0.36, 0.18])
+    if hen:   # design colours, read off the survey guide's photographs
+        plum = mix(plum[None], np.array([0.40, 0.31, 0.22]), np.array([0.8]))[0]
+        bronze = np.array([0.72, 0.60, 0.42])        # buff feather tips
     h = 0.36
     s = Sculpt()
     s.ellipsoid((0.0, 0, h + 0.20), (0.27, 0.17, 0.19), plum, k=0.08, R=rot(pitch=0.15))     # body
@@ -478,24 +544,35 @@ def turkey(rgb):
     def fan_paint(P, N, C):   # chestnut-tipped tail with a dark subterminal band
         r = np.hypot(P[:, 0] + 0.42, P[:, 2] - h - 0.14)
         return mix(mix(C, bronze * 0.8, 0.3 * np.ones(len(P))), np.array([0.62, 0.42, 0.22]), smooth(0.14, 0.18, r))
-    torso = merge([s.mesh(target=3000, colour_fn=body_paint), fan.mesh(target=700, colour_fn=fan_paint),
-                   beard.mesh(target=120)])
+    torso = merge([s.mesh(target=3000, colour_fn=body_paint), fan.mesh(target=700, colour_fn=fan_paint)] +
+                  ([] if hen else [beard.mesh(target=120)]))
     pv = np.array([0.25, 0, h + 0.30])
-    skin_blue = np.array([0.55, 0.68, 0.85])
-    red = np.array([0.78, 0.12, 0.12])
+    skin_blue = np.array([0.62, 0.66, 0.74]) if hen else np.array([0.55, 0.68, 0.85])
+    red = np.array([0.70, 0.45, 0.45]) if hen else np.array([0.78, 0.12, 0.12])
     n = Sculpt()
     n.chain([(-0.04, 0, -0.04), (0.03, 0, 0.12), (0.06, 0, 0.26)], [0.055, 0.03, 0.026], plum, k=0.03)   # neck
     n.ellipsoid((0.08, 0, 0.30), (0.045, 0.03, 0.033), skin_blue, k=0.02)                                # bare head
     n.cone((0.10, 0, 0.30), (0.14, 0, 0.285), 0.012, 0.005, np.array([0.75, 0.7, 0.55]), k=0.006)        # bill
-    n.ellipsoid((0.065, 0, 0.21), (0.018, 0.022, 0.05), red, k=0.02)                                    # wattle
-    n.cone((0.11, 0, 0.33), (0.135, 0, 0.26), 0.008, 0.005, red, k=0.006)                                # snood
+    if hen:   # a small wattle, a nub of snood
+        n.ellipsoid((0.07, 0, 0.255), (0.01, 0.012, 0.02), red, k=0.01)
+        n.ellipsoid((0.11, 0, 0.325), (0.006, 0.005, 0.006), red, k=0.004)
+    else:
+        n.ellipsoid((0.065, 0, 0.21), (0.018, 0.022, 0.05), red, k=0.02)                                # wattle
+        n.cone((0.11, 0, 0.33), (0.135, 0, 0.26), 0.008, 0.005, red, k=0.006)                            # snood
+    bare_lo = 0.27 if hen else 0.18     # the hen's neck is feathered up to the head
 
     def head_paint(P, N, C):
-        bare = smooth(0.18, 0.24, P[:, 2])
-        return mix(C, skin_blue, bare * smooth(0.12, 0.3, lum(C)) * (1 - smooth(0.6, 0.7, C[:, 0] - C[:, 2])))
+        bare = smooth(bare_lo, bare_lo + 0.06, P[:, 2])
+        C = mix(C, skin_blue, bare * smooth(0.12, 0.3, lum(C)) * (1 - smooth(0.6, 0.7, C[:, 0] - C[:, 2])))
+        if hen:   # fine grey-brown feathering over the neck and crown
+            C = mix(C, np.array([0.48, 0.44, 0.40]), smooth(bare_lo + 0.02, bare_lo - 0.04, P[:, 2]) *
+                    smooth(0.12, 0.2, P[:, 2]) * 0.7)
+        return C
     eyes = [Sculpt().ellipsoid((0.10, 0.026 * sg, 0.31), (0.007,) * 3, DARK).mesh(target=BUDGET["eye"]) for sg in (1, -1)]
-    head = merge([n.mesh(target=1300, colour_fn=head_paint)] + eyes)
-    thigh, shank, ls = _bird_leg(h, np.array([0.62, 0.42, 0.38]), spur=True, thigh_feather=plum, tarsus=0.15)
+    hm = n.mesh(target=1300, colour_fn=head_paint)    # feathered neck, bare head (coat.py)
+    surface(hm, "feather", 0.008, 0.2, 0.25 if hen else 0.9, mask=hm.positions[:, 2] < bare_lo + 0.03)
+    head = merge([hm] + eyes)
+    thigh, shank, ls = _bird_leg(h, np.array([0.62, 0.42, 0.38]), spur=not hen, thigh_feather=plum, tarsus=0.15)
     return dict(torso=torso, head=head, neck_pivot=pv, thigh=thigh, shank=shank, ls=ls, hip=h, graze=np.radians(120))
 
 
@@ -614,35 +691,81 @@ def box_turtle(rgb):
 
 # ── a person walking ────────────────────────────────────────────────────────
 
-def human(rgb):
+# NHANES 2015–2018 via CDC FastStats (catalog/fauna_sources.json): mean stature of US adults, 68.9 in (men) and
+# 63.5 in (women). The model below stands HUMAN_MODEL tall (sole to crown) and is scaled to these.
+STATURE = {"m": 1.750, "f": 1.613}
+HUMAN_MODEL = 1.745
+SHIRTS = [(0.25, 0.35, 0.55), (0.55, 0.22, 0.18), (0.30, 0.42, 0.28), (0.72, 0.64, 0.46)]   # design
+PACKS = [np.array([0.20, 0.32, 0.22]), np.array([0.62, 0.30, 0.12]), np.array([0.18, 0.22, 0.34])]   # design
+
+
+def human(rgb, sex="m", season="summer", pack=None):
+    """A hiker. `sex` sets build and hair (women: narrower shoulders, broader hips, long hair tied back; design
+    proportions); `season` the sleeves (summer: short); `pack` an index into PACKS or None. The arms are
+    separate parts hanging from the shoulders (dict(mesh, pivot, side)) so they can swing against the legs."""
+    f = sex == "f"
     shirt = np.asarray(rgb, float)
     jeans = np.array([0.22, 0.27, 0.38])
     skin = np.array([0.72, 0.55, 0.42])
-    hair = np.array([0.20, 0.15, 0.11])
+    hair = np.array([0.32, 0.22, 0.13]) if f else np.array([0.20, 0.15, 0.11])
     hip = 0.9
+    sw = 0.88 if f else 1.0           # shoulder breadth (biacromial) relative to the male model
+    pw = 1.06 if f else 1.0           # hip breadth
+    sy = 0.19 * sw                    # shoulder joint, lateral
     s = Sculpt()
-    s.ellipsoid((0, 0, hip + 0.04), (0.10, 0.17, 0.11), jeans, k=0.04)                    # pelvis
-    s.ellipsoid((0.0, 0, hip + 0.30), (0.11, 0.17, 0.22), shirt, k=0.08)                  # trunk
-    s.ellipsoid((0.02, 0, hip + 0.44), (0.11, 0.2, 0.11), shirt, k=0.06)                  # chest, shoulders
+    s.ellipsoid((0, 0, hip + 0.04), (0.10, 0.17 * pw, 0.11), jeans, k=0.04)               # pelvis
+    s.ellipsoid((0.0, 0, hip + 0.30), (0.11, 0.165 * (sw + pw) / 2, 0.22), shirt, k=0.08)  # trunk
+    s.ellipsoid((0.02, 0, hip + 0.44), (0.11, 0.2 * sw, 0.11), shirt, k=0.06)             # chest, shoulders
+    if f:
+        s.ellipsoid((0.08, 0, hip + 0.38), (0.06, 0.13, 0.07), shirt, k=0.06)             # bust
     for sg in (1, -1):
-        s.chain([(0.0, 0.2 * sg, hip + 0.50), (0.0, 0.22 * sg, hip + 0.22), (0.05, 0.22 * sg, hip - 0.02)],
-                [0.045, 0.038, 0.03], shirt, k=0.03)                                       # arms
-        s.ellipsoid((0.06, 0.22 * sg, hip - 0.07), (0.035, 0.022, 0.05), skin, k=0.02)    # hands
-    s.cone((0.01, 0, hip + 0.52), (0.015, 0, hip + 0.62), 0.05, 0.045, skin, k=0.03)     # neck
+        s.ellipsoid((0.0, sy * sg, hip + 0.47), (0.055, 0.05, 0.06), shirt, k=0.04)       # shoulder cap (deltoid)
+    s.cone((0.01, 0, hip + 0.52), (0.015, 0, hip + 0.62), 0.05 if not f else 0.045, 0.045, skin, k=0.03)  # neck
     s.ellipsoid((0.02, 0, hip + 0.73), (0.095, 0.08, 0.115), skin, k=0.03)                # head
-    s.ellipsoid((0.0, 0, hip + 0.77), (0.1, 0.085, 0.1), hair, k=0.02)                    # hair
     s.cone((0.10, 0, hip + 0.73), (0.125, 0, hip + 0.70), 0.015, 0.012, skin, k=0.01)    # nose
     for sg in (1, -1):
         s.ellipsoid((0.0, 0.085 * sg, hip + 0.72), (0.02, 0.012, 0.03), skin, k=0.01)     # ears
+    hs = Sculpt()  # hair: its own sculpture, so it sits on the head as a cap instead of swelling it
+    hs.ellipsoid((-0.005, 0, hip + 0.765), (0.103, 0.088, 0.1), hair, k=0.02)
+    hs.ellipsoid((0.10, 0, hip + 0.64), (0.08, 0.2, 0.155), hair, k=0.02, sub=True)       # clear the face
+    if f:   # long hair tied back: a fall over the nape and a ponytail
+        hs.ellipsoid((-0.06, 0, hip + 0.68), (0.06, 0.08, 0.11), hair, k=0.03)
+        hs.cone((-0.10, 0, hip + 0.72), (-0.13, 0, hip + 0.52), 0.035, 0.018, hair, k=0.02)
+    if pack is not None:
+        pc = PACKS[pack % len(PACKS)]
+        s.ellipsoid((-0.19, 0, hip + 0.33), (0.08, 0.14 * sw, 0.2), pc, k=0.03)            # pack body
+        s.ellipsoid((-0.21, 0, hip + 0.53), (0.07, 0.12 * sw, 0.05), pc * 0.8, k=0.02)      # lid
+        s.ellipsoid((-0.25, 0, hip + 0.27), (0.03, 0.1 * sw, 0.09), pc * 0.85, k=0.02)      # front pocket
 
     def paint(P, N, C):
         face = smooth(0.2, 0.7, N[:, 0]) * smooth(hip + 0.63, hip + 0.66, P[:, 2]) * smooth(hip + 0.82, hip + 0.78, P[:, 2])
-        return mix(C, skin, face * smooth(0.0, 0.06, P[:, 0]))
+        C = mix(C, skin, face * smooth(0.0, 0.06, P[:, 0]))
+        if pack is not None:   # straps over the shoulders and down the chest, and the hip belt, painted on
+            y = np.abs(P[:, 1])
+            strap = smooth(0.022, 0.012, np.abs(y - 0.1 * sw)) * smooth(hip + 0.22, hip + 0.26, P[:, 2]) * \
+                smooth(hip + 0.6, hip + 0.56, P[:, 2]) * smooth(-0.13, -0.1, P[:, 0])
+            belt = smooth(0.02, 0.01, np.abs(P[:, 2] - hip - 0.08)) * smooth(-0.1, -0.05, P[:, 0])
+            C = mix(C, DARK * 2.5, np.maximum(strap, belt))
+        return C
     eyes = [Sculpt().ellipsoid((0.105, 0.035 * sg, hip + 0.745), (0.008,) * 3, DARK).mesh(target=40) for sg in (1, -1)]
-    torso = merge([s.mesh(target=4200, colour_fn=paint)] + eyes)
-    l = hip / 0.95 / 2
-    th = Sculpt().cone((0, 0, 0.04), (0, 0, -l), 0.075, 0.055, jeans, k=0.03).mesh(target=BUDGET["thigh"])
+    skin_ = surface(s.mesh(target=4200, colour_fn=paint), "bare")
+    torso = merge([skin_, surface(hs.mesh(target=700), "fur", 0.0015, 0.6)] + eyes)
+    short = season == "summer"
+    arms = []
+    for sg in (1.0, -1.0):   # pivot at the shoulder joint; the arm hangs along −z, elbow a little flexed
+        g = Sculpt()
+        g.cone((0, 0, 0.02), (0.0, 0.015 * sg, -0.29), 0.045 * sw, 0.035 * sw, shirt, k=0.02)        # upper arm
+        g.cone((0.0, 0.015 * sg, -0.29), (0.06, 0.015 * sg, -0.53), 0.035 * sw, 0.026 * sw,
+               skin if short else shirt, k=0.015)                                                       # forearm
+        g.ellipsoid((0.075, 0.015 * sg, -0.60), (0.03, 0.02, 0.055), skin, k=0.015)                   # hand
+
+        def arm_paint(P, N, C):    # a short sleeve ends above the elbow
+            return mix(C, skin, smooth(-0.16, -0.2, P[:, 2])) if short else C
+        arms.append(dict(mesh=g.mesh(target=700, colour_fn=arm_paint), side=sg, pivot=(0.0, sy * sg, hip + 0.47)))
+    l = hip / 0.985 / 2   # people stand nearly straight-legged: 1.5 % slack (others 5 %), knees ~20° at rest
+    th = Sculpt().cone((0, 0, 0.04), (0, 0, -l), 0.075 * pw, 0.055, jeans, k=0.03).mesh(target=BUDGET["thigh"])
     sh = Sculpt()
     sh.cone((0, 0, 0), (0, 0, -l + 0.07), 0.055, 0.04, jeans, k=0.02)
     sh.ellipsoid((0.04, 0, -l + 0.04), (0.13, 0.05, 0.045), np.array([0.3, 0.22, 0.15]), k=0.02)   # boot
-    return dict(torso=torso, thigh=th, shank=sh.mesh(target=500), ls=(l, l), hip=hip)
+    return dict(torso=torso, thigh=th, shank=sh.mesh(target=500), ls=(l, l), hip=hip, arms=arms,
+                size=STATURE[sex] / HUMAN_MODEL)

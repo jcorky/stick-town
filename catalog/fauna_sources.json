@@ -227,6 +227,57 @@
     "value": null,
     "url": "https://mdc.mo.gov/discover-nature/field-guide/white-tailed-deer",
     "quote": "In summer, white-tailed deer are reddish-brown to tan above; in winter, the colors are grayish to grayish brown."
+   },
+   "antlers": {
+    "value": {
+     "grow": "April–August",
+     "shed": "February–March",
+     "males_only": true
+    },
+    "url": "https://mdc.mo.gov/discover-nature/field-guide/white-tailed-deer",
+    "quote": "Antlers normally occur only in males and are formed and shed each year. In Missouri, antler growth typically starts in April and is completed in August. Antlers are shed mostly in February and March."
+   },
+   "velvet": {
+    "value": "spring–summer",
+    "url": "https://mdc.mo.gov/discover-nature/field-guide/white-tailed-deer",
+    "quote": "During the antler-growth period, the soft skin and short hair covering the antlers have a plush quality, giving this stage the name of \"velvet.\""
+   },
+   "mass_by_sex": {
+    "value": {
+     "f": [
+      49.9,
+      65.8
+     ],
+     "m": [
+      70.3,
+      88.5
+     ]
+    },
+    "url": "https://mdc.mo.gov/discover-nature/field-guide/white-tailed-deer",
+    "quote": "weight: 110–145 pounds (females); 155–195 pounds (males).",
+    "note": "kg; mass ratio of midpoints 1.37, length ratio 1.37^(1/3) = 1.11"
+   },
+   "size_by_sex": {
+    "value": {
+     "f": 0.92,
+     "m": 1.02
+    },
+    "design": true,
+    "why": "isometric length ratio 1.11 from mass_by_sex, placed so both sexes' withers stay inside the sourced shoulder range"
+   },
+   "winter_coat_rgb": {
+    "value": [
+     0.45,
+     0.41,
+     0.36
+    ],
+    "design": true,
+    "why": "'grayish to grayish brown' (coat) as a colour, read off winter photographs"
+   },
+   "rack": {
+    "value": "8 points: brow tine, G2, G3, beam tip",
+    "design": true,
+    "why": "a typical mature rack drawn from photographs; beam radius 1.7 cm from a ~4.3 in base circumference"
    }
   },
   "coyote": {
@@ -283,6 +334,47 @@
     "value": null,
     "url": "https://mdc.mo.gov/discover-nature/field-guide/wild-turkey",
     "quote": "very large and dark with a bare, red and blue head, with red wattles on the throat and neck … The feathers are bronzy and iridescent."
+   },
+   "hen": {
+    "value": {
+     "body": "brown and tan",
+     "head": "gray or pale blue",
+     "beard": "typically none"
+    },
+    "url": "https://dnr.maryland.gov/wildlife/Documents/summer-turkey.pdf",
+    "quote": "Body brown and tan; duller than gobblers … Head gray or pale blue sometimes with light pink evident … Hens typically beardless but some have thin beard … Smaller than gobblers but usually larger than poults"
+   },
+   "hen_head": {
+    "value": "grayish head, feathered neck",
+    "url": "https://animaldiversity.org/accounts/Meleagris_gallopavo/",
+    "quote": "Females have a grayish head and a feathered neck."
+   },
+   "mass_by_sex": {
+    "value": {
+     "m": [
+      6.8,
+      11.0
+     ],
+     "f": [
+      3.6,
+      5.4
+     ]
+    },
+    "url": "https://animaldiversity.org/accounts/Meleagris_gallopavo/",
+    "quote": "Male turkeys weigh 6.8 to 11 kg. Hens usually weigh 3.6 to 5.4 kg."
+   },
+   "size_by_sex": {
+    "value": {
+     "m": 1.0,
+     "f": 0.9
+    },
+    "design": true,
+    "why": "hens weigh about half (mass_by_sex: isometric 0.8) but are 'almost as tall as the male' (height), so between"
+   },
+   "iridescence": {
+    "value": "gobblers",
+    "url": "https://dnr.maryland.gov/wildlife/Documents/summer-turkey.pdf",
+    "quote": "Body appears black; In sunlight, metallic iridescence is noticeable"
    }
   },
   "armadillo": {
@@ -307,6 +399,24 @@
     "value": 1.751,
     "url": "https://stacks.cdc.gov/view/cdc/174595/cdc_174595_DS1.pdf",
     "quote": "the average man age 20 and older … was 68.9 inches (just under 5 feet 9 inches) tall … The average woman … was 63.5 inches"
+   },
+   "stature_female": {
+    "value": 1.613,
+    "url": "https://stacks.cdc.gov/view/cdc/174595/cdc_174595_DS1.pdf",
+    "quote": "the average man age 20 and older … was 68.9 inches (just under 5 feet 9 inches) tall … The average woman … was 63.5 inches"
+   },
+   "build": {
+    "value": {
+     "shoulders_f": 0.88,
+     "hips_f": 1.06
+    },
+    "design": true,
+    "why": "relative breadths for a readable silhouette at distance; no anthropometric table fetched"
+   },
+   "arm_swing": {
+    "value": 0.7,
+    "design": true,
+    "why": "shoulder swing as a share of the opposite hip's swing, by eye from walking video"
    }
   }
  }

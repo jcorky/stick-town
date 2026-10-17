@@ -1,0 +1,15 @@
+{
+ "key": "464244c1c4db7c7fd3e832531ae3d7ed",
+ "kind": "body",
+ "version": "body-0.3.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "armadillo"
+ },
+ "meta": {
+  "created": "2026-10-17T15:55:24",
+  "tris": 8076
+ },
+ "path": "body/46/464244c1c4db7c7fd3e832531ae3d7ed.npz"
+}
