@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from .coat import coat as surface
 from .sculpt import Sculpt, merge, rot, tube
 
 BUDGET = dict(torso=2600, head=1400, ear=160, eye=160, tail=420, thigh=380, shank=320, hoof=70)
@@ -231,13 +232,14 @@ def _antlers(state, coat):
             C = mix(C, np.array([0.42, 0.33, 0.22]), smooth(0.14, 0.0, d) * 0.8)
             return mix(C, WHITE, smooth(0.11, 0.2, P[:, 2] - base[2]) * 0.6)
         S = lambda pts: [(x, y * sg, z) for x, y, z in pts]
-        parts.append(tube(S(beam), [r * fat for r in br], col, sides=8, per=4, tip=tip, colour_fn=paint))
+        rack = [tube(S(beam), [r * fat for r in br], col, sides=8, per=4, tip=tip, colour_fn=paint)]
         for p0, p1, p2, r0, r1 in tines:
-            parts.append(tube(S([p0, p1, p2]), [r0 * fat, (r0 + r1) / 2 * fat, r1 * fat], col, sides=6, per=3,
-                              tip=tip, colour_fn=paint))
+            rack.append(tube(S([p0, p1, p2]), [r0 * fat, (r0 + r1) / 2 * fat, r1 * fat], col, sides=6, per=3,
+                             tip=tip, colour_fn=paint))
         if not velvet:  # the burr: a rough ring where the antler meets the pedicle
             ring = Sculpt().ellipsoid(base + np.array([0, 0, 0.018]), (0.024, 0.024, 0.007), BONE * 0.55, k=0.004)
-            parts.append(ring.mesh(target=60))
+            rack.append(ring.mesh(target=60))
+        parts += [surface(m, "fur", 0.002, 0.5) if velvet else surface(m, "bare") for m in rack]
     return merge(parts)
 
 
@@ -567,7 +569,9 @@ def turkey(rgb, sex="m"):
                     smooth(0.12, 0.2, P[:, 2]) * 0.7)
         return C
     eyes = [Sculpt().ellipsoid((0.10, 0.026 * sg, 0.31), (0.007,) * 3, DARK).mesh(target=BUDGET["eye"]) for sg in (1, -1)]
-    head = merge([n.mesh(target=1300, colour_fn=head_paint)] + eyes)
+    hm = n.mesh(target=1300, colour_fn=head_paint)    # feathered neck, bare head (coat.py)
+    surface(hm, "feather", 0.008, 0.2, 0.25 if hen else 0.9, mask=hm.positions[:, 2] < bare_lo + 0.03)
+    head = merge([hm] + eyes)
     thigh, shank, ls = _bird_leg(h, np.array([0.62, 0.42, 0.38]), spur=not hen, thigh_feather=plum, tarsus=0.15)
     return dict(torso=torso, head=head, neck_pivot=pv, thigh=thigh, shank=shank, ls=ls, hip=h, graze=np.radians(120))
 
@@ -744,7 +748,8 @@ def human(rgb, sex="m", season="summer", pack=None):
             C = mix(C, DARK * 2.5, np.maximum(strap, belt))
         return C
     eyes = [Sculpt().ellipsoid((0.105, 0.035 * sg, hip + 0.745), (0.008,) * 3, DARK).mesh(target=40) for sg in (1, -1)]
-    torso = merge([s.mesh(target=4200, colour_fn=paint), hs.mesh(target=700)] + eyes)
+    skin_ = surface(s.mesh(target=4200, colour_fn=paint), "bare")
+    torso = merge([skin_, surface(hs.mesh(target=700), "fur", 0.0015, 0.6)] + eyes)
     short = season == "summer"
     arms = []
     for sg in (1.0, -1.0):   # pivot at the shoulder joint; the arm hangs along −z, elbow a little flexed

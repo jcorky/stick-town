@@ -77,11 +77,19 @@ def rig(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     else:
         raise KeyError(key)
     size = d.get("size", A.SEX_SIZE.get(key, {}).get(sex, 1.0)) if key != "gray_squirrel" else 1.0
+    from .coat import BIRD_LEG, SURFACE, fill
+    surf = SURFACE.get((key, sex), SURFACE.get(key, ("bare", 0.0, 0.0, 0.0)))
+    for part in (torso, *(p_["mesh"] for p_ in (neck, tail, *wings, *arms) if p_ is not None)):
+        fill(part, *surf)
+    for lg in legs:   # thighs and shanks are shared left/right: fill is idempotent
+        fill(lg["thigh"], *surf)
+        fill(lg["shank"], *(BIRD_LEG if kind == "biped" and key != "human" else surf))
     S = np.float32(scale)
 
     def sc(m):
         out = Mesh(m.positions * S, m.colors, m.indices)
         out.nrm = m.nrm
+        out.attrs = m.attrs
         return out
     torso = sc(torso)
     for part in (neck, tail, *wings, *arms):
@@ -115,6 +123,7 @@ def posed_legs(r, angles=None):
         for m, th, at in ((lg["thigh"], th1, hip), (lg["shank"], th1 + th2, knee)):
             M = Mesh(_pitch(m.positions, th) + at, m.colors, m.indices)
             M.nrm = None if m.nrm is None else _pitch(m.nrm, th)
+            M.attrs = m.attrs
             out.append(M)
     return out
 
@@ -127,16 +136,16 @@ def body(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     for n in (r["neck"], r["tail"]):
         if n is not None:
             M = Mesh(n["mesh"].positions + np.asarray(n["pivot"], np.float32), n["mesh"].colors, n["mesh"].indices)
-            M.nrm = n["mesh"].nrm
+            M.nrm, M.attrs = n["mesh"].nrm, n["mesh"].attrs
             parts.append(M)
     for a in r["arms"]:
         M = Mesh(a["mesh"].positions + np.asarray(a["pivot"], np.float32), a["mesh"].colors, a["mesh"].indices)
-        M.nrm = a["mesh"].nrm
+        M.nrm, M.attrs = a["mesh"].nrm, a["mesh"].attrs
         parts.append(M)
     from .gait import WING_FOLD
     for w in r["wings"]:  # folded: span squeezed toward the body
         P = w["mesh"].positions * np.array([1, WING_FOLD, 1], np.float32)
         M = Mesh(P + np.asarray(w["pivot"], np.float32), w["mesh"].colors, w["mesh"].indices)
-        M.nrm = w["mesh"].nrm
+        M.nrm, M.attrs = w["mesh"].nrm, w["mesh"].attrs
         parts.append(M)
     return merge(parts)

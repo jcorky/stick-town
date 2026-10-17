@@ -249,6 +249,10 @@ def merge(meshes):
     out = Mesh.merge(meshes)
     if all(m.nrm is not None for m in meshes):
         out.nrm = np.concatenate([m.nrm for m in meshes]).astype(np.float32)
+    keys = {k for m in meshes for k in (m.attrs or {})}
+    if keys:   # custom attributes (coat.py's _COAT): parts without one get zero rows ("not yet set")
+        out.attrs = {k: np.concatenate([(m.attrs or {}).get(k, np.zeros((len(m.positions), 4), np.uint8))
+                                        for m in meshes]) for k in keys}
     return out
 
 

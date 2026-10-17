@@ -31,7 +31,7 @@ GENERATOR_VERSIONS = {
     "tree": "tree-0.3.3",
     "building": "building-0.1.1",
     "terrain": "terrain-0.3.1",
-    "body": "body-0.2.0",
+    "body": "body-0.3.0",
     "behavior": "behavior-0.2.1",
     "grass_patch": "grass-0.1.0",
     "texture": "texture-0.1.3",
