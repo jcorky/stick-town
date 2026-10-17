@@ -21,6 +21,7 @@ from ..assets.store import GENERATOR_VERSIONS, AssetStore, mesh_codec, store_beh
 from ..export.gltf import GLB, _to_gltf, pitch_quat, qmul, yaw_quat
 from ..fauna.agents import FAUNA, World, run, spawn
 from ..fauna import gait, motion, perception
+from ..fauna.anatomy import SHIRTS
 from ..fauna.bodies import rig
 from ..flora import impostor
 from ..flora.species import SPECIES
@@ -39,6 +40,9 @@ from .groundcover import scatter
 from .names import scene_names, site_scores
 from .roads import ROAD_WIDTH, grade, ribbon, route, smooth
 from .planner import ScenePlan
+
+TINTS = (0.92, 1.0, 1.08)   # individual coat shades (sRGB multipliers), as material factors over shared meshes
+SEXED = ("white_tailed_deer", "wild_turkey", "human")   # species built differently by sex (anatomy.py)
 
 GRASS_BUDGET = {"low": 20000, "med": 70000, "high": 250000, "cm": 2_000_000}
 VARIANTS = {"low": 2, "med": 3, "high": 5, "cm": 8}
@@ -417,7 +421,6 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
 
     m_grass = g.material("grass", double=True, rough=0.8)
     m_bld, m_water = g.material("building", rough=0.6), g.material("water", rough=0.08, alpha=0.85)
-    m_fauna = g.material("fauna", rough=0.8)
     g.node("terrain", g.mesh(ter, "terrain", mat(ter, "terrain", rough=1.0)))
     if grass.n_tris:  # in chunks under 65,536 vertices, so indices fit in 16 bits (blades are 5 vertices, 3 triangles)
         per = 65530 // 5
@@ -468,35 +471,61 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                             rotation_z=gp["yaw"], scale=gp["scale"]))
     if pkids:
         g.node("ground_props", children=pkids)
-    tracks, extra, akids, rigs = [], [], [], {}
+    tracks, extra, akids, rigs, sexes = [], [], [], {}, {}
+    # individual coat tints are material colour factors over shared geometry (sRGB 0.92/1.0/1.08 of the coat,
+    # geometry built at the brightest): white markings dim with the coat, which reads as shade, not as a new mesh
+    tint_mats = [g.material(f"fauna_{i}", rough=0.8, factor=round((t / TINTS[-1]) ** 2.2, 4))
+                 for i, t in enumerate(TINTS)]
     for a in agents:
         rr = make_rng("look", a.id)
-        # a few quantised looks per species, so individuals share meshes
-        rgb = np.clip(np.array(a.spec.rgb) * [0.88, 1.0, 1.12][int(rr.integers(0, 3))], 0, 1)
+        tint = int(rr.integers(0, 3))
         sc = [0.9, 1.0, 1.1][int(rr.integers(0, 3))]
-        # one sculpted rig per (species, coat); size is the agent node's scale, so the 3 sizes share meshes (§36)
-        look = (a.spec.key, tuple(np.round(rgb, 2)))
+        sx = make_rng("sex", a.id)
+        key = a.spec.key
+        sexed = key in SEXED
+        sex = ("m" if sx.random() < 0.5 else "f") if sexed else "f"
+        pack = (0 if sx.random() < 0.6 else None) if key == "human" else None
+        rgb = np.clip(np.array(a.spec.rgb) * TINTS[-1], 0, 1)
+        if key == "human":   # shirt by build and pack, so the people in a scene differ without more meshes
+            rgb = np.array(SHIRTS[(sex == "f") + 2 * (pack is not None)])
+            pack = None if pack is None else int(sex == "f")
+        # one sculpted rig per (species, sex, pack) in this scene's season; size is the agent node's scale (§36)
+        look = (key, sex, pack)
         if look not in rigs:  # torso + legs pivoting at the hips (TECHNIQUES §25)
-            rg = rig(a.spec.key, rgb, scale=1.0)
-            nm = f"{a.spec.key}_{len(rigs)}"
+            rg = rig(key, rgb, scale=1.0, sex=sex, season=plan.season, pack=pack)
+            nm = f"{key}_{len(rigs)}"
             memo = {}
 
             def fm(m, name):  # sculpt colours are display (sRGB) values; glTF vertex colours are linear
                 lin = Mesh(m.positions, np.clip(m.colors, 0, 1) ** 2.2, m.indices)
                 lin.nrm = m.nrm
-                return g.mesh(lin, name, m_fauna)
+                lin.attrs = m.attrs
+                return g.mesh(lin, name, tint_mats[-1])
 
             def once(m, name):  # left and right legs share one mesh
                 if id(m) not in memo:
                     memo[id(m)] = fm(m, name)
                 return memo[id(m)]
-            rigs[look] = (rg, fm(rg["torso"], nm + "_torso"),
-                          fm(rg["neck"]["mesh"], nm + "_head") if rg["neck"] else None,
-                          fm(rg["tail"]["mesh"], nm + "_tail") if rg["tail"] else None,
-                          [fm(w["mesh"], f"{nm}_wing{i}") for i, w in enumerate(rg["wings"])],
-                          [(once(lg["thigh"], f"{nm}_thigh{i}"), once(lg["shank"], f"{nm}_shank{i}"))
-                           for i, lg in enumerate(rg["legs"])])
-        rg, torso_mesh, head_mesh, tail_mesh, wing_meshes, leg_meshes = rigs[look]
+            rigs[look] = dict(rg=rg, torso=fm(rg["torso"], nm + "_torso"),
+                              head=fm(rg["neck"]["mesh"], nm + "_head") if rg["neck"] else None,
+                              tail=fm(rg["tail"]["mesh"], nm + "_tail") if rg["tail"] else None,
+                              wings=[fm(w["mesh"], f"{nm}_wing{i}") for i, w in enumerate(rg["wings"])],
+                              arms=[fm(w["mesh"], f"{nm}_arm{i}") for i, w in enumerate(rg["arms"])],
+                              legs=[(once(lg["thigh"], f"{nm}_thigh{i}"), once(lg["shank"], f"{nm}_shank{i}"))
+                                    for i, lg in enumerate(rg["legs"])], tinted={})
+        R_ = rigs[look]
+        rg = R_["rg"]
+        sc = sc * rg["size"]   # sex size (bucks, gobblers, sourced statures) on top of individual size
+
+        def tinted(mi, tint=tint, R_=R_):  # the same geometry drawn with this individual's tint material
+            if mi is None or tint == len(TINTS) - 1:
+                return mi
+            if (mi, tint) not in R_["tinted"]:
+                R_["tinted"][(mi, tint)] = g.variant(mi, f"{g.meshes[mi]['name']}_t{tint}", tint_mats[tint])
+            return R_["tinted"][(mi, tint)]
+        torso_mesh, head_mesh, tail_mesh = tinted(R_["torso"]), tinted(R_["head"]), tinted(R_["tail"])
+        wing_meshes, arm_meshes = [tinted(m_) for m_ in R_["wings"]], [tinted(m_) for m_ in R_["arms"]]
+        leg_meshes = [(tinted(t_), tinted(s_)) for t_, s_ in R_["legs"]]
         torso = g.node("torso", torso_mesh)
         neck = g.node("neck", head_mesh, translation=rg["neck"]["pivot"]) if head_mesh is not None else None
         tail = g.node("tail", tail_mesh, translation=rg["tail"]["pivot"]) if tail_mesh is not None else None
@@ -514,7 +543,8 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
             wn = g.node(f"wing{i}", wm, translation=w["pivot"])
             g.nodes[wn]["scale"] = [1.0, 1.0, gait.WING_FOLD]  # span is world y = glTF z
             wings.append(wn)
-        trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs + wings)
+        arms = [g.node(f"arm{i}", am, translation=w["pivot"]) for i, (am, w) in enumerate(zip(arm_meshes, rg["arms"]))]
+        trunk = g.node("body", children=[torso] + [n_ for n_ in (neck, tail) if n_ is not None] + legs + wings + arms)
         # what the viewer's live controller needs to walk, look and flee by itself (viewer/life.js, §35)
         live = dict(kind=rg["kind"], hip=round(float(rg["hip"]), 4), lie=round(float(rg["lie"] or 0), 4),
                     legs=[dict(l1=round(float(lg["l1"]), 4), l2=round(float(lg["l2"]), 4), knee=float(lg["knee"]))
@@ -522,7 +552,9 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                     graze=round(float(rg["neck"]["graze"]), 4) if rg["neck"] else 0.0,
                     flag=round(float(rg["tail"]["flag"]), 4) if rg["tail"] else 0.0,
                     walk=a.spec.walk, run=a.spec.run, flies=a.spec.flies, climbs=a.spec.climbs,
-                    withdraws=a.spec.withdraws, eats=a.spec.eats, scale=sc)
+                    withdraws=a.spec.withdraws, eats=a.spec.eats, scale=round(float(sc), 4), sex=sex,
+                    arms=len(arms))
+        sexes[a.id] = sex if sexed else None
         node = g.node(f"{a.spec.key}_{a.id}", children=[trunk], extras={"rig": live}, scale=sc)
         akids.append(node)
         if len(a.log) > 1:  # full-rate path, turn-rate-limited heading, keys reduced (TECHNIQUES §30)
@@ -542,6 +574,10 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                 for i, (ln, sn) in enumerate(zip(legs, shanks)):
                     extra.append((ln, "rotation", tk, pitch_quat(ang[:, i, 0])))
                     extra.append((sn, "rotation", tk, pitch_quat(ang[:, i, 1])))
+                if arms:  # each arm swings with the opposite leg (gait.arm_swing)
+                    rest = [gait.rest_pose(rg["hip"], lg["l1"], lg["l2"], lg["knee"])[0] for lg in rg["legs"][:2]]
+                    for an, sw_ in zip(arms, gait.arm_swing(ang[:, :2, 0], rest)):
+                        extra.append((an, "rotation", tk, pitch_quat(sw_)))
                 bz = np.asarray(bob)
                 extra.append((trunk, "translation", tk, _to_gltf(np.c_[0 * bz, 0 * bz, bz])))
             if neck is not None:  # head pitch by state (§28) and yaw by gaze (§31): q = yaw(ψ) · pitch(−θ)
@@ -590,13 +626,13 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
                  ground_props=[dict(gp, model=f"{gp['model'][0]}/{gp['model'][1]}") for gp in gprops],
                  credits=sorted({(p_.meta["source"]["url"], p_.meta["source"]["licence"],
                                   ", ".join(p_.meta["source"].get("authors", []))) for p_ in gparts.values()}),
-                 agents=[dict(id=a.id, species=a.spec.key, traits={k: round(v, 2) for k, v in a.trait.items()},
+                 agents=[dict(id=a.id, species=a.spec.key, sex=sexes.get(a.id), traits={k: round(v, 2) for k, v in a.trait.items()},
                               events=a.events[:80]) for a in agents],
                  perception=perception.to_json(), attractors=[[float(x), float(y)] for x, y in world.attractors],
                  gait=dict(QUAD={k: [list(v[0]), v[1]] for k, v in gait.QUAD.items()},
                            BIPED={k: [list(v[0]), v[1]] for k, v in gait.BIPED.items()},
                            LIFT=gait.LIFT, BOB=gait.BOB, FLAP_HZ=gait.FLAP_HZ, FLAP_AMP=float(gait.FLAP_AMP),
-                           WING_FOLD=gait.WING_FOLD))
+                           WING_FOLD=gait.WING_FOLD, ARM_SWING=gait.ARM_SWING))
     np.savez_compressed(os.path.join(out_dir, "layers.npz"), z=hf.z, trail=field.G, canopy=canopy,
                         grass=dens, moisture=moist, water=water)
     scene["world"] = write_world(os.path.join(out_dir, "world.bin"), hf, dict(

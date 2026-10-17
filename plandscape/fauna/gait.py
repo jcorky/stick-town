@@ -243,3 +243,13 @@ def hop_heights(times, xy, h, height):
     vk = _interval_speed(times, v, tk)
     pk = np.interp(tk, times, phi)
     return tk, np.where(vk > 0, height * np.abs(np.sin(pk / 2)), 0.0)
+
+
+ARM_SWING = 0.7   # design: shoulder swing as a share of the opposite hip's swing about its rest angle
+
+
+def arm_swing(hip_angles, rest):
+    """Arm pitch tracks for a person from the legs' hip angles (K, 2) [left, right] about their rest angles:
+    each arm swings with the opposite leg (left arm forward as the right foot reaches forward)."""
+    a = np.asarray(hip_angles, float)
+    return [ARM_SWING * (a[:, 1] - rest[1]), ARM_SWING * (a[:, 0] - rest[0])]

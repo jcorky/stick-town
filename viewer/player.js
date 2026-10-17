@@ -10,6 +10,8 @@
   const clamp = (x, a, b) => Math.min(Math.max(x, a), b);
   const pitchQ = (th, q) => q.set(0, 0, Math.sin(th / 2), Math.cos(th / 2));   // gltf.pitch_quat
   const yawQ = (th, q) => q.set(0, Math.sin(th / 2), 0, Math.cos(th / 2));     // gltf.yaw_quat
+  const rollQ = (th) => new THREE.Quaternion(Math.sin(th / 2), 0, 0, Math.cos(th / 2));
+  const armQ = (a, pitch, yaw) => a.quaternion.multiplyQuaternions(yawQ(yaw, new THREE.Quaternion()), pitchQ(pitch, new THREE.Quaternion()));
 
   // ── the world the player and live animals walk on (world.bin, written by compose.write_world) ──
   const World = {
@@ -76,23 +78,42 @@
     return g;
   }
 
+  // a rig's parts by node name (the loader may suffix duplicate names: leg0 → leg0_3)
+  const base = (o) => o.name.replace(/_\d+$/, '');
+  function parts(node) {
+    const rig = (node.userData && node.userData.rig) || {}, body = node.children[0];
+    const byName = (n) => body && body.children.find((c) => base(c) === n);
+    const legs = (rig.legs || []).map((_, i) => { const th = byName('leg' + i); return { th, sh: th && th.children.find((c) => base(c) === 'shank' + i) }; });
+    return { rig, body, legs, neck: byName('neck'), tail: byName('tail'), torso: byName('torso'),
+             wings: [0, 1].map((i) => byName('wing' + i)).filter(Boolean), arms: [0, 1].map((i) => byName('arm' + i)).filter(Boolean) };
+  }
+
+  // the player wears the scene's own sculpted hiker when there is one (falls back to the box figure)
+  function hikerAvatar() {
+    const people = (Play.agents || []).filter((n) => /^human_\d+$/.test(n.name));
+    const src = people.find((n) => (n.userData.rig || {}).sex === 'm') || people[0];
+    if (!src) return null;
+    const node = src.clone(true);
+    node.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    const me = Object.assign(parts(node), { node, x: 0, y: 0, h: 0, v: 0, phase: 0, alt: 0, hop: 0, look: 0, shut: 0 });
+    node.userData.me = me;
+    return node;
+  }
+
   Play.init = function (opts) {
     Object.assign(Play, opts);  // scene, camera, controls, sceneInfo, agents, log, lighting
     const s = Play.sceneInfo;
     Life.init(s.perception);
-    Play.avatar = makeAvatar(); Play.avatar.visible = false; Play.scene.add(Play.avatar);
+    Play.avatar = hikerAvatar() || makeAvatar(); Play.avatar.visible = false; Play.scene.add(Play.avatar);
     const S = (World.nx - 1) * World.res;
     Play.p = { x: World.ox + S / 2 + 3, y: World.oy + S / 2 - 6, h: Math.PI / 2, v: 0, phase: 0, mode: 'walk', posture: 'stand', target: null };
     Play.trees = (s.trees || []).map((t) => ({ x: t.x, y: t.y, r: 0.5 }));
     Play.minds = Play.agents.map((node) => {
       const rig = (node.userData && node.userData.rig) || {}, sp = node.name.replace(/_\d+$/, '');
-      const body = node.children[0], byName = (n) => body && body.children.find((c) => c.name === n);
-      const legs = (rig.legs || []).map((_, i) => { const th = byName('leg' + i); return { th, sh: th && th.children.find((c) => c.name === 'shank' + i) }; });
-      return { node, sp, rig, mind: new Life.Mind(sp), live: false, body, neck: byName('neck'), tail: byName('tail'),
-               torso: byName('torso'), wings: [0, 1].map((i) => byName('wing' + i)).filter(Boolean), legs,
+      return Object.assign(parts(node), { node, sp, rig, mind: new Life.Mind(sp), live: false,
                x: 0, y: 0, h: 0, alt: 0, v: 0, phase: 0, look: 0, cue: '', act: 'idle', actT: 0, lastLog: -99,
                npc: sp === 'human' ? { wary: false, friendly: 0, greeted: -99, goal: null } : null,
-               meter: makeMeter() };
+               meter: makeMeter() });
     });
     Play.minds.forEach((m) => { m.meter.visible = false; Play.scene.add(m.meter); });
     // grass trampling: what the player wears in on top of the baked trail, sampled by the grass shader
@@ -176,7 +197,7 @@
   // ── per-frame update ──
   Play.update = function (dt, tAbs) {
     if (!Play.on) return;
-    Play.t += dt;
+    Play.t += dt; Play.dt = dt;
     movePlayer(dt);
     for (const m of Play.minds) senseAndAct(m, dt);
     updateScent(dt);
@@ -220,6 +241,18 @@
     // body: stride law for a person (biped), swinging legs and arms; crouch folds the hips
     const hip = p.posture === 'crouch' ? 0.62 : 0.92;
     if (p.v > 0.05) p.phase += TAU * p.v / Life.stride(p.v, 0.92) * dt;
+    const me = Play.avatar.userData.me;
+    if (me) {   // the sculpted hiker: same stride law, IK feet, arms against the legs; crouch lowers the hips
+      const vl = p.v / (me.rig.scale || 1);
+      if (vl > 0.05) me.phase += TAU * vl / Life.stride(vl, me.rig.hip) * dt;
+      Object.assign(me, { x: p.x, y: p.y, h: p.h, v: p.v, drop: p.posture === 'crouch' ? 0.3 * me.rig.hip : 0 });
+      pose(me, 0, 0, me.rig.hip);
+      if (p.clapT > 0) { p.clapT -= dt; me.arms.forEach((a, i) => armQ(a, 1.35, i ? 0.3 : -0.3)); }
+      if (p.waveT > 0) { p.waveT -= dt; me.arms[1] && me.arms[1].quaternion.multiplyQuaternions(rollQ(0.35 * Math.sin(Play.t * 12)), pitchQ(2.8, new THREE.Quaternion())); }
+      const tgt = G2(p.x, p.y, p.z + 1.4), d = tgt.clone().sub(Play.controls.target);
+      Play.controls.target.add(d); Play.camera.position.add(d);
+      return;
+    }
     const U = Play.avatar.userData, sw = Math.min(p.v / 1.3, 1.4) * 0.5;
     U.hips.position.y = hip + (p.v > 0.05 ? 0.03 * Math.cos(2 * p.phase) : 0);
     U.legL.rotation.z = sw * Math.sin(p.phase); U.legR.rotation.z = -sw * Math.sin(p.phase);
@@ -351,15 +384,23 @@
     const air = m.alt > 0.3 && rig.flies, v = m.v / (rig.scale || 1);
     const fr = Life.froude(v, h), gname = Life.gaitName(fr), tab = Play.sceneInfo.gait[rig.kind === 'quad' ? 'QUAD' : 'BIPED'][gname];
     const S = Life.stride(Math.max(v, 0.05), h) * tab[1], lift = Play.sceneInfo.gait.LIFT[gname];
+    const drop = m.drop || 0, hips = [];
     m.legs.forEach((lg, i) => {
       if (!lg.th || !lg.sh) return;
       const r = rig.legs[i]; let a1, a2;
       if (air) { a1 = -1.4; a2 = 0; }
-      else if (v > 0.05) { const [fx, fz] = Life.footPath(m.phase / TAU - tab[0][i % tab[0].length], tab[1], S, h, lift); [a1, a2] = Life.twoBone(fx, fz, r.l1, r.l2, r.knee); }
-      else [a1, a2] = Life.twoBone(0, -h, r.l1, r.l2, r.knee);
+      else if (v > 0.05) { const [fx, fz] = Life.footPath(m.phase / TAU - tab[0][i % tab[0].length], tab[1], S, h, lift); [a1, a2] = Life.twoBone(fx, fz + drop, r.l1, r.l2, r.knee); }
+      else [a1, a2] = Life.twoBone(0, -h + drop, r.l1, r.l2, r.knee);
       pitchQ(a1, lg.th.quaternion); pitchQ(a2, lg.sh.quaternion);
+      hips[i] = a1 - Life.twoBone(0, -h, r.l1, r.l2, r.knee)[0];
     });
-    if (m.body) m.body.position.set(0, v > 0.05 && !air ? Play.sceneInfo.gait.BOB[gname] * h * Math.cos(2 * m.phase) : 0, 0);
+    // people: each arm swings with the opposite leg (gait.arm_swing)
+    (m.arms || []).forEach((a, i) => pitchQ((Play.sceneInfo.gait.ARM_SWING || 0.7) * (hips[1 - i] || 0), a.quaternion));
+    if (m.waveT > 0 && m.arms && m.arms[1]) {   // a raised right hand, rocking at the wrist's ~2 Hz
+      m.waveT -= Play.dt || 1 / 60;
+      m.arms[1].quaternion.multiplyQuaternions(rollQ(0.35 * Math.sin(Play.t * 12)), pitchQ(2.8, new THREE.Quaternion()));
+    }
+    if (m.body) m.body.position.set(0, (v > 0.05 && !air ? Play.sceneInfo.gait.BOB[gname] * h * Math.cos(2 * m.phase) : 0) - drop, 0);
     if (m.neck) { const q1 = yawQ(m.look, new THREE.Quaternion()), q2 = pitchQ(-head * (rig.graze || 0), new THREE.Quaternion()); m.neck.quaternion.copy(q1.multiply(q2));
       m.neck.scale.setScalar(1 - 0.9 * (m.shut || 0)); }
     if (m.tail) pitchQ(-flag * (rig.flag || 0), m.tail.quaternion);
@@ -403,7 +444,7 @@
       Play.say(n.friendly > 0 ? 'stops to chat — "nice evening for it"' : '"hey there"', who);
     }
     if (p.waved !== undefined && p.waved !== n.sawWave && Play.t - p.waved < 1 && d < 25 && !n.wary) {
-      n.sawWave = p.waved; n.friendly++; n.chatT = Math.max(n.chatT || 0, 1.5); Play.say('waves back', who);
+      n.sawWave = p.waved; n.friendly++; n.chatT = Math.max(n.chatT || 0, 1.5); Play.say('waves back', who); m.waveT = 1.5;
     }
     if (p.mode === 'run' && d < 3 && p.v > 2 && Math.cos(wrap(p.h - (bear + Math.PI))) > 0.7 && !n.wary) startleNPC(m);
     if (n.chatT > 0) { n.chatT -= dt; want = 0; dir = bear; head = -0.1; }

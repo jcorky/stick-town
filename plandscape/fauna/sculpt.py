@@ -250,3 +250,60 @@ def merge(meshes):
     if all(m.nrm is not None for m in meshes):
         out.nrm = np.concatenate([m.nrm for m in meshes]).astype(np.float32)
     return out
+
+
+def tube(pts, radii, rgb, sides=8, per=4, tip=0.5, colour_fn=None):
+    """A swept tube for parts thinner than any grid can afford (antler tines, quills): a Catmull–Rom spline
+    through `pts`, rings of `sides` vertices carried along it by parallel transport (no twist), radius linear
+    in arc parameter. The far end closes in a cone `tip`·r long (0 = flat, larger = rounder or sharper); the base
+    in a flat fan. Normals are the ring's radial directions, tilted by the taper dr/ds."""
+    P = np.asarray(pts, float)
+    R = np.asarray(radii, float)
+    Q = np.r_[[2 * P[0] - P[1]], P, [2 * P[-1] - P[-2]]]
+    t = np.linspace(0, 1, per, endpoint=False)
+    C, rad = [], []
+    for i in range(len(P) - 1):
+        p0, p1, p2, p3 = Q[i:i + 4]
+        T = t[:, None]
+        C.append(0.5 * (2 * p1 + (p2 - p0) * T + (2 * p0 - 5 * p1 + 4 * p2 - p3) * T ** 2 +
+                        (3 * p1 - p0 - 3 * p2 + p3) * T ** 3))
+        rad.append(R[i] + (R[i + 1] - R[i]) * t)
+    C, rad = np.concatenate(C + [P[-1:]]), np.r_[np.concatenate(rad), R[-1]]
+    tang = np.gradient(C, axis=0)
+    tang /= np.linalg.norm(tang, axis=1, keepdims=True)
+    a = np.cross(tang[0], [0, 0, 1.0] if abs(tang[0][2]) < 0.9 else [1.0, 0, 0])
+    a /= np.linalg.norm(a)
+    U = [a]
+    for k in range(1, len(C)):   # parallel transport: remove the new tangent's component, renormalise
+        u = U[-1] - tang[k] * (U[-1] @ tang[k])
+        U.append(u / np.linalg.norm(u))
+    U = np.array(U)
+    V = np.cross(tang, U)
+    ang = np.linspace(0, 2 * np.pi, sides, endpoint=False)
+    ds = np.linalg.norm(np.diff(C, axis=0), axis=1)
+    slope = np.r_[(rad[1] - rad[0]) / ds[0], np.diff(rad) / ds]           # dr/ds
+    radial = np.cos(ang)[None, :, None] * U[:, None] + np.sin(ang)[None, :, None] * V[:, None]
+    pos = C[:, None] + rad[:, None, None] * radial
+    nrm = radial - slope[:, None, None] * tang[:, None]
+    n = len(C)
+    pos = pos.reshape(-1, 3)
+    nrm = nrm.reshape(-1, 3)
+    end = C[-1] + tang[-1] * rad[-1] * tip
+    pos = np.r_[pos, [C[0], end]]
+    nrm = np.r_[nrm, [-tang[0], tang[-1]]]
+    nrm /= np.linalg.norm(nrm, axis=1, keepdims=True)
+    idx = []
+    for k in range(n - 1):
+        for j in range(sides):
+            a0, a1 = k * sides + j, k * sides + (j + 1) % sides
+            idx += [(a0, a1, a1 + sides), (a0, a1 + sides, a0 + sides)]
+    b, e = n * sides, n * sides + 1
+    for j in range(sides):
+        j1 = (j + 1) % sides
+        idx += [(b, j1, j), ((n - 1) * sides + j, (n - 1) * sides + j1, e)]
+    col = np.tile(np.asarray(rgb, np.float32), (len(pos), 1))
+    if colour_fn is not None:
+        col = np.clip(colour_fn(pos, nrm, col), 0, 1)
+    m = Mesh(pos.astype(np.float32), col.astype(np.float32), np.asarray(idx, np.uint32))
+    m.nrm = nrm.astype(np.float32)
+    return m

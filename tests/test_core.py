@@ -63,7 +63,7 @@ class Gaits(unittest.TestCase):
         for k in ("white_tailed_deer", "wild_turkey", "human", "gray_squirrel"):
             r = rig(k, (0.5, 0.4, 0.3))
             b = body(k, (0.5, 0.4, 0.3))
-            neck = sum(r[k]["mesh"].n_tris for k in ("neck", "tail") if r[k])
+            neck = sum(r[k]["mesh"].n_tris for k in ("neck", "tail") if r[k]) + sum(a["mesh"].n_tris for a in r["arms"])
             self.assertEqual(b.n_tris, r["torso"].n_tris + neck + sum(lg["thigh"].n_tris + lg["shank"].n_tris
                                                                       for lg in r["legs"]))
             for lg in r["legs"]:  # rest pose puts the foot on the ground, slightly flexed

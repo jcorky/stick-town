@@ -100,12 +100,16 @@ class GLB:
         return self.tex_index[tex.key]
 
     def material(self, name, double=False, rough=0.9, metal=0.0, alpha=1.0, texture=None, splat=None,
-                 splat_tile=2.0, sharpness=8.0):
-        """`texture` (a Texture) adds a base-colour map; one with an alpha channel is alpha-masked."""
+                 splat_tile=2.0, sharpness=8.0, factor=1.0, extras=None):
+        """`texture` (a Texture) adds a base-colour map; one with an alpha channel is alpha-masked. `factor` scales
+        the base colour (linear)."""
         if name in self.mat_index:
             return self.mat_index[name]
+        f = float(factor)
         m = {"name": name, "doubleSided": double,
-             "pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, alpha], "metallicFactor": metal, "roughnessFactor": rough}}
+             "pbrMetallicRoughness": {"baseColorFactor": [f, f, f, alpha], "metallicFactor": metal, "roughnessFactor": rough}}
+        if extras:
+            m["extras"] = dict(extras)
         if alpha < 1:
             m["alphaMode"] = "BLEND"
         if texture is not None:
@@ -164,6 +168,15 @@ class GLB:
         else:
             idx = self._acc(mesh.indices.astype(np.uint32).ravel(), UINT, "SCALAR", ELEMENT_ARRAY_BUFFER)
         self.meshes.append({"name": name, "primitives": [{"attributes": attrs, "indices": idx, "material": material}]})
+        return len(self.meshes) - 1
+
+    def variant(self, mesh, name, material):
+        """Another mesh drawing the same vertex data (shared accessors) with a different material: individuals
+        that differ only by a colour factor cost a few bytes of JSON instead of a copy of the geometry."""
+        if mesh is None:
+            return None
+        prim = dict(self.meshes[mesh]["primitives"][0], material=material)
+        self.meshes.append({"name": name, "primitives": [prim]})
         return len(self.meshes) - 1
 
     def node(self, name, mesh=None, translation=None, rotation_z=0.0, scale=1.0, children=None, world=True,
