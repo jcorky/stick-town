@@ -244,9 +244,26 @@ class Sculpt:
         fn = np.cross(V[T[:, 1]] - V[T[:, 0]], V[T[:, 2]] - V[T[:, 0]])
         if (fn * N[T].mean(1)).sum() < 0:
             T = T[:, ::-1]
+        T = _drop_specks(T, len(V))
         m = Mesh(V.astype(np.float32), np.clip(C, 0, 1).astype(np.float32), T.astype(np.uint32))
         m.nrm = N.astype(np.float32)
         return m
+
+
+def _drop_specks(T, n):
+    """Surface nets can leave a few-vertex island where a tip thins below the grid: drop components under 16
+    vertices that are also under a tenth of its largest piece (vertices stay, unreferenced)."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    if not len(T):
+        return T
+    I = np.r_[T[:, 0], T[:, 1], T[:, 2]]
+    J = np.r_[T[:, 1], T[:, 2], T[:, 0]]
+    _, lab = connected_components(coo_matrix((np.ones(len(I)), (I, J)), shape=(n, n)), directed=False)
+    used = np.unique(T)
+    size = np.bincount(lab[used], minlength=lab.max() + 1)
+    small = (size < 16) & (size < 0.1 * size.max())
+    return T[~small[lab[T[:, 0]]]] if small.any() else T
 
 
 def merge(meshes):

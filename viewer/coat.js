@@ -2,7 +2,7 @@
 // fragment from the _COAT vertex attribute (plandscape/fauna/coat.py) on the sculpted bodies' standard material.
 //
 //   _COAT = (kind/8, size/S_MAX, sheen, iridescence), u8 normalised; kind 0 bare, 1 fur, 2 feather, 3 shell,
-//   4 fur lying along the part's z (legs)
+//   4 fur lying along the part's z (legs), 5 smooth plumage (feathers at 40 % contrast)
 //   fur      albedo × (0.74 + 0.52 n₆)(0.72 + 0.56 S(n)),  n value noise stretched 8× along the hair (object −x), n₆ tufts 6× larger
 //   feather  staggered rows of discs: d = |frac(q) − (0, ½)|, pale band where 0.32 < d < 0.47, dark rim at d → ½
 //   shell    Worley cells: seam where F2 − F1 → 0, a tone per cell
@@ -37,7 +37,7 @@
     float fade = uCoat * (1.0 - smoothstep(0.35, 1.2, px));
     float ndv = clamp(dot(n, v), 0.0, 1.0), rim = pow(1.0 - ndv, 3.0);
     vec3 c = dc.rgb;
-    if (kind < 1.5 || kind > 3.5) {   // fur: strands, and tufts 6× larger that still read at a distance
+    if (kind < 1.5 || (kind > 3.5 && kind < 4.5)) {   // fur: strands, and tufts 6× larger that still read at a distance
       if (kind > 3.5) p = p.zyx;      // legs: the hair lies along the limb
       float st = 0.65 * cNoise(vec3(p.x * 0.125, p.y, p.z)) + 0.35 * cNoise(vec3(p.x * 0.25, p.y * 2.0, p.z * 2.0) + 7.0);
       float tuft = cNoise(vec3(p.x * 0.042, p.y * 0.167, p.z * 0.167) + 3.0);
@@ -46,12 +46,13 @@
       c *= mix(1.0, 0.74 + 0.52 * tuft, fadeT) * mix(1.0, 0.72 + 0.56 * st, fade);
       c *= 1.0 + vCoat.z * rim * 0.9;
       rough = max(rough, 0.85);
-    } else if (kind < 2.5) {   // feathers: tri-planar, each plane's rows pointing back along −x
+    } else if (kind < 2.5 || kind > 4.5) {   // feathers: tri-planar, each plane's rows pointing back along −x
       vec3 w = abs(normalize(vObjN)); w = w * w; w /= (w.x + w.y + w.z);
       vec2 a = cScallop(vec2(-p.x, p.z) * vec2(1.0, 1.3)), b = cScallop(vec2(-p.x, p.y) * vec2(1.0, 1.3)),
            e = cScallop(vec2(p.y, p.z) * 1.3);
       vec2 sc = a * w.y + b * w.z + e * w.x;
-      float band = sc.x * fade, edge = sc.y * fade;
+      float soft = kind > 4.5 ? 0.4 : 1.0;
+      float band = sc.x * fade * soft, edge = sc.y * fade * soft;
       c = mix(c, c * 1.6 + 0.04, band * 0.45);
       c *= 1.0 - 0.35 * edge;
       c *= 1.0 + vCoat.z * rim * 0.6;

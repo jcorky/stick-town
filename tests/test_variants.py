@@ -48,6 +48,12 @@ class Variants(unittest.TestCase):
             self.assertTrue((k[k > 0] == coat.KIND["fur_z"]).all(), part)   # hooves stay bare
             self.assertGreater(float((k == coat.KIND["fur_z"]).mean()), 0.5, part)
 
+    def test_heron_plumage_is_soft_and_turkey_bold(self):
+        k = lambda key: np.bincount(rig(key, FAUNA[key].rgb, sex="m")["torso"].attrs["_COAT"][:, 0] // 32, minlength=6)
+        self.assertGreater(k("great_blue_heron")[coat.KIND["feather_soft"]], 0)
+        self.assertEqual(k("great_blue_heron")[coat.KIND["feather"]], 0)
+        self.assertGreater(k("wild_turkey")[coat.KIND["feather"]], 0)
+
     def test_winter_coat_is_greyer(self):
         def mean_sat(season):
             t = rig("white_tailed_deer", DEER, season=season)["torso"]

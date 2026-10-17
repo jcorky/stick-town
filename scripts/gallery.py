@@ -259,7 +259,7 @@ def fauna_sheet(path):
     W, H = 560, 420
     tiles, parts, x = [], [], 0.0
     for key, spec in FAUNA.items():
-        b = body(key, spec.rgb)
+        b = body(key, spec.rgb, 1.0, "m" if key == "wild_turkey" else "f")   # the gobbler; the hen is in variants
         lo, hi = b.positions.min(0), b.positions.max(0)
         c, r = (lo + hi) / 2, float(np.max(hi - lo)) * 0.62
         im = render([b], None, size=(W, H), azimuth=-38, elevation=12,

@@ -3,7 +3,8 @@
 Each sculpted part carries a glTF attribute _COAT (normalised u8 vec4):
 
     x = kind / 8        kind ∈ {0 bare (skin, eye, hoof, cloth), 1 fur, 2 feather, 3 shell / scales,
-                                4 fur lying along the part's z (legs: hair runs down the limb, not back)}
+                                4 fur lying along the part's z (legs: hair runs down the limb, not back),
+                                5 smooth plumage (feathers at 40 % contrast: a heron, not a turkey)}
     y = s / S_MAX       feature size s (m): hair-strand spacing, feather length, scute or scale size
     z = sheen           rim brightening of fur and feather at grazing view, 0..1
     w = iridescence     view-dependent structural colour (a gobbler's bronze-green-copper), 0..1
@@ -17,7 +18,7 @@ from __future__ import annotations
 
 import numpy as np
 
-KIND = {"bare": 0, "fur": 1, "feather": 2, "shell": 3, "fur_z": 4}
+KIND = {"bare": 0, "fur": 1, "feather": 2, "shell": 3, "fur_z": 4, "feather_soft": 5}
 S_MAX = 0.05
 DARK_LUM = 0.1
 
@@ -29,7 +30,7 @@ SURFACE = {
     "gray_squirrel": ("fur", 0.003, 0.35, 0.0),
     "armadillo": ("shell", 0.012, 0.15, 0.0),
     "box_turtle": ("shell", 0.008, 0.1, 0.0),
-    "great_blue_heron": ("feather", 0.03, 0.25, 0.0),
+    "great_blue_heron": ("feather_soft", 0.03, 0.25, 0.0),
     ("wild_turkey", "m"): ("feather", 0.035, 0.2, 0.9),
     ("wild_turkey", "f"): ("feather", 0.03, 0.15, 0.25),
 }

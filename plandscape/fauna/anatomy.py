@@ -398,29 +398,32 @@ def raccoon(rgb):
 def armadillo(rgb):
     shell = np.asarray(rgb, float)
     skin = np.array([0.72, 0.62, 0.55])
-    q = Quad(h=0.08, back=0.11, shoulder_x=0.13, hip_x=-0.13, half_w=0.085, depth=0.15, leg_y=0.06,
+    q = Quad(h=0.08, back=0.11, shoulder_x=0.13, hip_x=-0.13, half_w=0.068, depth=0.14, leg_y=0.058,
              leg_r=(0.022, 0.016, 0.013),
              neck=[(-0.03, 0, -0.01), (0.02, 0, 0.0)], neck_r=[0.04, 0.04],
              skull=((0.05, 0, 0.0), (0.055, 0.04, 0.04), 0.25),
              muzzle=((0.07, 0, -0.01), (0.17, 0, -0.05), 0.026, 0.009), nose_r=0.007,
-             ears=((0.035, 0.03, 0.045), (0.012, 0.005, 0.019), 0.35, -0.35, "pointed"),
+             ears=((0.03, 0.032, 0.05), (0.013, 0.003, 0.019), 0.3, -0.3, "pointed"),
              eye=((0.08, 0.026, 0.012), 0.005),
-             tail=[(0, 0, 0), (-0.12, 0, -0.05), (-0.26, 0, -0.12)], tail_r=[0.03, 0.018, 0.006],
+             tail=[(0, 0, 0), (-0.12, 0, -0.05), (-0.25, 0, -0.115)], tail_r=[0.03, 0.018, 0.009],
              foot="paw", neck_pivot=(0.21, 0, 0.13), tail_pivot=(-0.22, 0, 0.14))
     q.extras["neck_root_lift"] = -0.02
 
     # the carapace is its own sculpture on a finer grid: shoulder and hip shields, 9 raised bands between them,
     # all overhanging the body like a skirt
     cap = Sculpt()
-    cap.ellipsoid((0.0, 0, 0.16), (0.25, 0.112, 0.092), shell, k=0.04)              # one dome, nose to tail
-    cap.ellipsoid((0.15, 0, 0.17), (0.08, 0.108, 0.085), shell, k=0.06)             # scapular shield
-    cap.ellipsoid((-0.15, 0, 0.17), (0.09, 0.114, 0.088), shell, k=0.06)            # pelvic shield
+    cap.ellipsoid((0.0, 0, 0.155), (0.25, 0.098, 0.085), shell, k=0.04)             # the banded middle, a little lower
+    cap.ellipsoid((0.15, 0, 0.165), (0.085, 0.104, 0.085), shell, k=0.03)           # scapular shield
+    cap.ellipsoid((-0.15, 0, 0.165), (0.095, 0.11, 0.09), shell, k=0.03)            # pelvic shield
 
-    def bands(P):   # 9 ridges between the shields, each a raised lip 3 mm high
+    def bands(P):   # 9 ridges between the shields, each a raised lip
         x = P[:, 0]
         inband = smooth(-0.105, -0.095, x) * smooth(0.105, 0.095, x)
-        return -0.005 * inband * np.cos(np.pi * (x + 0.099) / 0.022) ** 8
+        return -0.006 * inband * np.cos(np.pi * (x + 0.099) / 0.022) ** 8
     cap.displace(bands)
+    rng_ = np.random.default_rng(7)   # scute centres on the shields: fixed jittered grid (geometry, not randomness)
+    gx, gy = np.meshgrid(np.arange(-0.26, 0.26, 0.016), np.arange(-0.13, 0.13, 0.016))
+    scutes = np.c_[gx.ravel(), gy.ravel()] + rng_.uniform(-0.004, 0.004, (gx.size, 2))
 
     def torso_paint(P, N, C):   # the soft, pale, sparsely haired underside below the shell
         return C * mottle(P, 0.01, 0.06)[:, None]
@@ -432,15 +435,21 @@ def armadillo(rgb):
     def tail_paint(P, N, C):   # 12–15 rings of scales
         u = -P[:, 0]
         return C * (1 - 0.3 * smooth(0.7, 1.0, np.cos(2 * np.pi * u / 0.02) ** 2))[:, None]
-    def cap_paint(P, N, C):  # stippled scutes, the bands' leading edges darker
+
+    def cap_paint(P, N, C):  # rosette scutes on the shields; pale-crowned bands with dark seams between them
         x = P[:, 0]
         inband = smooth(-0.105, -0.095, x) * smooth(0.105, 0.095, x)
-        edge = inband * smooth(0.6, 1.0, np.sin(np.pi * (x + 0.099) / 0.022) ** 2)
-        C = C * (0.9 + 0.1 * np.sign(np.sin(P[:, 0] * 420) * np.sin(P[:, 1] * 420 + P[:, 2] * 300)))[:, None]
-        lip = inband * np.cos(np.pi * (x + 0.099) / 0.022) ** 8
-        return C * (1 - 0.35 * edge + 0.15 * lip)[:, None]
+        ph = np.cos(np.pi * (x + 0.099) / 0.022)
+        seam = inband * smooth(0.25, 0.0, np.abs(ph))                 # the folds between bands
+        crown = inband * smooth(0.6, 0.95, ph ** 2)
+        d = np.sort(np.linalg.norm(P[:, None, :2] - scutes[None], axis=2), axis=1)
+        cell = (1 - inband) * smooth(0.0025, 0.0, d[:, 1] - d[:, 0])  # scute borders on the shields
+        C = mix(C, np.array([0.82, 0.76, 0.66]), crown * 0.45)
+        skirt = smooth(0.13, 0.11, P[:, 2])                           # the overhanging lower edge, paler
+        C = mix(C, np.array([0.8, 0.72, 0.64]), skirt * 0.4)
+        return C * (1 - 0.55 * seam - 0.35 * cell)[:, None]
     tf, th, sf, shh, sp = _quad_legs(q, skin, skin * 0.9, DARK * 2)
-    body = merge([_quad_torso(q, skin, torso_paint), cap.mesh(target=2600, colour_fn=cap_paint)])
+    body = merge([_quad_torso(q, skin, torso_paint), cap.mesh(target=3000, colour_fn=cap_paint)])
     return dict(q=q, torso=body,
                 head=_quad_head(q, shell, head_paint, ear_col=skin * 0.9),
                 neck_pivot=q.neck_pivot, tail=_quad_tail(q, shell, tail_paint), tail_pivot=q.tail_pivot,
