@@ -762,7 +762,7 @@ def human(rgb, sex="m", season="summer", pack=None):
         def arm_paint(P, N, C):    # a short sleeve ends above the elbow
             return mix(C, skin, smooth(-0.16, -0.2, P[:, 2])) if short else C
         arms.append(dict(mesh=g.mesh(target=700, colour_fn=arm_paint), side=sg, pivot=(0.0, sy * sg, hip + 0.47)))
-    l = hip / 0.95 / 2
+    l = hip / 0.985 / 2   # people stand nearly straight-legged: 1.5 % slack (others 5 %), knees ~20° at rest
     th = Sculpt().cone((0, 0, 0.04), (0, 0, -l), 0.075 * pw, 0.055, jeans, k=0.03).mesh(target=BUDGET["thigh"])
     sh = Sculpt()
     sh.cone((0, 0, 0), (0, 0, -l + 0.07), 0.055, 0.04, jeans, k=0.02)

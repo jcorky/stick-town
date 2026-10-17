@@ -28,9 +28,9 @@ SURFACE = {
     "gray_squirrel": ("fur", 0.003, 0.35, 0.0),
     "armadillo": ("shell", 0.012, 0.15, 0.0),
     "box_turtle": ("shell", 0.008, 0.1, 0.0),
-    "great_blue_heron": ("feather", 0.02, 0.25, 0.0),
-    ("wild_turkey", "m"): ("feather", 0.018, 0.2, 0.9),
-    ("wild_turkey", "f"): ("feather", 0.016, 0.15, 0.25),
+    "great_blue_heron": ("feather", 0.03, 0.25, 0.0),
+    ("wild_turkey", "m"): ("feather", 0.035, 0.2, 0.9),
+    ("wild_turkey", "f"): ("feather", 0.03, 0.15, 0.25),
 }
 BIRD_LEG = ("shell", 0.004, 0.1, 0.0)    # the scutes of a bird's tarsus
 

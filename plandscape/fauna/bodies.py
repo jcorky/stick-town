@@ -33,7 +33,7 @@ def rig(key, rgb, scale=1.0, sex="f", season="summer", pack=None):
     kind='quad'|'biped'|'hop'|'none', lie=trunk drop when lying, as a fraction of h, size=linear size by sex
     (applied by the caller as node scale)). `sex` 'm'|'f' and `season` pick antlers, coats, plumage and sleeves.
     Legs are ordered LF, RF, LH, RH (bipeds L, R). Thigh and shank hang straight down from their own origins (hip,
-    knee); l1 + l2 = h / 0.95, so the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward
+    knee); l1 + l2 = h / 0.95 (people h / 0.985), so the rest pose (gait.rest_pose) is slightly flexed. knee = +1 bends forward
     (stifle, human knee), −1 backward (a deer's carpus, a bird's intertarsal joint).
     Every part is a sculpture of blended anatomical forms (anatomy.py, sculpt.py; TECHNIQUES §36)."""
     from . import anatomy as A

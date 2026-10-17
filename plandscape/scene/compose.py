@@ -480,7 +480,7 @@ def compose(plan: ScenePlan, out_dir: str, sim_seconds=180.0, log=print, store: 
         rr = make_rng("look", a.id)
         tint = int(rr.integers(0, 3))
         sc = [0.9, 1.0, 1.1][int(rr.integers(0, 3))]
-        sx = make_rng("sex", a.id)
+        sx = make_rng("sex", plan.seed, a.id)
         key = a.spec.key
         sexed = key in SEXED
         sex = ("m" if sx.random() < 0.5 else "f") if sexed else "f"

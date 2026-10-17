@@ -2,7 +2,7 @@
 // fragment from the _COAT vertex attribute (plandscape/fauna/coat.py) on the sculpted bodies' standard material.
 //
 //   _COAT = (kind/4, size/S_MAX, sheen, iridescence), u8 normalised; kind 0 bare, 1 fur, 2 feather, 3 shell
-//   fur      albedo × (0.78 + 0.44 n),  n = value noise stretched 8× along the hair (object −x)
+//   fur      albedo × (0.74 + 0.52 n₆)(0.72 + 0.56 S(n)),  n value noise stretched 8× along the hair (object −x), n₆ tufts 6× larger
 //   feather  staggered rows of discs: d = |frac(q) − (0, ½)|, pale band where 0.32 < d < 0.47, dark rim at d → ½
 //   shell    Worley cells: seam where F2 − F1 → 0, a tone per cell
 //   sheen    albedo × (1 + s (1 − n·v)³)
@@ -36,9 +36,12 @@
     float fade = uCoat * (1.0 - smoothstep(0.35, 1.2, px));
     float ndv = clamp(dot(n, v), 0.0, 1.0), rim = pow(1.0 - ndv, 3.0);
     vec3 c = dc.rgb;
-    if (kind < 1.5) {          // fur
+    if (kind < 1.5) {          // fur: strands, and tufts 6× larger that still read at a distance
       float st = 0.65 * cNoise(vec3(p.x * 0.125, p.y, p.z)) + 0.35 * cNoise(vec3(p.x * 0.25, p.y * 2.0, p.z * 2.0) + 7.0);
-      c *= mix(1.0, 0.78 + 0.44 * st, fade);
+      float tuft = cNoise(vec3(p.x * 0.042, p.y * 0.167, p.z * 0.167) + 3.0);
+      float fadeT = uCoat * (1.0 - smoothstep(0.35, 1.2, px / 6.0));
+      st = smoothstep(0.25, 0.75, st);
+      c *= mix(1.0, 0.74 + 0.52 * tuft, fadeT) * mix(1.0, 0.72 + 0.56 * st, fade);
       c *= 1.0 + vCoat.z * rim * 0.9;
       rough = max(rough, 0.85);
     } else if (kind < 2.5) {   // feathers: tri-planar, each plane's rows pointing back along −x
@@ -51,9 +54,9 @@
       c *= 1.0 - 0.35 * edge;
       c *= 1.0 + vCoat.z * rim * 0.6;
       vec3 film = 0.5 + 0.5 * cos(6.2832 * (vec3(0.0, 0.33, 0.67) + 1.6 * ndv + 0.15));
-      vec3 tint = mix(vec3(0.80, 0.48, 0.20), film * vec3(0.55, 0.95, 0.55), 0.55);
+      vec3 tint = mix(vec3(0.85, 0.50, 0.20), film * vec3(0.6, 0.95, 0.5), 0.35);   // bronze, green at grazing
       float L = dot(c, vec3(0.3, 0.59, 0.11));
-      c = mix(c, tint * max(2.4 * L, 0.06), vCoat.w * 0.6 * (0.35 + 0.65 * rim + 0.5 * band));
+      c = mix(c, tint * max(2.4 * L, 0.06), vCoat.w * 0.6 * clamp(0.15 + 0.5 * rim + 0.9 * band, 0.0, 1.0));
       rough = mix(rough, 0.5, vCoat.w);
     } else {                   // shell and scales: Worley cells
       vec3 g = floor(p), f = fract(p);
