@@ -1,6 +1,6 @@
 # Handoff — stick-town / plandscape
 
-Last updated 2026-10-15, end of session 2 (v0.2.0). Paste everything below the line into a new Claude Code session with **jcorky/stick-town** attached with push access.
+Last updated 2026-10-17 (session 5: sculpted animals, sex and season variants, coat detail). Paste everything below the line into a new Claude Code session with **jcorky/stick-town** attached with push access.
 
 ---
 
@@ -35,6 +35,7 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 | `wind/` + `viewer/wind.js` | one gust field (Kaimal, frozen turbulence, Davenport coherence, log/exponential profile, NOAA Beaufort) driving trunk, limb, branch, leaf and grass oscillators per vertex (§34); constants in `catalog/wind_sources.json` |
 | `viewer/index.html` | lighting, physically based wind with Beaufort slider, leaf-shaped shadows, timeline, follow-cam, event log |
 | `viewer/player.js` + `life.js` + `fauna/perception.py` | Walk in: sight/hearing/smell → alarm → displays, flight, learning, food; hikers with proxemics; live trails (§35) |
+| `fauna/coat.py` + `viewer/coat.js` | sex and season variants (antlers by month, winter coat, hens, two hiker builds with arms and packs) and per-vertex coat detail: fur, feathers, scutes, iridescence (§37) |
 
 **Session 2 history note:** session 1's commits were imported from the owner's bundle. Its building/body/terrain/behaviour LFS objects were never pushed and are lost; they were regenerated, and the asset commit was rewritten (owner approved) so the history only references objects that exist.
 
@@ -51,11 +52,18 @@ You are continuing **stick-town**, a Python package (`plandscape`) that turns a 
 
 ## 3. Next priorities, in order
 
+**Session 5 asked for:** better animal models (done, §36: sculpted bodies) and then more enhancement (done, §37:
+sexes, seasons, arms, coat shader). Gaps: fawns and poults; a gobbler's strut (tail fan, dropped wings); antlers
+are one typical rack (no spikes or 10-pointers by age); hikers have no faces or hands beyond simple forms, and no
+elbow or wrist joints; fur direction follows object −x everywhere, so legs and tails stream the wrong way; the
+coat shader is viewer-only (the Python previews show vertex colour). Next: age classes, hair-flow from the sculpt
+gradient, and a strutting display when the player is near in spring.
+
 **Session 4 asked for:** wind through the foliage (done, §34) and player actions that change how animals and NPCs
 behave (done, §35: Walk in; `catalog/perception_sources.json`; `scripts/play_check.py`). Perception gaps: FIDs for
 deer on foot, turkeys, raccoons, coyotes and herons, footstep levels, scent ranges, crouching and per-encounter
 habituation rates are design values (nothing citable found); live animals never hand back to their clip; people
-do not path-find around buildings; the avatar is a box figure. Next: predators that use the same senses (coyote
+do not path-find around buildings. Next: predators that use the same senses (coyote
 stalking downwind), herd alarm spreading (one deer's snort alerts the rest), and saving a player's visit. Wind gaps:
 broadleaf f0 comes out 0.6–1.5 Hz vs 0.26–0.34 Hz measured (stocky stems, no branch–trunk mass damping); grass and
 leaf-flutter amplitudes and U0 are design values; Kaimal is extrapolated above 0.3 Hz.
