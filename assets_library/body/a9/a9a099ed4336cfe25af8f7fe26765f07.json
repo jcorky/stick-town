@@ -1,0 +1,15 @@
+{
+ "key": "a9a099ed4336cfe25af8f7fe26765f07",
+ "kind": "body",
+ "version": "body-0.3.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "box_turtle"
+ },
+ "meta": {
+  "created": "2026-10-17T15:55:25",
+  "tris": 3020
+ },
+ "path": "body/a9/a9a099ed4336cfe25af8f7fe26765f07.npz"
+}

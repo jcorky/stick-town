@@ -1,0 +1,15 @@
+{
+ "key": "e19a36474f29188b36d231555f848089",
+ "kind": "body",
+ "version": "body-0.3.0",
+ "params": {
+  "scale": 1.0,
+  "sex": "f",
+  "species": "gray_squirrel"
+ },
+ "meta": {
+  "created": "2026-10-17T15:55:23",
+  "tris": 2724
+ },
+ "path": "body/e1/e19a36474f29188b36d231555f848089.npz"
+}

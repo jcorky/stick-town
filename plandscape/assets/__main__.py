@@ -80,8 +80,10 @@ def bake(store, variants, detail, seasons, moistures=(0.5, 0.8)):
             store.get_or_build("building", dict(kind=kind, seed=[0, v]),
                                lambda: generate_building(kind, seed=(0, v)), benc, bdec)
     fenc, fdec = mesh_codec("body")
-    for key, spec in FAUNA.items():
-        store.get_or_build("body", dict(species=key, scale=1.0), lambda: (body(key, spec.rgb), {}), fenc, fdec)
+    for key, spec in FAUNA.items():   # one per sex where the sexes are built differently (TECHNIQUES §37)
+        for sex in (("m", "f") if key in ("white_tailed_deer", "wild_turkey", "human") else ("f",)):
+            store.get_or_build("body", dict(species=key, scale=1.0, sex=sex),
+                               lambda: (body(key, spec.rgb, 1.0, sex), {}), fenc, fdec)
     print(f"baked in {time.time() - n0:.1f}s")
 
 
